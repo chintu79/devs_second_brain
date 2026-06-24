@@ -1,0 +1,87 @@
+"use client";
+
+import { useState } from "react";
+import { Star, Pencil, Trash2, Sparkles } from "lucide-react";
+import { deletePrompt, toggleFavorite } from "@/actions/prompts";
+import { CopyButton } from "@/components/shared/copy-button";
+import { PromptDialog } from "./prompt-dialog";
+
+interface Prompt {
+  id: string;
+  title: string;
+  prompt: string;
+  category: string;
+  tags: string[];
+  useCase: string;
+  favorite: boolean;
+  createdAt: Date;
+}
+
+interface PromptCardProps {
+  prompt: Prompt;
+}
+
+export function PromptCard({ prompt: p }: PromptCardProps) {
+  const [open, setOpen] = useState(false);
+
+  async function handleDelete() {
+    if (confirm("Delete this prompt?")) {
+      await deletePrompt(p.id);
+    }
+  }
+
+  return (
+    <>
+      <div className="group rounded-lg border border-border bg-card overflow-hidden card-hover">
+        <div className="p-3.5">
+          <div className="flex items-start gap-3">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted">
+              <Sparkles className="h-4 w-4 text-muted-foreground" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-sm font-medium truncate">{p.title}</span>
+                  <span className="bg-muted text-[10px] text-muted-foreground px-1.5 py-0.5 rounded shrink-0">{p.category}</span>
+                </div>
+                <div className="flex items-center gap-0.5 shrink-0">
+                  <form action={async () => { await toggleFavorite(p.id); }}>
+                    <button type="submit" className={`flex h-7 w-7 items-center justify-center rounded transition-colors ${p.favorite ? "text-amber-400" : "text-muted-foreground hover:text-amber-400 hover:bg-muted"}`}>
+                      <Star className={`h-3 w-3 ${p.favorite ? "fill-amber-400" : ""}`} />
+                    </button>
+                  </form>
+                  <CopyButton text={p.prompt} />
+                </div>
+              </div>
+              {p.useCase && (
+                <p className="text-xs text-muted-foreground mt-1">{p.useCase}</p>
+              )}
+              <pre className="text-xs text-muted-foreground/70 whitespace-pre-wrap font-sans mt-2 line-clamp-2 bg-muted/50 rounded-md p-2 leading-relaxed font-[inherit]">
+                {p.prompt}
+              </pre>
+              {p.tags.length > 0 && (
+                <div className="flex items-center justify-between mt-2.5">
+                  <div className="flex flex-wrap gap-1">
+                    {p.tags.slice(0, 3).map((tag) => (
+                      <span key={tag} className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">{tag}</span>
+                    ))}
+                    {p.tags.length > 3 && <span className="text-[10px] text-muted-foreground">+{p.tags.length - 3}</span>}
+                  </div>
+                  <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button className="flex h-7 w-7 items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors" onClick={() => setOpen(true)}>
+                      <Pencil className="h-3 w-3" />
+                    </button>
+                    <button className="flex h-7 w-7 items-center justify-center rounded text-muted-foreground hover:text-red-400 hover:bg-muted transition-colors" onClick={handleDelete}>
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+      <PromptDialog prompt={p} open={open} onOpenChange={setOpen} />
+    </>
+  );
+}

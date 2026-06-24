@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Prompt" ADD COLUMN     "lastUsedAt" TIMESTAMP(3),
+ADD COLUMN     "useCount" INTEGER NOT NULL DEFAULT 0;
