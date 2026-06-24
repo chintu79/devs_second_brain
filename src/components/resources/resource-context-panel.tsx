@@ -25,7 +25,7 @@ export function ResourceContextPanel({ topResources, recentNotes, projects }: Co
                 <Link
                   key={r.id}
                   href={`/resources/${r.id}`}
-                  className="group flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs text-foreground/80 hover:text-foreground hover:bg-muted/40 transition-all"
+                  className="group flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs text-foreground/80 hover:text-foreground hover:bg-muted/40 hover:scale-[1.02] transition-all duration-150"
                 >
                   <Bookmark className="h-3.5 w-3.5 shrink-0 text-secondary-foreground group-hover:text-primary transition-colors" />
                   <span className="truncate">{r.title}</span>
@@ -49,7 +49,7 @@ export function ResourceContextPanel({ topResources, recentNotes, projects }: Co
                 <Link
                   key={n.id}
                   href="/notes"
-                  className="group flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs text-foreground/80 hover:text-foreground hover:bg-muted/40 transition-all"
+                  className="group flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs text-foreground/80 hover:text-foreground hover:bg-muted/40 hover:scale-[1.02] transition-all duration-150"
                 >
                   <StickyNote className="h-3.5 w-3.5 shrink-0 text-secondary-foreground group-hover:text-primary transition-colors" />
                   <span className="truncate">{n.title}</span>
@@ -73,7 +73,7 @@ export function ResourceContextPanel({ topResources, recentNotes, projects }: Co
                 <Link
                   key={p.id}
                   href={`/projects/${p.id}`}
-                  className="group flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs text-foreground/80 hover:text-foreground hover:bg-muted/40 transition-all"
+                  className="group flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs text-foreground/80 hover:text-foreground hover:bg-muted/40 hover:scale-[1.02] transition-all duration-150"
                 >
                   <FolderKanban className="h-3.5 w-3.5 shrink-0 text-secondary-foreground group-hover:text-primary transition-colors" />
                   <span className="truncate">{p.title}</span>

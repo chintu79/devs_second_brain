@@ -21,7 +21,7 @@ export function PromptContextPanel({ favorites, recentPrompts }: PromptContextPa
                 <Link
                   key={p.id}
                   href={`/prompts/${p.id}`}
-                  className="group flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs text-foreground/80 hover:text-foreground hover:bg-muted/40 transition-all"
+                  className="group flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs text-foreground/80 hover:text-foreground hover:bg-muted/40 hover:scale-[1.02] transition-all duration-150"
                 >
                   <Star className="h-3.5 w-3.5 shrink-0 text-amber-400 fill-amber-400" />
                   <span className="truncate">{p.title}</span>
@@ -45,7 +45,7 @@ export function PromptContextPanel({ favorites, recentPrompts }: PromptContextPa
                 <Link
                   key={p.id}
                   href={`/prompts/${p.id}`}
-                  className="group flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs text-foreground/80 hover:text-foreground hover:bg-muted/40 transition-all"
+                  className="group flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs text-foreground/80 hover:text-foreground hover:bg-muted/40 hover:scale-[1.02] transition-all duration-150"
                 >
                   <Sparkles className="h-3.5 w-3.5 shrink-0 text-secondary-foreground group-hover:text-primary transition-colors" />
                   <span className="truncate">{p.title}</span>

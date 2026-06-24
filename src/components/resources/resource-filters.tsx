@@ -31,10 +31,10 @@ export function ResourceFilters({
       <div className="flex items-center gap-2 flex-wrap">
         <button
           onClick={() => onCategoryChange(null)}
-          className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
+          className={`px-3 py-1 rounded-lg text-xs font-medium transition-all duration-150 ${
             !selectedCategory
               ? "bg-primary/10 text-primary"
-              : "bg-muted text-secondary-foreground hover:text-foreground hover:bg-muted/80"
+              : "bg-muted text-secondary-foreground hover:text-foreground hover:bg-muted/80 hover:scale-[1.03]"
           }`}
         >
           All
@@ -43,10 +43,10 @@ export function ResourceFilters({
           <button
             key={cat}
             onClick={() => onCategoryChange(cat)}
-            className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors capitalize ${
+            className={`px-3 py-1 rounded-lg text-xs font-medium transition-all duration-150 capitalize ${
               selectedCategory === cat
                 ? "bg-primary/10 text-primary"
-                : "bg-muted text-secondary-foreground hover:text-foreground hover:bg-muted/80"
+                : "bg-muted text-secondary-foreground hover:text-foreground hover:bg-muted/80 hover:scale-[1.03]"
             }`}
           >
             {cat}
@@ -73,10 +73,10 @@ export function ResourceFilters({
             <button
               key={tag}
               onClick={() => onTagChange(selectedTag === tag ? null : tag)}
-              className={`px-2 py-0.5 rounded text-[11px] font-medium transition-colors ${
+              className={`px-2 py-0.5 rounded text-[11px] font-medium transition-all duration-150 ${
                 selectedTag === tag
                   ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:text-foreground bg-muted/30 hover:bg-muted/60"
+                  : "text-muted-foreground hover:text-foreground bg-muted/30 hover:bg-muted/60 hover:scale-[1.03]"
               }`}
             >
               {tag}

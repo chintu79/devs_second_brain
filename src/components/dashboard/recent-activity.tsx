@@ -38,7 +38,7 @@ export function RecentActivity({ resources, notes, projects }: RecentActivityPro
           <h2 className="text-xs font-semibold text-section-foreground uppercase tracking-[0.1em]">Recent Activity</h2>
           <span className="text-[11px] text-muted-foreground px-1.5 py-0.5 rounded bg-muted">{items.length}</span>
         </div>
-        <Link href="/search" className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors">
+        <Link href="/search" className="text-xs font-medium text-muted-foreground hover:text-foreground hover:scale-[1.02] transition-all duration-150">
           View all
         </Link>
       </div>
@@ -50,7 +50,7 @@ export function RecentActivity({ resources, notes, projects }: RecentActivityPro
             <Link
               key={i}
               href={item.href}
-              className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/30"
+              className="flex items-center gap-3 px-4 py-3 transition-all duration-150 hover:bg-muted/30 hover:scale-[1.01]"
             >
               <div className="flex h-6 w-6 items-center justify-center rounded shrink-0 bg-muted">
                 <Icon className={`h-3.5 w-3.5 ${typeAccents[item.type] || "text-muted-foreground"}`} />

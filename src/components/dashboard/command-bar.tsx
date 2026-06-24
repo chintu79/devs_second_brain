@@ -13,7 +13,7 @@ export function CommandBar({ onOpenPalette }: CommandBarProps) {
       <div className="flex-1 max-w-xl">
         <button
           onClick={onOpenPalette}
-          className="group relative flex w-full items-center rounded-lg border border-border bg-muted hover:border-muted-foreground/40 hover:bg-muted/80 transition-all duration-200"
+          className="group relative flex w-full items-center rounded-lg border border-border bg-muted hover:border-muted-foreground/40 hover:bg-muted/80 hover:scale-[1.01] transition-all duration-200"
         >
           <Search className="absolute left-3 h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
           <span className="flex h-9 w-full items-center pl-9 pr-16 text-sm text-muted-foreground group-hover:text-foreground transition-colors text-left">
@@ -36,7 +36,7 @@ export function CommandBar({ onOpenPalette }: CommandBarProps) {
       <div className="w-px h-6 bg-border/50 mx-1" />
 
       <div className="flex items-center gap-1">
-        <button className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all">
+        <button className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 hover:scale-[1.1] transition-all duration-150">
           <Bell className="h-4 w-4" />
         </button>
         <div className="flex h-7 w-7 items-center justify-center rounded-full bg-muted text-[11px] font-medium text-foreground">
@@ -52,7 +52,7 @@ function QuickActionBtn({ icon: Icon, label, href }: { icon: React.ElementType; 
     <Link
       href={href}
       title={label}
-      className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all"
+      className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 hover:scale-[1.1] transition-all duration-150"
     >
       <Icon className="h-4 w-4" />
     </Link>

@@ -84,8 +84,8 @@ export function NoteSidebar({
               onCategoryChange(null);
               onTagChange(null);
             }}
-            className={`sidebar-item w-full text-sm ${
-              activeSection === item.id && !activeCategory && !activeTag ? "sidebar-item-active" : ""
+            className={`sidebar-item w-full text-sm transition-transform duration-150 ${
+              activeSection === item.id && !activeCategory && !activeTag ? "sidebar-item-active" : "hover:scale-[1.02]"
             }`}
           >
             <item.icon className="h-4 w-4 shrink-0" />
@@ -113,8 +113,8 @@ export function NoteSidebar({
                 onTagChange(null);
                 onSectionChange(`cluster:${c.name}`);
               }}
-              className={`sidebar-item w-full text-sm ${
-                activeSection === `cluster:${c.name}` ? "sidebar-item-active" : ""
+              className={`sidebar-item w-full text-sm transition-transform duration-150 ${
+                activeSection === `cluster:${c.name}` ? "sidebar-item-active" : "hover:scale-[1.02]"
               }`}
             >
               <span className="w-2 h-2 rounded-full bg-primary/60 shrink-0" />
@@ -139,8 +139,8 @@ export function NoteSidebar({
                 onTagChange(null);
                 onSectionChange("all");
               }}
-              className={`sidebar-item w-full text-sm ${
-                activeCategory === c.name ? "sidebar-item-active" : ""
+              className={`sidebar-item w-full text-sm transition-transform duration-150 ${
+                activeCategory === c.name ? "sidebar-item-active" : "hover:scale-[1.02]"
               }`}
             >
               <span className="flex-1 text-left capitalize">{c.name}</span>
@@ -164,8 +164,8 @@ export function NoteSidebar({
                 onCategoryChange(null);
                 onSectionChange("all");
               }}
-              className={`sidebar-item w-full text-sm ${
-                activeTag === t.name ? "sidebar-item-active" : ""
+              className={`sidebar-item w-full text-sm transition-transform duration-150 ${
+                activeTag === t.name ? "sidebar-item-active" : "hover:scale-[1.02]"
               }`}
             >
               <span className="flex-1 text-left">{t.name}</span>

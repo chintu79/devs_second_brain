@@ -19,7 +19,7 @@ export function SearchContextPanel({ recentSearches, recentlyViewed, onSearchCli
               <button
                 key={i}
                 onClick={() => onSearchClick(q)}
-                className="w-full rounded-md px-2 py-1.5 text-sm text-foreground/80 hover:bg-muted/60 transition-colors text-left truncate"
+                className="w-full rounded-md px-2 py-1.5 text-sm text-foreground/80 hover:bg-muted/60 hover:scale-[1.02] transition-all duration-150 text-left truncate"
               >
                 {q}
               </button>
@@ -33,7 +33,7 @@ export function SearchContextPanel({ recentSearches, recentlyViewed, onSearchCli
         <ContextSection icon={Search} label="Recently Viewed">
           <div className="space-y-1">
             {recentlyViewed.slice(0, 5).map((item) => (
-              <div key={item.id} className="rounded-md px-2 py-1.5 hover:bg-muted/60 transition-colors cursor-pointer">
+              <div key={item.id} className="rounded-md px-2 py-1.5 hover:bg-muted/60 hover:scale-[1.02] transition-all duration-150 cursor-pointer">
                 <p className="text-sm font-medium text-foreground/90 truncate">{item.title}</p>
                 <p className="text-xs text-muted-foreground capitalize">{item.type}</p>
               </div>
@@ -49,7 +49,7 @@ export function SearchContextPanel({ recentSearches, recentlyViewed, onSearchCli
             <button
               key={s}
               onClick={() => onSearchClick(s)}
-              className="w-full rounded-md px-2 py-1.5 text-sm text-foreground/80 hover:bg-muted/60 transition-colors text-left truncate"
+              className="w-full rounded-md px-2 py-1.5 text-sm text-foreground/80 hover:bg-muted/60 hover:scale-[1.02] transition-all duration-150 text-left truncate"
             >
               {s}
             </button>

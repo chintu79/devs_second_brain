@@ -13,10 +13,10 @@ export function PromptFilters({ categories, selectedCategory, onCategoryChange }
     <div className="flex items-center gap-2 flex-wrap">
       <button
         onClick={() => onCategoryChange(null)}
-        className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
+        className={`px-3 py-1 rounded-lg text-xs font-medium transition-all duration-150 ${
           !selectedCategory
             ? "bg-primary/10 text-primary"
-            : "bg-muted text-secondary-foreground hover:text-foreground hover:bg-muted/80"
+            : "bg-muted text-secondary-foreground hover:text-foreground hover:bg-muted/80 hover:scale-[1.03]"
         }`}
       >
         All
@@ -25,10 +25,10 @@ export function PromptFilters({ categories, selectedCategory, onCategoryChange }
         <button
           key={cat}
           onClick={() => onCategoryChange(cat)}
-          className={`px-3 py-1 rounded-lg text-xs font-medium capitalize transition-colors ${
+          className={`px-3 py-1 rounded-lg text-xs font-medium capitalize transition-all duration-150 ${
             selectedCategory === cat
               ? "bg-primary/10 text-primary"
-              : "bg-muted text-secondary-foreground hover:text-foreground hover:bg-muted/80"
+              : "bg-muted text-secondary-foreground hover:text-foreground hover:bg-muted/80 hover:scale-[1.03]"
           }`}
         >
           {cat}

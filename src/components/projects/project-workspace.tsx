@@ -319,7 +319,7 @@ function WorkspacePanel({
               className={`px-4 py-2.5 text-xs font-medium border-b-2 transition-all duration-150 ${
                 activeTab === tab.toLowerCase()
                   ? "border-primary text-foreground"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
+                  : "border-transparent text-muted-foreground hover:text-foreground hover:scale-[1.02]"
               }`}
             >
               {tab}

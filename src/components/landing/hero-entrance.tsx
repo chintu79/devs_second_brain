@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Sparkles, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Mockup } from "./mockup";
+import { TypewriterText } from "./typewriter-text";
 import { ease } from "@/lib/motion";
 
 const containerVariants = {
@@ -39,14 +40,14 @@ export function HeroEntrance() {
       <motion.div variants={childVariants}>
         <div className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/40 px-4 py-1.5 text-xs font-medium text-muted-foreground/80 mb-10">
           <Sparkles className="h-3 w-3 text-primary animate-glow-pulse" />
-          Your developer memory system
+          Your second brain for development.
         </div>
       </motion.div>
 
       <motion.div variants={childVariants}>
         <h1 className="text-[clamp(2.8rem,7vw,5.5rem)] font-bold tracking-[-0.03em] leading-[1.04] mb-6 max-w-4xl mx-auto">
-          Never lose a useful resource,<br />
-          <span className="text-primary">prompt, or idea again.</span>
+          Never lose another<br />
+          <TypewriterText />
         </h1>
       </motion.div>
 

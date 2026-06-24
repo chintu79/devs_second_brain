@@ -70,7 +70,7 @@ export function ProjectSidebar({
           <button
             key={item.id}
             onClick={() => { onSectionChange(item.id); onTagChange(null); }}
-            className={`sidebar-item w-full text-sm ${activeSection === item.id && !activeTag ? "sidebar-item-active" : ""}`}
+            className={`sidebar-item w-full text-sm transition-transform duration-150 ${activeSection === item.id && !activeTag ? "sidebar-item-active" : "hover:scale-[1.02]"}`}
           >
             <item.icon className="h-4 w-4 shrink-0" />
             <span className="flex-1 text-left">{item.label}</span>
@@ -87,7 +87,7 @@ export function ProjectSidebar({
             <button
               key={t.name}
               onClick={() => { onTagChange(activeTag === t.name ? null : t.name); onSectionChange("all"); }}
-              className={`sidebar-item w-full text-sm ${activeTag === t.name ? "sidebar-item-active" : ""}`}
+              className={`sidebar-item w-full text-sm transition-transform duration-150 ${activeTag === t.name ? "sidebar-item-active" : "hover:scale-[1.02]"}`}
             >
               <span className="flex-1 text-left">{t.name}</span>
               <span className="text-xs text-muted-foreground">{t.count}</span>

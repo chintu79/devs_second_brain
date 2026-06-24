@@ -75,7 +75,7 @@ export function Sidebar() {
                 key={link.href}
                 href={link.href}
                 data-accent={link.accent}
-                className={`sidebar-link sidebar-item ${isActive ? "sidebar-item-active" : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"}`}
+                className={`sidebar-link sidebar-item transition-transform duration-150 ${isActive ? "sidebar-item-active" : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:scale-[1.02]"}`}
               >
                 {isActive && (
                   <motion.div
@@ -106,7 +106,7 @@ export function Sidebar() {
                 key={link.href}
                 href={link.href}
                 data-accent={link.accent}
-                className={`sidebar-link sidebar-item ${isActive ? "sidebar-item-active" : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"}`}
+                className={`sidebar-link sidebar-item transition-transform duration-150 ${isActive ? "sidebar-item-active" : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:scale-[1.02]"}`}
               >
                 {isActive && (
                   <motion.div
@@ -130,14 +130,14 @@ export function Sidebar() {
           <Link
             href="/settings"
             data-accent="settings"
-            className="sidebar-link sidebar-item text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            className="sidebar-link sidebar-item text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:scale-[1.02] transition-transform duration-150"
           >
             <Settings className="h-4 w-4" />
             Settings
           </Link>
           <ThemeToggle variant="sidebar" />
           <form action={logout}>
-            <button type="submit" className="sidebar-item w-full text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
+            <button type="submit" className="sidebar-item w-full text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:scale-[1.02] transition-transform duration-150">
               <LogOut className="h-4 w-4" />
               Sign out
             </button>

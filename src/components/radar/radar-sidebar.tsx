@@ -78,7 +78,7 @@ export function RadarSidebar({
           <button
             key={item.id}
             onClick={() => onSectionChange(item.id)}
-            className={`sidebar-item w-full text-sm ${activeSection === item.id ? "sidebar-item-active" : ""}`}
+            className={`sidebar-item w-full text-sm transition-transform duration-150 ${activeSection === item.id ? "sidebar-item-active" : "hover:scale-[1.02]"}`}
           >
             <item.icon className="h-4 w-4 shrink-0" />
             <span className="flex-1 text-left">{item.label}</span>

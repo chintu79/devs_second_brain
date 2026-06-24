@@ -3,6 +3,7 @@ import { Bookmark, Sparkles, StickyNote, FolderKanban, Radio, History, GitFork, 
 import { Button } from "@/components/ui/button";
 import { FadeIn } from "@/components/landing/fade-in";
 import { HeroEntrance } from "@/components/landing/hero-entrance";
+import { AnimatedArrow } from "@/components/landing/animated-arrow";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 
 const features = [
@@ -36,12 +37,12 @@ export default function LandingPage() {
             </div>
             <span className="text-sm font-semibold tracking-tight">Dev Second Brain</span>
           </Link>
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden md:flex items-center gap-1">
             {["Features", "Open Source", "Pricing", "Docs"].map((link) => (
               <Link
                 key={link}
                 href="#"
-                className="text-sm text-muted-foreground/80 hover:text-foreground transition-all duration-200 relative after:absolute after:bottom-0 after:left-0 after:h-px after:w-0 after:bg-foreground/30 after:transition-all after:duration-200 hover:after:w-full"
+                className="relative px-3 py-1.5 text-sm text-muted-foreground/80 hover:text-foreground transition-all duration-200 rounded-md hover:bg-muted/60 hover:scale-[1.03]"
               >
                 {link}
               </Link>
@@ -50,7 +51,7 @@ export default function LandingPage() {
           <div className="flex items-center gap-3">
             <ThemeToggle />
             <Link href="/login">
-              <Button variant="ghost" className="text-sm text-muted-foreground/80 hover:text-foreground h-9 transition-all duration-200">
+              <Button variant="ghost" className="text-sm text-muted-foreground/80 hover:text-foreground h-9 transition-all duration-200 hover:bg-muted/60 hover:scale-[1.03]">
                 Sign in
               </Button>
             </Link>
@@ -71,24 +72,6 @@ export default function LandingPage() {
           <HeroEntrance />
         </section>
 
-        {/* ── Stats ── */}
-        <section className="border-y border-border/50 py-14 md:py-16">
-          <div className="mx-auto max-w-4xl px-6">
-            <div className="grid grid-cols-3 gap-12 md:gap-20">
-              {[
-                { value: "12,400+", label: "Resources Saved" },
-                { value: "8,200+", label: "Prompts Stored" },
-                { value: "3,100+", label: "Projects Managed" },
-              ].map((stat) => (
-                <div key={stat.label} className="text-center">
-                  <div className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">{stat.value}</div>
-                  <div className="text-sm text-muted-foreground/70 mt-1.5">{stat.label}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
         {/* ── Features ── */}
         <section id="features" className="py-24 md:py-32">
           <div className="mx-auto max-w-6xl px-6">
@@ -103,7 +86,7 @@ export default function LandingPage() {
                 const Icon = f.icon;
                 return (
                   <FadeIn key={f.title} delay={i * 60}>
-                    <div className="group rounded-xl border border-border bg-card p-6 transition-all duration-300 hover:-translate-y-0.5 hover:border-[var(--border-hover)] hover:shadow-[var(--shadow-elevated)]">
+                    <div className="group rounded-xl border border-border bg-card p-6 transition-all duration-300 hover:-translate-y-0.5 hover:scale-[1.02] hover:border-[var(--border-hover)] hover:shadow-[var(--shadow-elevated)]">
                       <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted group-hover:bg-primary/10 transition-all duration-300 mb-4 animate-icon-glow">
                         <Icon className="h-[18px] w-[18px] text-muted-foreground/60 group-hover:text-primary transition-colors duration-300" />
                       </div>
@@ -265,28 +248,24 @@ export default function LandingPage() {
               <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">How it works</h2>
               <p className="text-muted-foreground/70 text-base mb-16 max-w-sm mx-auto leading-relaxed">A continuous loop for your developer knowledge.</p>
             </FadeIn>
-            <div className="flex flex-col md:flex-row items-center justify-center gap-5 md:gap-0">
+            <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-0">
               {workflowSteps.map((step, i) => {
                 const Icon = step.icon;
                 return (
                   <FadeIn key={step.label} delay={i * 80} className="flex items-center">
                     <div className="flex flex-col items-center gap-3">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-border bg-card transition-all duration-300 hover:-translate-y-0.5 hover:border-[var(--border-hover)] hover:shadow-[var(--shadow-elevated)]">
-                        <Icon className="h-5 w-5 text-muted-foreground/60" />
+                      <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-border bg-card transition-all duration-300 hover:-translate-y-1 hover:scale-[1.05] hover:border-[var(--border-hover)] hover:shadow-[var(--shadow-elevated)] hover:bg-primary/[0.03]">
+                        <Icon className="h-6 w-6 text-muted-foreground/60" />
                       </div>
-                      <span className="text-xs font-medium text-muted-foreground/70">{step.label}</span>
+                      <span className="text-sm font-semibold text-muted-foreground/80">{step.label}</span>
                     </div>
                     {i < workflowSteps.length - 1 && (
                       <>
-                        <div className="hidden md:flex items-center px-6">
-                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-muted-foreground/20 animate-dash-flow">
-                            <path d="M5 12h14M13 5l7 7-7 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
+                        <div className="hidden md:flex items-center px-8">
+                          <AnimatedArrow />
                         </div>
-                        <div className="flex md:hidden mb-1">
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-muted-foreground/20 rotate-90 my-1 animate-dash-flow">
-                            <path d="M5 12h14M13 5l7 7-7 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
+                        <div className="flex md:hidden py-2">
+                          <AnimatedArrow mobile />
                         </div>
                       </>
                     )}

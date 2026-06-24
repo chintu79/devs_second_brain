@@ -82,15 +82,15 @@
   --color-muted-bg: #f0f0f0;
   --color-muted-fg: #71717a;
   --color-section-fg: #52525b;
-  --color-border-color: rgba(0, 0, 0, 0.08);
+  --color-border-color: rgba(0, 0, 0, 0.18);
 
   --color-sidebar-bg: #ffffff;
   --color-sidebar-fg: #52525b;
   --color-sidebar-accent-bg: rgba(99, 102, 241, 0.08);
-  --color-sidebar-border-color: rgba(0, 0, 0, 0.06);
+  --color-sidebar-border-color: rgba(0, 0, 0, 0.12);
 
   --shadow-elevated: 0 8px 30px rgba(0, 0, 0, 0.08);
-  --border-hover: rgba(0, 0, 0, 0.12);
+  --border-hover: rgba(0, 0, 0, 0.25);
 
   color-scheme: light;
 }
@@ -105,15 +105,15 @@
   --color-muted-bg: #0d0d0d;
   --color-muted-fg: #71717a;
   --color-section-fg: #e4e4e7;
-  --color-border-color: rgba(255, 255, 255, 0.08);
+  --color-border-color: rgba(255, 255, 255, 0.18);
 
   --color-sidebar-bg: #0d0d0d;
   --color-sidebar-fg: #d4d4d8;
   --color-sidebar-accent-bg: color-mix(in srgb, var(--sidebar-item-accent, #6366f1) 12%, transparent);
-  --color-sidebar-border-color: rgba(255, 255, 255, 0.06);
+  --color-sidebar-border-color: rgba(255, 255, 255, 0.12);
 
   --shadow-elevated: 0 8px 30px rgba(0, 0, 0, 0.5);
-  --border-hover: rgba(255, 255, 255, 0.12);
+  --border-hover: rgba(255, 255, 255, 0.25);
 
   --color-sidebar-accent-foreground: var(--sidebar-item-accent, #fafafa);
 
@@ -165,14 +165,14 @@ html.theme-transition *::after {
 
 /* ── Border Hierarchy ── */
 .border-page {
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
 }
 .border-interactive {
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   transition: border-color 0.15s ease;
 }
 .border-interactive:hover {
-  border-color: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.28);
 }
 .border-active {
   border-color: var(--accent, #6366f1);
@@ -197,7 +197,7 @@ html.theme-transition *::after {
 
 /* ── Section Container ── */
 .section-container {
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 20px;
   padding: 24px;
 }

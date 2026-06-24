@@ -49,9 +49,9 @@ export function RadarFeed({
   );
 
   return (
-    <div className="flex-1 flex flex-col min-w-0" onKeyDown={handleKeyDown}>
+    <div className="flex-1 flex flex-col min-w-0 overflow-y-auto" onKeyDown={handleKeyDown}>
       {/* Search */}
-      <div className="px-5 pt-4 pb-3 border-b border-border/30">
+      <div className="sticky top-0 z-10 bg-background px-5 pt-4 pb-3 border-b border-border/30">
         <div className="relative">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input
@@ -65,8 +65,7 @@ export function RadarFeed({
       </div>
 
       {/* Feed */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="px-5 py-4 space-y-8">
+      <div className="px-5 py-4 space-y-8">
           {filteredSections.length === 0 || (filteredSections.length === 1 && filteredSections[0].repos.length === 0) ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted mb-4">
@@ -106,7 +105,6 @@ export function RadarFeed({
               </Section>
             ))
           )}
-        </div>
       </div>
     </div>
   );

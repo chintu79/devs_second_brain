@@ -36,7 +36,7 @@ export function ContinueWorking({ projects }: ContinueWorkingProps) {
           <h2 className="text-sm font-semibold uppercase tracking-[0.1em]" style={{ color: "var(--accent)" }}>Continue Working</h2>
           <span className="text-xs text-muted-foreground px-2 py-0.5 rounded-md bg-muted font-medium">{projects.length} active</span>
         </div>
-        <Link href="/projects" className="text-sm font-medium hover:text-foreground transition-colors" style={{ color: "var(--accent)" }}>
+        <Link href="/projects" className="text-sm font-medium hover:text-foreground hover:scale-[1.02] transition-all duration-150" style={{ color: "var(--accent)" }}>
           All projects
         </Link>
       </div>
@@ -46,7 +46,7 @@ export function ContinueWorking({ projects }: ContinueWorkingProps) {
           const status = statusConfig[project.status] || statusConfig["In Progress"];
           return (
             <Link key={project.id} href={`/projects/${project.id}`}>
-              <div className="group rounded-xl border border-border bg-card transition-all duration-200 hover:border-[var(--border-hover)] hover:shadow-[var(--shadow-elevated)]">
+              <div className="group rounded-xl border border-border bg-card transition-all duration-200 hover:border-[var(--border-hover)] hover:shadow-[var(--shadow-elevated)] hover:scale-[1.01]">
                 <div className="px-6 py-5">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
