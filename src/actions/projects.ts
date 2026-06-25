@@ -27,11 +27,11 @@ export async function createProject(formData: FormData) {
     : [];
 
   try {
-    await prisma.project.create({
+    const project = await prisma.project.create({
       data: { title, description: description || "", status, techStack, tags, userId: session.user.id },
     });
     revalidatePath("/projects");
-    return { success: true };
+    return { success: true, id: project.id };
   } catch {
     return { error: "Failed to create project" };
   }

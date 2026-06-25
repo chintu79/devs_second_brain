@@ -22,11 +22,11 @@ export async function createNote(formData: FormData) {
     : [];
 
   try {
-    await prisma.note.create({
+    const note = await prisma.note.create({
       data: { title, content: content || "", category, tags, userId: session.user.id },
     });
     revalidatePath("/notes");
-    return { success: true };
+    return { success: true, id: note.id };
   } catch {
     return { error: "Failed to create note" };
   }

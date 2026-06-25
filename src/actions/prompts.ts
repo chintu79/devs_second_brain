@@ -23,11 +23,11 @@ export async function createPrompt(formData: FormData) {
     : [];
 
   try {
-    await prisma.prompt.create({
+    const created = await prisma.prompt.create({
       data: { title, prompt, category, tags, useCase: useCase || "", userId: session.user.id },
     });
     revalidatePath("/prompts");
-    return { success: true };
+    return { success: true, id: created.id };
   } catch {
     return { error: "Failed to create prompt" };
   }

@@ -14,17 +14,17 @@ const containerVariants = {
 };
 
 const childVariants = {
-  hidden: { opacity: 0, y: 24 },
+  hidden: { opacity: 0, y: 24, filter: "blur(4px)" },
   visible: {
-    opacity: 1, y: 0,
+    opacity: 1, y: 0, filter: "blur(0px)",
     transition: { duration: 0.5, ease: ease.decelerate },
   },
 };
 
 const mockupVariants = {
-  hidden: { opacity: 0, y: 32, scale: 0.98 },
+  hidden: { opacity: 0, y: 32, scale: 0.98, filter: "blur(6px)" },
   visible: {
-    opacity: 1, y: 0, scale: 1,
+    opacity: 1, y: 0, scale: 1, filter: "blur(0px)",
     transition: { duration: 0.6, delay: 0.5, ease: ease.decelerate },
   },
 };
@@ -46,7 +46,7 @@ export function HeroEntrance() {
 
       <motion.div variants={childVariants}>
         <h1 className="text-[clamp(2.8rem,7vw,5.5rem)] font-bold tracking-[-0.03em] leading-[1.04] mb-6 max-w-4xl mx-auto">
-          Never lose another<br />
+          Never lose a useful<br />
           <TypewriterText />
         </h1>
       </motion.div>

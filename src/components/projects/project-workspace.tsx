@@ -145,7 +145,7 @@ export function ProjectWorkspace({ projects, resources, prompts, notes }: Projec
       />
 
       {/* ── List column ── */}
-      <div className={`${selectedId ? "w-80" : "flex-1"} shrink-0 border-r border-border/50 flex flex-col`}>
+      <div className={`${selectedId ? "w-80" : "flex-1"} shrink-0 border-r border-border/50 flex flex-col px-2`}>
         <div className="px-3 pt-3 pb-2 border-b border-border/30">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
@@ -316,11 +316,10 @@ function WorkspacePanel({
             <button
               key={tab}
               onClick={() => onTabChange(tab.toLowerCase())}
-              className={`px-4 py-2.5 text-xs font-medium border-b-2 transition-all duration-150 ${
-                activeTab === tab.toLowerCase()
-                  ? "border-primary text-foreground"
-                  : "border-transparent text-muted-foreground hover:text-foreground hover:scale-[1.02]"
-              }`}
+              className={`px-4 py-2.5 text-xs font-medium border-b-2 transition-all duration-150 ${activeTab === tab.toLowerCase()
+                ? "border-primary text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground hover:scale-[1.02]"
+                }`}
             >
               {tab}
             </button>

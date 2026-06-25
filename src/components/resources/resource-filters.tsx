@@ -89,7 +89,7 @@ export function ResourceFilters({
       {hasActiveFilters && (
         <button
           onClick={() => { onCategoryChange(null); onTagChange(null); }}
-          className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground hover:scale-[1.03] transition-all duration-150"
         >
           <X className="h-3 w-3" />
           Clear filters

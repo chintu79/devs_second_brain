@@ -32,7 +32,7 @@ export function PromptCard({ prompt: p }: PromptCardProps) {
 
   return (
     <>
-      <div className="group rounded-lg border border-border bg-card overflow-hidden card-hover">
+      <div className="group rounded-lg border border-border bg-card overflow-hidden transition-all duration-150 hover:-translate-y-0.5 hover:border-[var(--border-hover)] hover:shadow-[var(--shadow-elevated)] hover:scale-[1.01]">
         <div className="p-3.5">
           <div className="flex items-start gap-3">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted">
@@ -46,7 +46,7 @@ export function PromptCard({ prompt: p }: PromptCardProps) {
                 </div>
                 <div className="flex items-center gap-0.5 shrink-0">
                   <form action={async () => { await toggleFavorite(p.id); }}>
-                    <button type="submit" className={`flex h-7 w-7 items-center justify-center rounded transition-colors ${p.favorite ? "text-amber-400" : "text-muted-foreground hover:text-amber-400 hover:bg-muted"}`}>
+                    <button type="submit" className={`flex h-7 w-7 items-center justify-center rounded transition-all duration-150 hover:scale-[1.1] ${p.favorite ? "text-amber-400" : "text-muted-foreground hover:text-amber-400 hover:bg-muted"}`}>
                       <Star className={`h-3 w-3 ${p.favorite ? "fill-amber-400" : ""}`} />
                     </button>
                   </form>
@@ -68,10 +68,10 @@ export function PromptCard({ prompt: p }: PromptCardProps) {
                     {p.tags.length > 3 && <span className="text-[10px] text-muted-foreground">+{p.tags.length - 3}</span>}
                   </div>
                   <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button className="flex h-7 w-7 items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors" onClick={() => setOpen(true)}>
+                    <button className="flex h-7 w-7 items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-150 hover:scale-[1.1]" onClick={() => setOpen(true)}>
                       <Pencil className="h-3 w-3" />
                     </button>
-                    <button className="flex h-7 w-7 items-center justify-center rounded text-muted-foreground hover:text-red-400 hover:bg-muted transition-colors" onClick={handleDelete}>
+                    <button className="flex h-7 w-7 items-center justify-center rounded text-muted-foreground hover:text-red-400 hover:bg-muted transition-all duration-150 hover:scale-[1.1]" onClick={handleDelete}>
                       <Trash2 className="h-3 w-3" />
                     </button>
                   </div>

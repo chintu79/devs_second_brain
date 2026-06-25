@@ -9,7 +9,7 @@ interface CommandBarProps {
 
 export function CommandBar({ onOpenPalette }: CommandBarProps) {
   return (
-    <div className="flex h-14 items-center gap-3 px-5 border-b border-border bg-background">
+    <div className="flex h-14 items-center gap-3 px-5 py-3 border-b border-border bg-background">
       <div className="flex-1 max-w-xl">
         <button
           onClick={onOpenPalette}

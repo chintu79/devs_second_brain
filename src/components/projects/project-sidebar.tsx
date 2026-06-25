@@ -57,10 +57,10 @@ export function ProjectSidebar({
   ];
 
   return (
-    <div className="w-56 shrink-0 border-r border-border/50 bg-sidebar flex flex-col overflow-y-auto">
+    <div className="h-[100vh] w-56 shrink-0 border-r border-border/50 bg-sidebar flex flex-col overflow-y-auto">
       <div className="px-3 pt-3 pb-2 flex items-center justify-between border-b border-border/30">
         <span className="text-xs font-semibold text-section-foreground uppercase tracking-[0.1em]">Projects</span>
-        <button onClick={onCreate} className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors">
+        <button onClick={onCreate} className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 hover:scale-[1.1] transition-all duration-150">
           <Plus className="h-4 w-4" />
         </button>
       </div>
@@ -104,7 +104,7 @@ function CollapsibleSection({ label, icon: Icon, collapsed, onToggle, children }
 }) {
   return (
     <div className="pt-2">
-      <button onClick={onToggle} className="flex items-center gap-2 w-full px-3 py-1.5 text-xs font-semibold text-section-foreground uppercase tracking-[0.1em] hover:text-foreground transition-colors">
+      <button onClick={onToggle} className="flex items-center gap-2 w-full px-3 py-1.5 text-xs font-semibold text-section-foreground uppercase tracking-[0.1em] hover:text-foreground hover:scale-[1.02] transition-all duration-150">
         <Icon className="h-3.5 w-3.5" />
         {label}
         <ChevronDown className={`h-3 w-3 ml-auto transition-transform duration-150 ${collapsed ? "-rotate-90" : ""}`} />

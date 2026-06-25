@@ -126,7 +126,7 @@ function CollapsibleSection({
 }) {
   return (
     <div className="pt-2">
-      <button onClick={onToggle} className="flex items-center gap-2 w-full px-3 py-1.5 text-xs font-semibold text-section-foreground uppercase tracking-[0.1em] hover:text-foreground transition-colors">
+      <button onClick={onToggle} className="flex items-center gap-2 w-full px-3 py-1.5 text-xs font-semibold text-section-foreground uppercase tracking-[0.1em] hover:text-foreground hover:scale-[1.02] transition-all duration-150">
         <Icon className="h-3.5 w-3.5" />
         {label}
         <ChevronDown className={`h-3.5 w-3.5 ml-auto transition-transform duration-150 ${collapsed ? "-rotate-90" : ""}`} />

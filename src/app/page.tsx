@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { Bookmark, Sparkles, StickyNote, FolderKanban, Radio, History, GitFork, ArrowRight, Search, Layers, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { FadeIn } from "@/components/landing/fade-in";
+import { ScrollReveal } from "@/components/shared/scroll-reveal";
 import { HeroEntrance } from "@/components/landing/hero-entrance";
 import { AnimatedArrow } from "@/components/landing/animated-arrow";
-import { ThemeToggle } from "@/components/theme/theme-toggle";
+import { Navbar } from "@/components/landing/navbar";
+import { SmoothScroll } from "@/components/landing/smooth-scroll";
 
 const features = [
   { icon: Bookmark, title: "Resource Vault", desc: "Save useful links, articles, and dev tools. Extract key insights and tag them for later uses." },
@@ -25,44 +26,9 @@ const workflowSteps = [
 
 export default function LandingPage() {
   return (
+    <SmoothScroll>
     <div className="flex flex-col min-h-screen bg-background text-foreground selection:bg-primary/30">
-      {/* ── Navigation ── */}
-      <nav className="sticky top-0 z-50 border-b border-border/50 bg-background/70 backdrop-blur-xl">
-        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-6">
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary transition-transform duration-200 group-hover:scale-105">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 3a6 6 0 0 0-6 6v2.5c0 3.5 2 6.5 6 8.5 4-2 6-5 6-8.5V9a6 6 0 0 0-6-6z" />
-              </svg>
-            </div>
-            <span className="text-sm font-semibold tracking-tight">Dev Second Brain</span>
-          </Link>
-          <div className="hidden md:flex items-center gap-1">
-            {["Features", "Open Source", "Pricing", "Docs"].map((link) => (
-              <Link
-                key={link}
-                href="#"
-                className="relative px-3 py-1.5 text-sm text-muted-foreground/80 hover:text-foreground transition-all duration-200 rounded-md hover:bg-muted/60 hover:scale-[1.03]"
-              >
-                {link}
-              </Link>
-            ))}
-          </div>
-          <div className="flex items-center gap-3">
-            <ThemeToggle />
-            <Link href="/login">
-              <Button variant="ghost" className="text-sm text-muted-foreground/80 hover:text-foreground h-9 transition-all duration-200 hover:bg-muted/60 hover:scale-[1.03]">
-                Sign in
-              </Button>
-            </Link>
-            <Link href="/register">
-              <Button className="text-sm h-9 px-4 bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_0_0_1px_rgba(99,102,241,0.3)] hover:shadow-[0_0_0_2px_rgba(99,102,241,0.4)] transition-all duration-200">
-                Get Started
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <Navbar />
 
       <main>
         {/* ── Hero ── */}
@@ -75,25 +41,25 @@ export default function LandingPage() {
         {/* ── Features ── */}
         <section id="features" className="py-24 md:py-32">
           <div className="mx-auto max-w-6xl px-6">
-            <FadeIn>
+            <ScrollReveal>
               <div className="text-center mb-16">
                 <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">Everything a developer needs</h2>
                 <p className="text-muted-foreground/70 text-base max-w-sm mx-auto leading-relaxed">Six vaults working together as one unified memory system.</p>
               </div>
-            </FadeIn>
+            </ScrollReveal>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {features.map((f, i) => {
                 const Icon = f.icon;
                 return (
-                  <FadeIn key={f.title} delay={i * 60}>
-                    <div className="group rounded-xl border border-border bg-card p-6 transition-all duration-300 hover:-translate-y-0.5 hover:scale-[1.02] hover:border-[var(--border-hover)] hover:shadow-[var(--shadow-elevated)]">
+                  <ScrollReveal key={f.title} delay={i * 60}>
+                    <div className="group rounded-xl border border-border bg-card p-6 transition-all duration-300 hover:-translate-y-0.5 hover:scale-[1.01] hover:border-[var(--border-hover)] hover:shadow-[var(--shadow-elevated)]">
                       <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted group-hover:bg-primary/10 transition-all duration-300 mb-4 animate-icon-glow">
                         <Icon className="h-[18px] w-[18px] text-muted-foreground/60 group-hover:text-primary transition-colors duration-300" />
                       </div>
                       <h3 className="text-sm font-semibold mb-2">{f.title}</h3>
                       <p className="text-sm text-muted-foreground/70 leading-relaxed">{f.desc}</p>
                     </div>
-                  </FadeIn>
+                  </ScrollReveal>
                 );
               })}
             </div>
@@ -104,7 +70,7 @@ export default function LandingPage() {
         <section className="pb-24 md:pb-32">
           <div className="mx-auto max-w-6xl px-6 space-y-24 md:space-y-32">
             {/* Capture Everything */}
-            <FadeIn>
+            <ScrollReveal>
               <div className="grid md:grid-cols-2 gap-12 md:gap-20 items-center">
                 <div>
                   <h2 className="text-2xl md:text-4xl font-bold tracking-tight mb-5">Capture everything</h2>
@@ -142,10 +108,10 @@ export default function LandingPage() {
                   </div>
                 </div>
               </div>
-            </FadeIn>
+            </ScrollReveal>
 
             {/* Find Anything */}
-            <FadeIn>
+            <ScrollReveal>
               <div className="grid md:grid-cols-2 gap-12 md:gap-20 items-center">
                 <div className="md:order-2">
                   <h2 className="text-2xl md:text-4xl font-bold tracking-tight mb-5">Find anything, instantly</h2>
@@ -198,10 +164,10 @@ export default function LandingPage() {
                   </div>
                 </div>
               </div>
-            </FadeIn>
+            </ScrollReveal>
 
             {/* Rediscover Knowledge */}
-            <FadeIn>
+            <ScrollReveal>
               <div className="grid md:grid-cols-2 gap-12 md:gap-20 items-center">
                 <div>
                   <h2 className="text-2xl md:text-4xl font-bold tracking-tight mb-5">Rediscover what matters</h2>
@@ -237,39 +203,34 @@ export default function LandingPage() {
                   </div>
                 </div>
               </div>
-            </FadeIn>
+            </ScrollReveal>
           </div>
         </section>
 
         {/* ── Developer Workflow ── */}
         <section className="border-t border-border/50 py-24 md:py-32">
           <div className="mx-auto max-w-5xl px-6 text-center">
-            <FadeIn>
+            <ScrollReveal>
               <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">How it works</h2>
               <p className="text-muted-foreground/70 text-base mb-16 max-w-sm mx-auto leading-relaxed">A continuous loop for your developer knowledge.</p>
-            </FadeIn>
-            <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-0">
+            </ScrollReveal>
+            <div className="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-0">
               {workflowSteps.map((step, i) => {
                 const Icon = step.icon;
                 return (
-                  <FadeIn key={step.label} delay={i * 80} className="flex items-center">
+                  <ScrollReveal key={step.label} delay={i * 80} className="flex items-center">
                     <div className="flex flex-col items-center gap-3">
-                      <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-border bg-card transition-all duration-300 hover:-translate-y-1 hover:scale-[1.05] hover:border-[var(--border-hover)] hover:shadow-[var(--shadow-elevated)] hover:bg-primary/[0.03]">
-                        <Icon className="h-6 w-6 text-muted-foreground/60" />
+                      <div className="flex h-20 w-20 items-center justify-center rounded-2xl border border-border bg-card transition-all duration-300 hover:-translate-y-1 hover:scale-[1.05] hover:border-[var(--border-hover)] hover:shadow-[var(--shadow-elevated)] hover:bg-primary/[0.03]">
+                        <Icon className="h-8 w-8 text-muted-foreground/60" />
                       </div>
                       <span className="text-sm font-semibold text-muted-foreground/80">{step.label}</span>
                     </div>
                     {i < workflowSteps.length - 1 && (
-                      <>
-                        <div className="hidden md:flex items-center px-8">
-                          <AnimatedArrow />
-                        </div>
-                        <div className="flex md:hidden py-2">
-                          <AnimatedArrow mobile />
-                        </div>
-                      </>
+                      <div className="hidden md:flex items-center self-center px-8 pt-8">
+                        <AnimatedArrow />
+                      </div>
                     )}
-                  </FadeIn>
+                  </ScrollReveal>
                 );
               })}
             </div>
@@ -279,7 +240,7 @@ export default function LandingPage() {
         {/* ── Open Source ── */}
         <section className="py-24 md:py-32">
           <div className="mx-auto max-w-3xl px-6 text-center">
-            <FadeIn>
+            <ScrollReveal>
               <div className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/40 px-4 py-1.5 text-xs font-medium text-muted-foreground/80 mb-6">
                 <GitFork className="h-3 w-3" />
                 Open Source
@@ -301,14 +262,14 @@ export default function LandingPage() {
                   </Button>
                 </Link>
               </div>
-            </FadeIn>
+            </ScrollReveal>
           </div>
         </section>
 
         {/* ── Final CTA ── */}
         <section className="border-t border-border/50 py-24 md:py-32">
           <div className="mx-auto max-w-3xl px-6 text-center">
-            <FadeIn>
+            <ScrollReveal>
               <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-5">Stop losing valuable developer knowledge.</h2>
               <p className="text-muted-foreground/70 text-base mb-10 max-w-sm mx-auto leading-relaxed">Build your personal memory system today. It&apos;s free for solo developers.</p>
               <div className="flex items-center justify-center gap-4">
@@ -325,7 +286,7 @@ export default function LandingPage() {
                   </Button>
                 </Link>
               </div>
-            </FadeIn>
+            </ScrollReveal>
           </div>
         </section>
       </main>
@@ -343,11 +304,11 @@ export default function LandingPage() {
               <span className="text-xs text-muted-foreground/60">Dev Second Brain</span>
             </div>
             <div className="flex items-center gap-6 text-xs text-muted-foreground/60">
-              <Link href="#" className="hover:text-foreground/80 transition-colors duration-200">Documentation</Link>
-              <Link href="https://github.com" className="hover:text-foreground/80 transition-colors duration-200">GitHub</Link>
-              <Link href="#" className="hover:text-foreground/80 transition-colors duration-200">Privacy</Link>
-              <Link href="#" className="hover:text-foreground/80 transition-colors duration-200">Terms</Link>
-              <Link href="#" className="hover:text-foreground/80 transition-colors duration-200">Contact</Link>
+              <Link href="#" className="hover:text-foreground/80 hover:scale-[1.02] transition-all duration-150">Documentation</Link>
+              <Link href="https://github.com" className="hover:text-foreground/80 hover:scale-[1.02] transition-all duration-150">GitHub</Link>
+              <Link href="#" className="hover:text-foreground/80 hover:scale-[1.02] transition-all duration-150">Privacy</Link>
+              <Link href="#" className="hover:text-foreground/80 hover:scale-[1.02] transition-all duration-150">Terms</Link>
+              <Link href="#" className="hover:text-foreground/80 hover:scale-[1.02] transition-all duration-150">Contact</Link>
             </div>
           </div>
           <div className="mt-8 text-center text-[11px] text-muted-foreground/40">
@@ -356,5 +317,6 @@ export default function LandingPage() {
         </div>
       </footer>
     </div>
+    </SmoothScroll>
   );
 }

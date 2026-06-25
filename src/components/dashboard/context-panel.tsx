@@ -37,7 +37,7 @@ export function ContextPanel({ recentActivity, recentNotes }: ContextPanelProps)
           <div>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xs font-semibold text-section-foreground uppercase tracking-[0.12em]">Notes</h3>
-              <Link href="/notes" className="text-xs font-medium text-section-foreground hover:text-foreground transition-colors">
+              <Link href="/notes" className="text-xs font-medium text-section-foreground hover:text-foreground hover:scale-[1.02] transition-all duration-150">
                 All notes
               </Link>
             </div>
@@ -46,7 +46,7 @@ export function ContextPanel({ recentActivity, recentNotes }: ContextPanelProps)
                 <Link
                   key={note.id}
                   href="/notes"
-                  className="group flex items-center gap-2.5 rounded-lg px-2.5 py-2.5 text-sm text-foreground/80 hover:text-foreground hover:bg-muted/40 transition-all"
+                  className="group flex items-center gap-2.5 rounded-lg px-2.5 py-2.5 text-sm text-foreground/80 hover:text-foreground hover:bg-muted/40 hover:scale-[1.02] transition-all duration-150"
                 >
                   <StickyNote className="h-4 w-4 shrink-0 text-secondary-foreground group-hover:text-primary transition-colors" />
                   <span className="truncate">{note.title}</span>

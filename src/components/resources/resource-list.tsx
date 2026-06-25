@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Search, Plus } from "lucide-react";
+import { Search } from "lucide-react";
 import { ResourceItem } from "./resource-item";
 import { ResourceFilters } from "./resource-filters";
 import { ResourceEmpty } from "./resource-empty";
@@ -88,8 +88,7 @@ export function ResourceList({ resources, allCategories, allTags }: ResourceList
 
   return (
     <>
-      <div className="flex flex-col xl:flex-row gap-6">
-        <div className="flex-1 min-w-0 space-y-5">
+      <div className="space-y-5">
           {/* Large Search Bar */}
           <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -99,15 +98,8 @@ export function ResourceList({ resources, allCategories, allTags }: ResourceList
               placeholder="Search resources, repositories, articles..."
               className="flex h-12 w-full rounded-xl border border-border bg-card pl-12 pr-4 text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all"
             />
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
-              <button
-                onClick={() => setDialogOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors"
-              >
-                <Plus className="h-3.5 w-3.5" />
-                Add
-              </button>
-              <kbd className="hidden sm:inline-flex text-[10px] text-muted-foreground border border-border rounded px-1.5 py-0.5 bg-muted">⌘K</kbd>
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 items-center gap-2 hidden sm:flex">
+              <kbd className="text-[10px] text-muted-foreground border border-border rounded px-1.5 py-0.5 bg-muted">⌘K</kbd>
             </div>
           </div>
 
@@ -228,7 +220,6 @@ export function ResourceList({ resources, allCategories, allTags }: ResourceList
             </div>
           )}
         </div>
-      </div>
 
       <ResourceDialog open={dialogOpen} onOpenChange={setDialogOpen} />
     </>

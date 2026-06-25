@@ -4,6 +4,7 @@ import { ArrowLeft, ExternalLink, Bookmark, Calendar, Heart } from "lucide-react
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
+import { LinkedItems } from "@/components/shared/linked-items";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -57,7 +58,7 @@ export default async function ResourceDetailPage({ params }: PageProps) {
               href={resource.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1.5"
+              className="text-sm text-muted-foreground hover:text-foreground hover:scale-[1.02] transition-all duration-150 inline-flex items-center gap-1.5"
             >
               {domain}
               <ExternalLink className="h-3.5 w-3.5" />
@@ -128,7 +129,7 @@ export default async function ResourceDetailPage({ params }: PageProps) {
                 <Link
                   key={tag}
                   href={`/resources?q=${tag}`}
-                  className="px-2.5 py-1 rounded-lg text-xs font-medium bg-muted text-secondary-foreground hover:text-foreground hover:bg-muted/80 transition-colors"
+                  className="px-2.5 py-1 rounded-lg text-xs font-medium bg-muted text-secondary-foreground hover:text-foreground hover:bg-muted/80 hover:scale-[1.03] transition-all duration-150"
                 >
                   {tag}
                 </Link>
@@ -136,6 +137,8 @@ export default async function ResourceDetailPage({ params }: PageProps) {
             </div>
           </div>
         )}
+
+        <LinkedItems type="resource" id={resource.id} />
 
         {/* Actions */}
         <div className="flex items-center gap-3 pt-4 border-t border-border">

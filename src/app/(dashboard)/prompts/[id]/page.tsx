@@ -4,6 +4,7 @@ import { ArrowLeft, Sparkles, Star, Copy, Calendar, Clock, Hash, Bookmark } from
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
+import { LinkedItems } from "@/components/shared/linked-items";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -132,7 +133,7 @@ export default async function PromptDetailPage({ params }: PageProps) {
                 <Link
                   key={tag}
                   href={`/prompts?q=${tag}`}
-                  className="px-2.5 py-1 rounded-lg text-xs font-medium bg-muted text-secondary-foreground hover:text-foreground hover:bg-muted/80 transition-colors"
+                  className="px-2.5 py-1 rounded-lg text-xs font-medium bg-muted text-secondary-foreground hover:text-foreground hover:bg-muted/80 hover:scale-[1.03] transition-all duration-150"
                 >
                   {tag}
                 </Link>
@@ -140,6 +141,8 @@ export default async function PromptDetailPage({ params }: PageProps) {
             </div>
           </div>
         )}
+
+        <LinkedItems type="prompt" id={prompt.id} />
 
         {/* Related Prompts */}
         {relatedPrompts.length > 0 && (

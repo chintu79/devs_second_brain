@@ -3,7 +3,7 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Search, Plus } from "lucide-react";
+import { Search } from "lucide-react";
 import { PromptCard } from "./prompt-card";
 import { PromptPreviewPanel } from "./prompt-preview-panel";
 import { PromptFilters } from "./prompt-filters";
@@ -159,14 +159,7 @@ export function PromptList({ prompts, categories }: PromptListProps) {
               placeholder="Search prompts, workflows, agents..."
               className="flex h-12 w-full rounded-xl border border-border bg-card pl-12 pr-4 text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all"
             />
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
-              <button
-                onClick={() => setDialogOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors"
-              >
-                <Plus className="h-3.5 w-3.5" />
-                Add
-              </button>
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 items-center gap-2 hidden sm:flex">
             </div>
           </div>
 

@@ -1,73 +1,148 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import Link from "next/link";
-import { register } from "@/actions/auth";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState } from "react"
+import Link from "next/link"
+import { motion } from "framer-motion"
+import { Eye, EyeOff, UserPlus } from "lucide-react"
+import { register } from "@/actions/auth"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { stagger, fadeInUp } from "@/lib/motion"
 
 export default function RegisterPage() {
-  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   async function handleSubmit(formData: FormData) {
-    setLoading(true);
-    setMessage(null);
-    const result = await register(formData);
-    setLoading(false);
+    setLoading(true)
+    setMessage(null)
+    const result = await register(formData)
+    setLoading(false)
     if (result?.error) {
-      setMessage({ type: "error", text: result.error });
+      setMessage({ type: "error", text: result.error })
     } else if (result?.success) {
-      setMessage({ type: "success", text: result.success });
+      setMessage({ type: "success", text: result.success })
     }
   }
 
   return (
-    <Card className="w-full max-w-sm">
-      <CardHeader className="text-center">
-        <CardTitle>Create an account</CardTitle>
-        <CardDescription>Enter your details to get started</CardDescription>
-      </CardHeader>
-      <form action={handleSubmit}>
-        <CardContent className="space-y-4">
-          {message && (
-            <div
-              className={`rounded-md p-3 text-sm ${
-                message.type === "success"
-                  ? "bg-green-500/10 text-green-600"
-                  : "bg-destructive/10 text-destructive"
-              }`}
+    <motion.div
+      className="w-full max-w-sm"
+      variants={stagger.container}
+      initial="hidden"
+      animate="visible"
+    >
+      <motion.div variants={fadeInUp} className="mb-8">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[var(--color-prompts)]/10 md:hidden">
+            <UserPlus className="h-5 w-5 text-[var(--color-prompts)]" />
+          </div>
+          <h1 className="text-lg font-semibold text-[var(--text-primary)]">Create an account</h1>
+        </div>
+        <p className="text-sm text-[var(--text-muted)]">
+          Enter your details to get started
+        </p>
+      </motion.div>
+
+      <form action={handleSubmit} className="space-y-5">
+        {message && (
+          <motion.div
+            initial={{ opacity: 0, y: 8, filter: "blur(4px)" }}
+            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+            transition={{ duration: 0.25, ease: [0, 0, 0.2, 1] }}
+            className={`rounded-xl border p-3 text-sm ${
+              message.type === "success"
+                ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400"
+                : "border-destructive/20 bg-destructive/5 text-destructive"
+            }`}
+          >
+            {message.type === "success" ? (
+              <span>
+                {message.text}{" "}
+                <Link href="/login" className="underline underline-offset-2">
+                  Sign in
+                </Link>
+              </span>
+            ) : (
+              message.text
+            )}
+          </motion.div>
+        )}
+
+        <motion.div variants={fadeInUp} className="space-y-2">
+          <Label htmlFor="name" className="text-sm text-[var(--text-secondary)]">
+            Name
+          </Label>
+          <Input
+            id="name"
+            name="name"
+            placeholder="John Doe"
+            className="h-11 rounded-xl border-border/40 bg-muted/30 px-4 text-sm transition-all duration-200 placeholder:text-[var(--text-muted)] focus-visible:border-[var(--color-prompts)]/40 focus-visible:ring-[var(--color-prompts)]/15"
+          />
+        </motion.div>
+
+        <motion.div variants={fadeInUp} className="space-y-2">
+          <Label htmlFor="email" className="text-sm text-[var(--text-secondary)]">
+            Email
+          </Label>
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            placeholder="you@example.com"
+            required
+            className="h-11 rounded-xl border-border/40 bg-muted/30 px-4 text-sm transition-all duration-200 placeholder:text-[var(--text-muted)] focus-visible:border-[var(--color-prompts)]/40 focus-visible:ring-[var(--color-prompts)]/15"
+          />
+        </motion.div>
+
+        <motion.div variants={fadeInUp} className="space-y-2">
+          <Label htmlFor="password" className="text-sm text-[var(--text-secondary)]">
+            Password
+          </Label>
+          <div className="relative">
+            <Input
+              id="password"
+              name="password"
+              type={showPassword ? "text" : "password"}
+              placeholder="••••••••"
+              required
+              className="h-11 rounded-xl border-border/40 bg-muted/30 px-4 pr-10 text-sm transition-all duration-200 placeholder:text-[var(--text-muted)] focus-visible:border-[var(--color-prompts)]/40 focus-visible:ring-[var(--color-prompts)]/15"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors duration-150"
+              tabIndex={-1}
             >
-              {message.text}
-            </div>
-          )}
-          <div className="space-y-2">
-            <Label htmlFor="name">Name</Label>
-            <Input id="name" name="name" placeholder="John Doe" />
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" name="email" type="email" placeholder="you@example.com" required />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input id="password" name="password" type="password" placeholder="••••••••" required />
-          </div>
-        </CardContent>
-        <CardFooter className="flex flex-col gap-4">
-          <Button type="submit" className="w-full" disabled={loading}>
+        </motion.div>
+
+        <motion.div variants={fadeInUp}>
+          <Button
+            type="submit"
+            className="w-full h-11 rounded-xl text-sm font-medium"
+            disabled={loading}
+          >
             {loading ? "Creating account..." : "Create account"}
           </Button>
-          <p className="text-sm text-muted-foreground">
+        </motion.div>
+
+        <motion.div variants={fadeInUp} className="text-center">
+          <p className="text-sm text-[var(--text-muted)]">
             Already have an account?{" "}
-            <Link href="/login" className="text-primary underline underline-offset-4">
+            <Link
+              href="/login"
+              className="text-[var(--text-primary)] hover:text-[var(--color-prompts)] underline underline-offset-4 transition-colors duration-150"
+            >
               Sign in
             </Link>
           </p>
-        </CardFooter>
+        </motion.div>
       </form>
-    </Card>
-  );
+    </motion.div>
+  )
 }

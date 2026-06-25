@@ -5,18 +5,13 @@ import { ease } from "@/lib/motion";
 
 interface AnimatedArrowProps {
   className?: string;
-  mobile?: boolean;
 }
 
-export function AnimatedArrow({ className = "", mobile = false }: AnimatedArrowProps) {
+export function AnimatedArrow({ className = "" }: AnimatedArrowProps) {
   return (
     <motion.div
       className={className}
-      animate={
-        mobile
-          ? { y: [0, 4, 0], rotate: [0, 3, 0] }
-          : { x: [0, 6, 0], rotate: [0, 3, 0] }
-      }
+      animate={{ x: [0, 6, 0], rotate: [0, 6, 0] }}
       transition={{
         duration: 2,
         repeat: Infinity,
@@ -24,11 +19,10 @@ export function AnimatedArrow({ className = "", mobile = false }: AnimatedArrowP
       }}
     >
       <svg
-        width="28"
-        height="28"
+        width="36"
+        height="36"
         viewBox="0 0 24 24"
         fill="none"
-        className={mobile ? "rotate-90" : ""}
       >
         <path
           d="M5 12h14M13 5l7 7-7 7"
@@ -36,7 +30,7 @@ export function AnimatedArrow({ className = "", mobile = false }: AnimatedArrowP
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className="text-primary/30"
+          className="text-primary/40"
         />
       </svg>
     </motion.div>

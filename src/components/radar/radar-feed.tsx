@@ -65,46 +65,46 @@ export function RadarFeed({
       </div>
 
       {/* Feed */}
-      <div className="px-5 py-4 space-y-8">
-          {filteredSections.length === 0 || (filteredSections.length === 1 && filteredSections[0].repos.length === 0) ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted mb-4">
-                <Radio className="h-6 w-6 text-muted-foreground" />
-              </div>
-              <h3 className="text-base font-medium text-foreground mb-1">No repositories found</h3>
-              <p className="text-sm text-muted-foreground">Try a different search or filter</p>
+      <div className="px-5 py-4 pb-12 space-y-8">
+        {filteredSections.length === 0 || (filteredSections.length === 1 && filteredSections[0].repos.length === 0) ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted mb-4">
+              <Radio className="h-6 w-6 text-muted-foreground" />
             </div>
-          ) : (
-            filteredSections.map((section) => (
-              <Section key={section.id} label={section.label} count={section.repos.length}>
-                {section.repos.length === 0 ? (
-                  <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
-                    Nothing to show yet in this section
-                  </div>
-                ) : (
-                  <motion.div
-                    className="space-y-3"
-                    variants={stagger.container}
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true, margin: "-30px" }}
-                  >
-                    {section.repos.map((repo) => (
-                      <motion.div key={repo.id} variants={fadeInUp}>
-                        <RepositoryCard
-                          repo={repo}
-                          selected={selectedId === repo.id}
-                          onSelect={onSelect}
-                          onBookmark={onBookmark}
-                          onSave={onSave}
-                        />
-                      </motion.div>
-                    ))}
-                  </motion.div>
-                )}
-              </Section>
-            ))
-          )}
+            <h3 className="text-base font-medium text-foreground mb-1">No repositories found</h3>
+            <p className="text-sm text-muted-foreground">Try a different search or filter</p>
+          </div>
+        ) : (
+          filteredSections.map((section) => (
+            <Section key={section.id} label={section.label} count={section.repos.length}>
+              {section.repos.length === 0 ? (
+                <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
+                  Nothing to show yet in this section
+                </div>
+              ) : (
+                <motion.div
+                  className="space-y-3"
+                  variants={stagger.container}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true, margin: "-30px" }}
+                >
+                  {section.repos.map((repo) => (
+                    <motion.div key={repo.id} variants={fadeInUp}>
+                      <RepositoryCard
+                        repo={repo}
+                        selected={selectedId === repo.id}
+                        onSelect={onSelect}
+                        onBookmark={onBookmark}
+                        onSave={onSave}
+                      />
+                    </motion.div>
+                  ))}
+                </motion.div>
+              )}
+            </Section>
+          ))
+        )}
       </div>
     </div>
   );

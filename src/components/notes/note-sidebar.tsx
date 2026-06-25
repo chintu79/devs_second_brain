@@ -64,12 +64,12 @@ export function NoteSidebar({
   ];
 
   return (
-    <div className="w-56 shrink-0 border-r border-border/50 bg-sidebar flex flex-col overflow-y-auto">
+    <div className="h-[100vh] w-56 shrink-0 border-r border-border/50 bg-sidebar flex flex-col overflow-y-auto">
       <div className="px-3 pt-3 pb-2 flex items-center justify-between border-b border-border/30">
         <span className="text-xs font-semibold text-section-foreground uppercase tracking-[0.1em]">Notes</span>
         <button
           onClick={onCreate}
-          className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+          className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 text-primary hover:bg-primary/20 hover:scale-[1.1] transition-all duration-150"
         >
           <Plus className="h-4 w-4" />
         </button>
@@ -84,9 +84,8 @@ export function NoteSidebar({
               onCategoryChange(null);
               onTagChange(null);
             }}
-            className={`sidebar-item w-full text-sm transition-transform duration-150 ${
-              activeSection === item.id && !activeCategory && !activeTag ? "sidebar-item-active" : "hover:scale-[1.02]"
-            }`}
+            className={`sidebar-item w-full text-sm transition-transform duration-150 ${activeSection === item.id && !activeCategory && !activeTag ? "sidebar-item-active" : "hover:scale-[1.02]"
+              }`}
           >
             <item.icon className="h-4 w-4 shrink-0" />
             <span className="flex-1 text-left">{item.label}</span>
@@ -100,7 +99,7 @@ export function NoteSidebar({
 
         {/* Knowledge Clusters */}
         <CollapsibleSection
-          label="Knowledge Clusters"
+          label="Clusters"
           icon={Layers}
           collapsed={collapsed.clusters}
           onToggle={() => toggleCollapse("clusters")}
@@ -113,9 +112,8 @@ export function NoteSidebar({
                 onTagChange(null);
                 onSectionChange(`cluster:${c.name}`);
               }}
-              className={`sidebar-item w-full text-sm transition-transform duration-150 ${
-                activeSection === `cluster:${c.name}` ? "sidebar-item-active" : "hover:scale-[1.02]"
-              }`}
+              className={`sidebar-item w-full text-sm transition-transform duration-150 ${activeSection === `cluster:${c.name}` ? "sidebar-item-active" : "hover:scale-[1.02]"
+                }`}
             >
               <span className="w-2 h-2 rounded-full bg-primary/60 shrink-0" />
               <span className="flex-1 text-left">{c.name}</span>
@@ -139,9 +137,8 @@ export function NoteSidebar({
                 onTagChange(null);
                 onSectionChange("all");
               }}
-              className={`sidebar-item w-full text-sm transition-transform duration-150 ${
-                activeCategory === c.name ? "sidebar-item-active" : "hover:scale-[1.02]"
-              }`}
+              className={`sidebar-item w-full text-sm transition-transform duration-150 ${activeCategory === c.name ? "sidebar-item-active" : "hover:scale-[1.02]"
+                }`}
             >
               <span className="flex-1 text-left capitalize">{c.name}</span>
               <span className="text-xs text-muted-foreground">{c.count}</span>
@@ -164,9 +161,8 @@ export function NoteSidebar({
                 onCategoryChange(null);
                 onSectionChange("all");
               }}
-              className={`sidebar-item w-full text-sm transition-transform duration-150 ${
-                activeTag === t.name ? "sidebar-item-active" : "hover:scale-[1.02]"
-              }`}
+              className={`sidebar-item w-full text-sm transition-transform duration-150 ${activeTag === t.name ? "sidebar-item-active" : "hover:scale-[1.02]"
+                }`}
             >
               <span className="flex-1 text-left">{t.name}</span>
               <span className="text-xs text-muted-foreground">{t.count}</span>
@@ -195,7 +191,7 @@ function CollapsibleSection({
     <div className="pt-2">
       <button
         onClick={onToggle}
-        className="flex items-center gap-2 w-full px-3 py-1.5 text-xs font-semibold text-section-foreground uppercase tracking-[0.1em] hover:text-foreground transition-colors"
+        className="flex items-center gap-2 w-full px-3 py-1.5 text-xs font-semibold text-section-foreground uppercase tracking-[0.1em] hover:text-foreground hover:scale-[1.02] transition-all duration-150"
       >
         <Icon className="h-3.5 w-3.5" />
         {label}

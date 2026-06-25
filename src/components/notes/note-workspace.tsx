@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback, useRef } from "react";
 import { AnimatePresence } from "framer-motion";
-import { Search } from "lucide-react";
+import { Search, Plus } from "lucide-react";
 import { NoteSidebar } from "./note-sidebar";
 import { NoteList } from "./note-list";
 import { NoteReaderPanel } from "./note-reader-panel";
@@ -218,9 +218,8 @@ export function NoteWorkspace({ notes, resources, prompts, projects }: NoteWorks
 
       {/* Notes list */}
       <div
-        className={`w-96 shrink-0 border-r border-border/50 flex flex-col ${
-          selectedId ? "" : "flex-1"
-        }`}
+        className={`w-96 shrink-0 border-r border-border/50 flex flex-col px-2 ${selectedId ? "" : "flex-1"
+          }`}
       >
         {/* Search */}
         <div className="px-4 pt-3 pb-2 border-b border-border/30">
@@ -231,8 +230,17 @@ export function NoteWorkspace({ notes, resources, prompts, projects }: NoteWorks
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search notes..."
-              className="flex h-9 w-full rounded-md border border-border bg-card pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/20 transition-all"
+              className="flex h-9 w-full rounded-md border border-border bg-card pl-9 pr-14 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/20 transition-all"
             />
+            <div className="absolute right-1.5 top-1/2 -translate-y-1/2">
+              <button
+                onClick={() => setCreateOpen(true)}
+                className="flex items-center gap-1 px-2 py-1 rounded-md bg-primary text-primary-foreground text-[11px] font-medium hover:bg-primary/90 hover:scale-[1.03] transition-all duration-150"
+              >
+                <Plus className="h-3 w-3" />
+                Add
+              </button>
+            </div>
           </div>
         </div>
 
@@ -250,7 +258,7 @@ export function NoteWorkspace({ notes, resources, prompts, projects }: NoteWorks
           projects={projects}
           selectedId={selectedId}
           onSelect={handleSelect}
-          onFavorite={() => {}}
+          onFavorite={() => { }}
         />
       </div>
 

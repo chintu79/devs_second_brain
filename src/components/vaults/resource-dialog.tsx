@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { createResource, editResource } from "@/actions/resources";
+import { batchCreateReferences, type LinkItem } from "@/actions/references";
+import { LinkPicker } from "@/components/shared/link-picker";
 
 interface Resource {
   id?: string;
@@ -30,6 +32,7 @@ export function ResourceDialog({ open, onOpenChange, resource }: ResourceDialogP
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [links, setLinks] = useState<LinkItem[]>([]);
   const isEdit = !!resource?.id;
 
   async function handleSubmit(formData: FormData) {
@@ -45,9 +48,11 @@ export function ResourceDialog({ open, onOpenChange, resource }: ResourceDialogP
     if (result?.error) {
       setError(result.error);
     } else {
-      router.refresh();
-      if (!("resource" in result)) {
+      const newId = !isEdit && result?.resource?.id ? result.resource.id : null;
+      if (newId && links.length > 0) {
+        await batchCreateReferences("resource", newId, links);
       }
+      router.refresh();
       onOpenChange(false);
     }
   }
@@ -108,6 +113,10 @@ export function ResourceDialog({ open, onOpenChange, resource }: ResourceDialogP
           <div className="space-y-2">
             <Label htmlFor="notes">Notes</Label>
             <Textarea id="notes" name="notes" defaultValue={resource?.notes || ""} placeholder="Optional notes..." rows={3} />
+          </div>
+
+          <div className="pt-2 border-t border-border/50">
+            <LinkPicker selected={links} onChange={setLinks} />
           </div>
 
           <div className="flex justify-end gap-3">

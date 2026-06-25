@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { createPrompt, editPrompt } from "@/actions/prompts";
+import { batchCreateReferences, type LinkItem } from "@/actions/references";
+import { LinkPicker } from "@/components/shared/link-picker";
 
 interface PromptData {
   id?: string;
@@ -29,6 +31,7 @@ export function PromptDialog({ open, onOpenChange, prompt }: PromptDialogProps) 
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [links, setLinks] = useState<LinkItem[]>([]);
   const isEdit = !!prompt?.id;
 
   async function handleSubmit(formData: FormData) {
@@ -44,6 +47,10 @@ export function PromptDialog({ open, onOpenChange, prompt }: PromptDialogProps) 
     if (result?.error) {
       setError(result.error);
     } else {
+      const newId = !isEdit && "id" in result ? (result as any).id as string : null;
+      if (newId && links.length > 0) {
+        await batchCreateReferences("prompt", newId, links);
+      }
       router.refresh();
       onOpenChange(false);
     }
@@ -98,6 +105,10 @@ export function PromptDialog({ open, onOpenChange, prompt }: PromptDialogProps) 
           <div className="space-y-2">
             <Label htmlFor="tags">Tags (comma separated)</Label>
             <Input id="tags" name="tags" defaultValue={prompt?.tags?.join(", ") || ""} placeholder="react, typescript, review" />
+          </div>
+
+          <div className="pt-2 border-t border-border/50">
+            <LinkPicker selected={links} onChange={setLinks} />
           </div>
 
           <div className="flex justify-end gap-3">

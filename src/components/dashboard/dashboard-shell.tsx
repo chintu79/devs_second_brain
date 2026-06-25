@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { CommandBar } from "./command-bar";
 import { CommandPalette } from "@/components/layout/command-palette";
+import { PageTransitionProvider } from "@/components/layout/page-transition-provider";
 
 interface DashboardShellProps {
   children: React.ReactNode;
@@ -14,7 +15,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
   return (
     <>
       <CommandBar onOpenPalette={() => setPaletteOpen(true)} />
-      {children}
+      <PageTransitionProvider>{children}</PageTransitionProvider>
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
     </>
   );

@@ -77,7 +77,7 @@ export const NoteList = forwardRef<HTMLDivElement, NoteListProps>(
               className={`w-full text-left rounded-lg p-3.5 transition-all duration-150 ${
                 isSelected
                   ? "bg-primary/10 border border-primary/20 shadow-sm"
-                  : "hover:bg-muted/50 border border-transparent"
+                  : "hover:bg-muted/50 hover:border-border/60 hover:scale-[1.01] border border-transparent"
               }`}
             >
               <div className="flex items-start gap-3">

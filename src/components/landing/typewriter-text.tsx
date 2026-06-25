@@ -3,12 +3,12 @@
 import { useState, useEffect, useCallback } from "react";
 
 const phrases = [
-  "useful resource.",
-  "perfect prompt.",
-  "important note.",
+  "resource.",
+  "repository.",
+  "prompt.",
+  "note.",
   "project idea.",
-  "GitHub repository.",
-  "breakthrough insight.",
+  "insight.",
 ];
 
 const TYPING_SPEED = 60;

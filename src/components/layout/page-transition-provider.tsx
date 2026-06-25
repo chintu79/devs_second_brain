@@ -1,16 +1,19 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { pageTransition } from "@/lib/motion";
 
-export function PageTransition({ children }: { children: React.ReactNode }) {
+export function PageTransitionProvider({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+
   return (
     <motion.div
+      key={pathname}
       initial="initial"
       animate="animate"
-      exit="exit"
       variants={pageTransition}
-      className="h-full"
+      className="h-full w-full"
     >
       {children}
     </motion.div>

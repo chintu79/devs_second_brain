@@ -1,13 +1,8 @@
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import { ResourceList } from "@/components/resources/resource-list";
-import { ResourceContextPanel } from "@/components/resources/resource-context-panel";
+import { ResourcesContent } from "./resources-content";
 
-interface PageProps {
-  searchParams: Promise<{ q?: string }>;
-}
-
-export default async function ResourcesPage({ searchParams }: PageProps) {
+export default async function ResourcesPage() {
   const session = await auth();
   const userId = session?.user?.id;
 
@@ -44,18 +39,13 @@ export default async function ResourcesPage({ searchParams }: PageProps) {
   const allTags = [...new Set(resources.flatMap((r) => r.tags))].sort();
 
   return (
-    <div data-accent="resources" className="flex h-full">
-      <div className="flex-1 min-w-0">
-        {/* Page Header */}
-        <div className="mb-8">
-          <h1 className="text-xl font-semibold tracking-tight text-foreground">Resources</h1>
-          <p className="text-sm text-secondary-foreground mt-1">Your developer knowledge library. Store, organize and rediscover valuable resources.</p>
-        </div>
-
-        <ResourceList resources={serialized} allCategories={allCategories} allTags={allTags} />
-      </div>
-
-      <ResourceContextPanel topResources={serialized} recentNotes={recentNotes} projects={projects} />
-    </div>
+    <ResourcesContent
+      resources={serialized}
+      allCategories={allCategories}
+      allTags={allTags}
+      topResources={serialized}
+      recentNotes={recentNotes}
+      projects={projects}
+    />
   );
 }

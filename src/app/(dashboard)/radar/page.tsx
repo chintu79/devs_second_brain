@@ -5,7 +5,7 @@ export const dynamic = "force-static";
 
 export default function RadarPage() {
   return (
-    <div data-accent="radar" className="-m-5 lg:-m-6 h-[calc(100vh-var(--header-height,0px))] flex overflow-hidden">
+    <div data-accent="radar" className="-m-5 pb-8 lg:-m-6 h-[calc(100vh-var(--header-height,0px))] flex overflow-hidden">
       <RadarWorkspace
         repos={allRepos}
         sections={discoverySections}
