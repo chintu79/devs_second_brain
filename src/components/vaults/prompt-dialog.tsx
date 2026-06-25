@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Sparkles, Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +14,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { createPrompt, editPrompt } from "@/actions/prompts";
 import { batchCreateReferences, type LinkItem } from "@/actions/references";
 import { LinkPicker } from "@/components/shared/link-picker";
+import { TagInput } from "@/components/shared/tag-input";
+import { aiSuggestCategory, aiSuggestTags } from "@/actions/ai";
 import { promptSchema } from "@/lib/schemas";
 
 interface PromptData {
@@ -55,6 +58,7 @@ export function PromptDialog({ open, onOpenChange, prompt }: PromptDialogProps) 
     },
   });
 
+  const [aiLoading, setAiLoading] = useState<string | null>(null);
   const { errors, isSubmitting } = form.formState;
 
   async function onSubmit(values: PromptFormValues) {
@@ -109,7 +113,28 @@ export function PromptDialog({ open, onOpenChange, prompt }: PromptDialogProps) 
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="category">Category</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="category">Category</Label>
+              <button
+                type="button"
+                onClick={async () => {
+                  setServerError(null);
+                  setAiLoading("category");
+                  const res = await aiSuggestCategory(
+                    form.watch("title"),
+                    form.watch("prompt") || form.watch("useCase") || "",
+                    ["coding", "debugging", "architecture", "testing", "docs", "other"]
+                  );
+                  setAiLoading(null);
+                  if (res.category) form.setValue("category", res.category as any);
+                  else if (res.error) setServerError(res.error);
+                }}
+                className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {aiLoading === "category" ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                Suggest
+              </button>
+            </div>
             <Controller
               control={form.control}
               name="category"
@@ -138,8 +163,28 @@ export function PromptDialog({ open, onOpenChange, prompt }: PromptDialogProps) 
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="tags">Tags (comma separated)</Label>
-            <Input id="tags" {...form.register("tags")} placeholder="react, typescript, review" />
+            <div className="flex items-center justify-between">
+              <Label>Tags</Label>
+              <button
+                type="button"
+                onClick={async () => {
+                  setServerError(null);
+                  setAiLoading("tags");
+                  const res = await aiSuggestTags(
+                    form.watch("title"),
+                    form.watch("prompt") || form.watch("useCase") || ""
+                  );
+                  setAiLoading(null);
+                  if (res.tags) form.setValue("tags", res.tags);
+                  else if (res.error) setServerError(res.error);
+                }}
+                className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {aiLoading === "tags" ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                Suggest
+              </button>
+            </div>
+            <TagInput value={form.watch("tags")} onChange={(v) => form.setValue("tags", v)} />
           </div>
 
           <div className="pt-2 border-t border-border/50">

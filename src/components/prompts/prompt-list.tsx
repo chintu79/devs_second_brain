@@ -3,12 +3,13 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Search } from "lucide-react";
+import { Search, Loader2, ChevronDown } from "lucide-react";
 import { PromptCard } from "./prompt-card";
 import { PromptPreviewPanel } from "./prompt-preview-panel";
 import { PromptFilters } from "./prompt-filters";
 import { PromptEmpty } from "./prompt-empty";
 import { PromptDialog } from "@/components/vaults/prompt-dialog";
+import { fetchMorePrompts } from "@/actions/prompts";
 import { stagger, fadeInUp } from "@/lib/motion";
 
 interface Prompt {
@@ -25,15 +26,19 @@ interface Prompt {
 }
 
 interface PromptListProps {
-  prompts: Prompt[];
+  initialItems: Prompt[];
+  nextCursor: string | null;
   categories: string[];
 }
 
-export function PromptList({ prompts, categories }: PromptListProps) {
+export function PromptList({ initialItems, nextCursor: initialCursor, categories }: PromptListProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const selectedId = searchParams.get("id");
 
+  const [items, setItems] = useState<Prompt[]>(initialItems);
+  const [cursor, setCursor] = useState<string | null>(initialCursor);
+  const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -41,8 +46,19 @@ export function PromptList({ prompts, categories }: PromptListProps) {
   const listRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
+  async function loadMore() {
+    if (loading || !cursor) return;
+    setLoading(true);
+    const result = await fetchMorePrompts(cursor, 20);
+    if (result) {
+      setItems((prev) => [...prev, ...result.items]);
+      setCursor(result.nextCursor);
+    }
+    setLoading(false);
+  }
+
   const filtered = useMemo(() => {
-    let result = [...prompts];
+    let result = [...items];
 
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
@@ -61,7 +77,7 @@ export function PromptList({ prompts, categories }: PromptListProps) {
     }
 
     return result;
-  }, [prompts, searchQuery, selectedCategory]);
+  }, [items, searchQuery, selectedCategory]);
 
   const sections = useMemo(() => {
     return {
@@ -141,16 +157,11 @@ export function PromptList({ prompts, categories }: PromptListProps) {
   }
 
   const hasSearch = searchQuery.trim().length > 0;
-  const total = prompts.length;
-  const favCount = prompts.filter((p) => p.favorite).length;
-  const usedRecently = prompts.filter((p) => p.lastUsedAt).length;
 
   return (
     <div className="flex h-full gap-0" onKeyDown={handleKeyDown}>
-      {/* List side */}
       <div className={`flex-1 min-w-0 ${selectedId ? "border-r border-border/50" : ""} transition-all duration-200`} ref={listRef} tabIndex={-1}>
         <div className="space-y-5 pr-5">
-          {/* Large Search Bar */}
           <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <input
@@ -163,31 +174,28 @@ export function PromptList({ prompts, categories }: PromptListProps) {
             </div>
           </div>
 
-          {/* Filters */}
           <PromptFilters
             categories={categories}
             selectedCategory={selectedCategory}
             onCategoryChange={setSelectedCategory}
           />
 
-          {/* Metadata */}
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
-            <span>{total} prompt{total !== 1 ? "s" : ""}</span>
-            {favCount > 0 && (
+            <span>{items.length} prompt{items.length !== 1 ? "s" : ""}</span>
+            {sections.favorites.length > 0 && (
               <>
                 <span className="text-border">&middot;</span>
-                <span className="text-amber-400">{favCount} favorite{favCount !== 1 ? "s" : ""}</span>
+                <span className="text-amber-400">{sections.favorites.length} favorite{sections.favorites.length !== 1 ? "s" : ""}</span>
               </>
             )}
-            {usedRecently > 0 && (
+            {sections.recent.length > 0 && (
               <>
                 <span className="text-border">&middot;</span>
-                <span>{usedRecently} recently used</span>
+                <span>{sections.recent.length} recently used</span>
               </>
             )}
           </div>
 
-          {/* Prompt sections */}
           {filtered.length === 0 ? (
             <PromptEmpty hasSearch={hasSearch} searchQuery={searchQuery} onCreate={() => setDialogOpen(true)} />
           ) : (
@@ -233,12 +241,28 @@ export function PromptList({ prompts, categories }: PromptListProps) {
                   ))}
                 </Section>
               )}
+
+              {cursor && (
+                <div className="flex justify-center pt-2 pb-8">
+                  <button
+                    onClick={loadMore}
+                    disabled={loading}
+                    className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-6 py-2.5 text-sm font-medium text-foreground hover:bg-muted hover:scale-[1.02] transition-all duration-150 disabled:opacity-50"
+                  >
+                    {loading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4" />
+                    )}
+                    {loading ? "Loading..." : "Load more"}
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
       </div>
 
-      {/* Preview panel */}
       <AnimatePresence mode="wait">
         {selectedPrompt && (
           <PromptPreviewPanel

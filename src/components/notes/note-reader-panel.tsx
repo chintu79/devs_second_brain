@@ -13,9 +13,11 @@ import {
   Sparkles,
   Link2,
   Layers,
+  Bot,
 } from "lucide-react";
 import { slideInRight } from "@/lib/motion";
 import { deleteNote, toggleNoteFavorite, editNote } from "@/actions/notes";
+import { aiSummarize } from "@/actions/ai";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -91,6 +93,8 @@ export function NoteReaderPanel({
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [summarizing, setSummarizing] = useState(false);
+  const [summary, setSummary] = useState<string | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -117,6 +121,14 @@ export function NoteReaderPanel({
       onClose();
       router.refresh();
     }
+  }
+
+  async function handleSummarize() {
+    if (summarizing || summary) return;
+    setSummarizing(true);
+    const res = await aiSummarize(note.content);
+    setSummarizing(false);
+    if (res.summary) setSummary(res.summary);
   }
 
   async function handleEdit(formData: FormData) {
@@ -184,6 +196,16 @@ export function NoteReaderPanel({
                 <Star className={`h-3.5 w-3.5 ${isFav ? "fill-amber-400" : ""}`} />
               </button>
               <button
+                onClick={handleSummarize}
+                disabled={summarizing}
+                className={`flex h-7 w-7 items-center justify-center rounded-md transition-colors ${
+                  summary ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                }`}
+                title={summary ? "Summary available" : "Summarize"}
+              >
+                <Bot className={`h-3.5 w-3.5 ${summarizing ? "animate-pulse" : ""}`} />
+              </button>
+              <button
                 onClick={() => setEditing(true)}
                 className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground transition-colors"
               >
@@ -238,6 +260,17 @@ export function NoteReaderPanel({
                         #{tag}
                       </span>
                     ))}
+                  </div>
+                )}
+
+                {/* AI Summary */}
+                {summary && (
+                  <div className="mb-8 rounded-lg border border-primary/20 bg-primary/[0.03] p-4">
+                    <div className="flex items-center gap-1.5 text-xs text-primary font-semibold uppercase tracking-[0.1em] mb-2">
+                      <Bot className="h-3.5 w-3.5" />
+                      AI Summary
+                    </div>
+                    <p className="text-sm text-foreground/80 leading-relaxed">{summary}</p>
                   </div>
                 )}
 

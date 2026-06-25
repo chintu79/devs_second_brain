@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Star, GitFork, Bookmark, BookmarkCheck, ArrowUpRight, TrendingUp, Zap, Sparkles, Clock, Plus } from "lucide-react";
+import { toast } from "sonner";
 import { cardHover } from "@/lib/motion";
 import { createResource } from "@/actions/resources";
 import type { Repository } from "@/lib/mock-data";
@@ -39,7 +40,12 @@ export function RepositoryCard({ repo, selected, onSelect, onBookmark }: Reposit
     formData.set("tags", repo.topics.slice(0, 5).join(", "));
     formData.set("reason", `Saved from Open Source Radar — ${repo.stars.toLocaleString()} stars, trending in ${repo.category}`);
     const result = await createResource(formData);
-    if (!result?.error) setSaved(true);
+    if (!result?.error) {
+      setSaved(true);
+      toast.success("Saved to Resources");
+    } else {
+      toast.error(result.error || "Failed to save");
+    }
     setSaving(false);
   }
 

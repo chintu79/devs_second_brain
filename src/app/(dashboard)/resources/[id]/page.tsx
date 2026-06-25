@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
 import { LinkedItems } from "@/components/shared/linked-items";
+import { includeTags, flattenItemTags } from "@/lib/tags";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -25,14 +26,15 @@ export default async function ResourceDetailPage({ params }: PageProps) {
   const userId = session?.user?.id;
   const { id } = await params;
 
-  const resource = await prisma.resource.findUnique({ where: { id } });
+  const resource = await prisma.resource.findUnique({ where: { id }, ...includeTags });
   if (!resource || (userId && resource.userId !== userId)) notFound();
 
-  const catColor = categoryColors[resource.category] || "bg-muted text-muted-foreground";
+  const item = flattenItemTags(resource);
+  const catColor = categoryColors[item.category] || "bg-muted text-muted-foreground";
 
-  let domain = resource.url;
+  let domain = item.url;
   try {
-    domain = new URL(resource.url).hostname.replace("www.", "");
+    domain = new URL(item.url).hostname.replace("www.", "");
   } catch {}
 
   return (
@@ -51,11 +53,11 @@ export default async function ResourceDetailPage({ params }: PageProps) {
           <Bookmark className="h-5 w-5 text-secondary-foreground" />
         </div>
         <div className="flex-1 min-w-0">
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">{resource.title}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">{item.title}</h1>
           <div className="flex items-center gap-3 mt-2">
-            <span className={`text-xs font-medium px-2 py-0.5 rounded capitalize ${catColor}`}>{resource.category}</span>
+            <span className={`text-xs font-medium px-2 py-0.5 rounded capitalize ${catColor}`}>{item.category}</span>
             <a
-              href={resource.url}
+              href={item.url}
               target="_blank"
               rel="noopener noreferrer"
               className="text-sm text-muted-foreground hover:text-foreground hover:scale-[1.02] transition-all duration-150 inline-flex items-center gap-1.5"
@@ -69,7 +71,7 @@ export default async function ResourceDetailPage({ params }: PageProps) {
 
       <div className="space-y-8">
         {/* Reason / Context */}
-        {resource.reason && (
+        {item.reason && (
           <div className="rounded-xl border border-border bg-card p-5">
             <div className="flex items-start gap-3">
               <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10">
@@ -77,17 +79,17 @@ export default async function ResourceDetailPage({ params }: PageProps) {
               </div>
               <div>
                 <h2 className="text-sm font-semibold text-foreground mb-1">Why I saved this</h2>
-                <p className="text-sm text-foreground/80 leading-relaxed">{resource.reason}</p>
+                <p className="text-sm text-foreground/80 leading-relaxed">{item.reason}</p>
               </div>
             </div>
           </div>
         )}
 
         {/* Notes */}
-        {resource.notes && (
+        {item.notes && (
           <div className="rounded-xl border border-border bg-card p-5">
             <h2 className="text-sm font-semibold text-foreground mb-3">Notes</h2>
-            <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-wrap">{resource.notes}</p>
+            <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-wrap">{item.notes}</p>
           </div>
         )}
 
@@ -98,10 +100,10 @@ export default async function ResourceDetailPage({ params }: PageProps) {
               <Calendar className="h-3.5 w-3.5" />
               Saved
             </div>
-            <p className="text-sm font-medium text-foreground">{formatDate(resource.createdAt)}</p>
+            <p className="text-sm font-medium text-foreground">{formatDate(item.createdAt)}</p>
           </div>
 
-          {resource.favorite && (
+          {item.favorite && (
             <div className="rounded-xl border border-border bg-card p-4">
               <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
                 <Heart className="h-3.5 w-3.5" />
@@ -121,11 +123,11 @@ export default async function ResourceDetailPage({ params }: PageProps) {
         </div>
 
         {/* Tags */}
-        {resource.tags.length > 0 && (
+        {item.tags.length > 0 && (
           <div>
             <h2 className="text-xs font-semibold text-section-foreground uppercase tracking-[0.1em] mb-3">Tags</h2>
             <div className="flex flex-wrap gap-1.5">
-              {resource.tags.map((tag) => (
+              {item.tags.map((tag) => (
                 <Link
                   key={tag}
                   href={`/resources?q=${tag}`}
@@ -138,11 +140,11 @@ export default async function ResourceDetailPage({ params }: PageProps) {
           </div>
         )}
 
-        <LinkedItems type="resource" id={resource.id} />
+        <LinkedItems type="resource" id={item.id} />
 
         {/* Actions */}
         <div className="flex items-center gap-3 pt-4 border-t border-border">
-          <a href={resource.url} target="_blank" rel="noopener noreferrer">
+          <a href={item.url} target="_blank" rel="noopener noreferrer">
             <Button variant="default" size="sm" className="h-8 text-xs gap-1.5">
               <ExternalLink className="h-3.5 w-3.5" />
               Open resource

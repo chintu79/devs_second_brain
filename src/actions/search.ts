@@ -26,9 +26,10 @@ export async function globalSearch(query: string) {
           { url: { contains: q, mode: "insensitive" } },
           { notes: { contains: q, mode: "insensitive" } },
           { category: { contains: q, mode: "insensitive" } },
-          { tags: { has: q } },
+          { tags: { some: { tag: { name: { contains: q, mode: "insensitive" } } } } },
         ],
       },
+      include: { tags: { include: { tag: true } } },
       take: 10,
     }),
     prisma.prompt.findMany({
@@ -39,9 +40,10 @@ export async function globalSearch(query: string) {
           { prompt: { contains: q, mode: "insensitive" } },
           { useCase: { contains: q, mode: "insensitive" } },
           { category: { contains: q, mode: "insensitive" } },
-          { tags: { has: q } },
+          { tags: { some: { tag: { name: { contains: q, mode: "insensitive" } } } } },
         ],
       },
+      include: { tags: { include: { tag: true } } },
       take: 10,
     }),
     prisma.note.findMany({
@@ -51,9 +53,10 @@ export async function globalSearch(query: string) {
           { title: { contains: q, mode: "insensitive" } },
           { content: { contains: q, mode: "insensitive" } },
           { category: { contains: q, mode: "insensitive" } },
-          { tags: { has: q } },
+          { tags: { some: { tag: { name: { contains: q, mode: "insensitive" } } } } },
         ],
       },
+      include: { tags: { include: { tag: true } } },
       take: 10,
     }),
     prisma.project.findMany({
@@ -62,13 +65,26 @@ export async function globalSearch(query: string) {
         OR: [
           { title: { contains: q, mode: "insensitive" } },
           { description: { contains: q, mode: "insensitive" } },
-          { tags: { has: q } },
+          { tags: { some: { tag: { name: { contains: q, mode: "insensitive" } } } } },
           { techStack: { has: q } },
         ],
       },
+      include: { tags: { include: { tag: true } } },
       take: 10,
     }),
   ]);
 
-  return { resources, prompts, notes, projects };
+  function flattenTags(items: { tags: { tag: { id: string; name: string } }[] }[]) {
+    return items.map((item) => ({
+      ...item,
+      tags: item.tags.map((t) => t.tag.name),
+    }));
+  }
+
+  return {
+    resources: flattenTags(resources),
+    prompts: flattenTags(prompts),
+    notes: flattenTags(notes),
+    projects: flattenTags(projects),
+  };
 }

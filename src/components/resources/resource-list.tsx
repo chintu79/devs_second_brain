@@ -2,11 +2,12 @@
 
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Search } from "lucide-react";
+import { Search, Loader2, ChevronDown } from "lucide-react";
 import { ResourceItem } from "./resource-item";
 import { ResourceFilters } from "./resource-filters";
 import { ResourceEmpty } from "./resource-empty";
 import { ResourceDialog } from "@/components/vaults/resource-dialog";
+import { fetchMoreResources } from "@/actions/resources";
 import { stagger, fadeInUp } from "@/lib/motion";
 
 interface Resource {
@@ -22,22 +23,37 @@ interface Resource {
 }
 
 interface ResourceListProps {
-  resources: Resource[];
+  initialItems: Resource[];
+  nextCursor: string | null;
   allCategories: string[];
   allTags: string[];
 }
 
 type SortBy = "newest" | "oldest" | "recently-opened";
 
-export function ResourceList({ resources, allCategories, allTags }: ResourceListProps) {
+export function ResourceList({ initialItems, nextCursor: initialCursor, allCategories, allTags }: ResourceListProps) {
+  const [items, setItems] = useState<Resource[]>(initialItems);
+  const [cursor, setCursor] = useState<string | null>(initialCursor);
+  const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SortBy>("newest");
   const [dialogOpen, setDialogOpen] = useState(false);
 
+  async function loadMore() {
+    if (loading || !cursor) return;
+    setLoading(true);
+    const result = await fetchMoreResources(cursor, 20);
+    if (result) {
+      setItems((prev) => [...prev, ...result.items]);
+      setCursor(result.nextCursor);
+    }
+    setLoading(false);
+  }
+
   const filtered = useMemo(() => {
-    let result = [...resources];
+    let result = [...items];
 
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
@@ -66,7 +82,7 @@ export function ResourceList({ resources, allCategories, allTags }: ResourceList
     });
 
     return result;
-  }, [resources, searchQuery, selectedCategory, selectedTag, sortBy]);
+  }, [items, searchQuery, selectedCategory, selectedTag, sortBy]);
 
   const sections = useMemo(() => {
     const now = new Date();
@@ -89,7 +105,6 @@ export function ResourceList({ resources, allCategories, allTags }: ResourceList
   return (
     <>
       <div className="space-y-5">
-          {/* Large Search Bar */}
           <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <input
@@ -103,7 +118,6 @@ export function ResourceList({ resources, allCategories, allTags }: ResourceList
             </div>
           </div>
 
-          {/* Filters */}
           <ResourceFilters
             allCategories={allCategories}
             allTags={allTags}
@@ -115,9 +129,8 @@ export function ResourceList({ resources, allCategories, allTags }: ResourceList
             onSortChange={setSortBy}
           />
 
-          {/* Section counts */}
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
-            <span>{resources.length} resources</span>
+            <span>{items.length} resources</span>
             <span className="text-border">&middot;</span>
             <span>{filtered.length} shown</span>
             {sections.favorites.length > 0 && (
@@ -128,7 +141,6 @@ export function ResourceList({ resources, allCategories, allTags }: ResourceList
             )}
           </div>
 
-          {/* Resource sections */}
           {filtered.length === 0 ? (
             <ResourceEmpty hasSearch={hasSearch} searchQuery={searchQuery} onCreate={() => setDialogOpen(true)} />
           ) : (
@@ -216,6 +228,23 @@ export function ResourceList({ resources, allCategories, allTags }: ResourceList
                     ))}
                   </motion.div>
                 </Section>
+              )}
+
+              {cursor && (
+                <div className="flex justify-center pt-2 pb-8">
+                  <button
+                    onClick={loadMore}
+                    disabled={loading}
+                    className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-6 py-2.5 text-sm font-medium text-foreground hover:bg-muted hover:scale-[1.02] transition-all duration-150 disabled:opacity-50"
+                  >
+                    {loading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4" />
+                    )}
+                    {loading ? "Loading..." : "Load more"}
+                  </button>
+                </div>
               )}
             </div>
           )}

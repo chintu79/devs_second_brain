@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Sparkles, Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +14,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { createProject, editProject } from "@/actions/projects";
 import { batchCreateReferences, type LinkItem } from "@/actions/references";
 import { LinkPicker } from "@/components/shared/link-picker";
+import { TagInput } from "@/components/shared/tag-input";
 import { projectSchema } from "@/lib/schemas";
+import { aiSuggestTags } from "@/actions/ai";
 
 interface ProjectData {
   id?: string;
@@ -55,6 +58,7 @@ export function ProjectDialog({ open, onOpenChange, project }: ProjectDialogProp
     },
   });
 
+  const [aiLoading, setAiLoading] = useState<string | null>(null);
   const { errors, isSubmitting } = form.formState;
 
   async function onSubmit(values: ProjectFormValues) {
@@ -138,8 +142,28 @@ export function ProjectDialog({ open, onOpenChange, project }: ProjectDialogProp
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="tags">Tags (comma separated)</Label>
-            <Input id="tags" {...form.register("tags")} placeholder="web, saas, ai" />
+            <div className="flex items-center justify-between">
+              <Label>Tags</Label>
+              <button
+                type="button"
+                onClick={async () => {
+                  setServerError(null);
+                  setAiLoading("tags");
+                  const res = await aiSuggestTags(
+                    form.watch("title"),
+                    form.watch("description") || ""
+                  );
+                  setAiLoading(null);
+                  if (res.tags) form.setValue("tags", res.tags);
+                  else if (res.error) setServerError(res.error);
+                }}
+                className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {aiLoading === "tags" ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                Suggest
+              </button>
+            </div>
+            <TagInput value={form.watch("tags")} onChange={(v) => form.setValue("tags", v)} />
           </div>
 
           <div className="pt-2 border-t border-border/50">

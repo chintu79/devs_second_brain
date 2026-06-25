@@ -10,7 +10,7 @@ export function PageTransition({ children }: { children: React.ReactNode }) {
       animate="animate"
       exit="exit"
       variants={pageTransition}
-      className="h-full"
+      className="w-full"
     >
       {children}
     </motion.div>

@@ -19,11 +19,12 @@ interface Prompt {
 }
 
 interface PromptsContentProps {
-  prompts: Prompt[];
+  initialItems: Prompt[];
+  nextCursor: string | null;
   categories: string[];
 }
 
-export function PromptsContent({ prompts, categories }: PromptsContentProps) {
+export function PromptsContent({ initialItems, nextCursor, categories }: PromptsContentProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
 
   return (
@@ -41,7 +42,11 @@ export function PromptsContent({ prompts, categories }: PromptsContentProps) {
           </div>
         </aside>
         <div className="flex-1 min-w-0 p-4">
-          <PromptList prompts={prompts} categories={categories} />
+          <PromptList
+            initialItems={initialItems}
+            nextCursor={nextCursor}
+            categories={categories}
+          />
         </div>
       </div>
       <PromptDialog open={dialogOpen} onOpenChange={setDialogOpen} />

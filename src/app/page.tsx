@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Bookmark, Sparkles, StickyNote, FolderKanban, Radio, History, GitFork, ArrowRight, Search, Layers, Eye } from "lucide-react";
+import { Bookmark, Sparkles, StickyNote, FolderKanban, Radio, History, GitFork, ArrowRight, Search, Layers, Eye, Key, Terminal, Code } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollReveal } from "@/components/shared/scroll-reveal";
 import { HeroEntrance } from "@/components/landing/hero-entrance";
@@ -234,6 +234,112 @@ export default function LandingPage() {
                 );
               })}
             </div>
+          </div>
+        </section>
+
+        {/* ── Public API ── */}
+        <section className="border-t border-border/50 py-24 md:py-32">
+          <div className="mx-auto max-w-6xl px-6">
+            <ScrollReveal>
+              <div className="text-center mb-16">
+                <div className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/40 px-4 py-1.5 text-xs font-medium text-muted-foreground/80 mb-6">
+                  <Key className="h-3 w-3" />
+                  REST API
+                </div>
+                <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">Your vault, programmable</h2>
+                <p className="text-muted-foreground/70 text-base max-w-md mx-auto leading-relaxed">
+                  Access everything via REST API. Integrate with your CLI, editor, CI/CD, or automation scripts.
+                </p>
+              </div>
+            </ScrollReveal>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              <ScrollReveal>
+                <div className="rounded-xl border border-border bg-card p-6 h-full hover:border-border/60 transition-colors">
+                  <div className="flex items-center gap-3 mb-5">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted">
+                      <Terminal className="h-4 w-4 text-muted-foreground/60" />
+                    </div>
+                    <span className="text-sm font-semibold">curl</span>
+                  </div>
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-[11px] font-medium text-muted-foreground/50 uppercase tracking-wider mb-2">List resources</p>
+                      <pre className="text-xs text-[#D4D4D8] bg-muted/50 rounded-lg p-4 font-mono leading-relaxed overflow-x-auto">{`curl $BASE/resources \\
+  -H "Authorization: Bearer $KEY"`}</pre>
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-medium text-muted-foreground/50 uppercase tracking-wider mb-2">Create a resource</p>
+                      <pre className="text-xs text-[#D4D4D8] bg-muted/50 rounded-lg p-4 font-mono leading-relaxed overflow-x-auto">{`curl -X POST $BASE/resources \\
+  -H "Authorization: Bearer $KEY" \\
+  -H "Content-Type: application/json" \\
+  -d '{"title":"My link","url":"https://...",
+       "category":"frontend"}'`}</pre>
+                    </div>
+                  </div>
+                </div>
+              </ScrollReveal>
+
+              <ScrollReveal delay={60}>
+                <div className="rounded-xl border border-border bg-card p-6 h-full hover:border-border/60 transition-colors">
+                  <div className="flex items-center gap-3 mb-5">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted">
+                      <Code className="h-4 w-4 text-muted-foreground/60" />
+                    </div>
+                    <span className="text-sm font-semibold">Python</span>
+                  </div>
+                  <pre className="text-xs text-[#D4D4D8] bg-muted/50 rounded-lg p-4 font-mono leading-relaxed overflow-x-auto">{`import httpx
+
+API_KEY = "dsb_abc123..."
+BASE = "https://example.com/api/v1"
+headers = {"Authorization": f"Bearer {API_KEY}"}
+
+# List resources
+resp = httpx.get(f"{BASE}/resources", headers=headers)
+print(resp.json())
+
+# Create a resource
+resp = httpx.post(f"{BASE}/resources",
+  headers=headers,
+  json={"title": "My link", "url": "https://...", "category": "tool"}
+)
+print(resp.json())`}</pre>
+                </div>
+              </ScrollReveal>
+            </div>
+
+            <ScrollReveal delay={120}>
+              <div className="mt-6 rounded-xl border border-border/20 bg-card/50 p-5">
+                <div className="flex flex-wrap gap-6 text-sm text-muted-foreground/70">
+                  <div className="flex items-center gap-2">
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#22C55E]" />
+                    GET & POST for all vault types
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#F59E0B]" />
+                    JSON request / response
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#EC4899]" />
+                    Bearer token auth
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#06B6D4]" />
+                    Cursor-based pagination
+                  </div>
+                </div>
+              </div>
+            </ScrollReveal>
+
+            <ScrollReveal delay={180}>
+              <div className="text-center mt-10">
+                <Link href="/docs">
+                  <Button variant="outline" className="h-10 px-5 text-sm gap-2 border-border/60 text-muted-foreground/80 hover:text-foreground hover:border-border transition-all duration-200">
+                    Full API Reference →
+                  </Button>
+                </Link>
+              </div>
+            </ScrollReveal>
           </div>
         </section>
 

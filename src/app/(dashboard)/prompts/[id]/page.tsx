@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
 import { LinkedItems } from "@/components/shared/linked-items";
+import { includeTags, flattenItemTags, flattenListTags } from "@/lib/tags";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -24,19 +25,22 @@ export default async function PromptDetailPage({ params }: PageProps) {
   const userId = session?.user?.id;
   const { id } = await params;
 
-  const prompt = await prisma.prompt.findUnique({ where: { id } });
+  const prompt = await prisma.prompt.findUnique({ where: { id }, ...includeTags });
   if (!prompt || (userId && prompt.userId !== userId)) notFound();
 
-  const catColor = categoryColors[prompt.category] || "bg-muted text-muted-foreground";
+  const item = flattenItemTags(prompt);
+  const catColor = categoryColors[item.category] || "bg-muted text-muted-foreground";
 
   // Find related prompts (same category, excluding current)
-  const relatedPrompts = userId
+  const rawRelated = userId
     ? await prisma.prompt.findMany({
-        where: { userId, category: prompt.category, id: { not: prompt.id } },
+        where: { userId, category: item.category, id: { not: item.id } },
         orderBy: { useCount: "desc" },
         take: 3,
+        ...includeTags,
       })
     : [];
+  const relatedPrompts = flattenListTags(rawRelated);
 
   return (
     <div className="max-w-3xl">
@@ -55,13 +59,13 @@ export default async function PromptDetailPage({ params }: PageProps) {
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3 mb-1">
-            <h1 className="text-2xl font-semibold tracking-tight text-foreground">{prompt.title}</h1>
-            {prompt.favorite && <Star className="h-5 w-5 text-amber-400 fill-amber-400 shrink-0" />}
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground">{item.title}</h1>
+            {item.favorite && <Star className="h-5 w-5 text-amber-400 fill-amber-400 shrink-0" />}
           </div>
           <div className="flex items-center gap-3 mt-1.5">
-            <span className={`text-xs font-medium px-2 py-0.5 rounded capitalize ${catColor}`}>{prompt.category}</span>
-            {prompt.useCase && (
-              <span className="text-sm text-secondary-foreground">{prompt.useCase}</span>
+            <span className={`text-xs font-medium px-2 py-0.5 rounded capitalize ${catColor}`}>{item.category}</span>
+            {item.useCase && (
+              <span className="text-sm text-secondary-foreground">{item.useCase}</span>
             )}
           </div>
         </div>
@@ -75,7 +79,7 @@ export default async function PromptDetailPage({ params }: PageProps) {
               <Hash className="h-3.5 w-3.5" />
               Times Used
             </div>
-            <p className="text-sm font-medium text-foreground">{prompt.useCount} time{prompt.useCount !== 1 ? "s" : ""}</p>
+            <p className="text-sm font-medium text-foreground">{item.useCount} time{item.useCount !== 1 ? "s" : ""}</p>
           </div>
           <div className="rounded-xl border border-border bg-card p-4">
             <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
@@ -83,7 +87,7 @@ export default async function PromptDetailPage({ params }: PageProps) {
               Last Used
             </div>
             <p className="text-sm font-medium text-foreground">
-              {prompt.lastUsedAt ? formatDate(prompt.lastUsedAt) : "Never used"}
+              {item.lastUsedAt ? formatDate(item.lastUsedAt) : "Never used"}
             </p>
           </div>
           <div className="rounded-xl border border-border bg-card p-4">
@@ -91,14 +95,14 @@ export default async function PromptDetailPage({ params }: PageProps) {
               <Calendar className="h-3.5 w-3.5" />
               Created
             </div>
-            <p className="text-sm font-medium text-foreground">{formatDate(prompt.createdAt)}</p>
+            <p className="text-sm font-medium text-foreground">{formatDate(item.createdAt)}</p>
           </div>
           <div className="rounded-xl border border-border bg-card p-4">
             <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
               <Bookmark className="h-3.5 w-3.5" />
               Use Case
             </div>
-            <p className="text-sm font-medium text-foreground truncate">{prompt.useCase || "General"}</p>
+            <p className="text-sm font-medium text-foreground truncate">{item.useCase || "General"}</p>
           </div>
         </div>
 
@@ -109,7 +113,7 @@ export default async function PromptDetailPage({ params }: PageProps) {
             <form action={async () => {
               "use server";
               const { recordPromptUsage } = await import("@/actions/prompts");
-              await recordPromptUsage(prompt.id);
+              await recordPromptUsage(item.id);
             }}>
               <Button type="submit" variant="ghost" size="sm" className="h-7 text-xs gap-1.5 text-muted-foreground hover:text-foreground">
                 <Copy className="h-3.5 w-3.5" />
@@ -119,17 +123,17 @@ export default async function PromptDetailPage({ params }: PageProps) {
           </div>
           <div className="p-5">
             <pre className="text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap font-sans">
-              {prompt.prompt}
+              {item.prompt}
             </pre>
           </div>
         </div>
 
         {/* Tags */}
-        {prompt.tags.length > 0 && (
+        {item.tags.length > 0 && (
           <div>
             <h2 className="text-xs font-semibold text-section-foreground uppercase tracking-[0.1em] mb-3">Tags</h2>
             <div className="flex flex-wrap gap-1.5">
-              {prompt.tags.map((tag) => (
+              {item.tags.map((tag) => (
                 <Link
                   key={tag}
                   href={`/prompts?q=${tag}`}
@@ -142,7 +146,7 @@ export default async function PromptDetailPage({ params }: PageProps) {
           </div>
         )}
 
-        <LinkedItems type="prompt" id={prompt.id} />
+        <LinkedItems type="prompt" id={item.id} />
 
         {/* Related Prompts */}
         {relatedPrompts.length > 0 && (

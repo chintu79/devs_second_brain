@@ -9,9 +9,13 @@ import {
   MessageSquare,
   StickyNote,
   FolderKanban,
+  Tags,
   Radio,
   Search,
+  Bot,
+  GitGraph,
   Settings,
+  Book,
   LogOut,
   type LucideIcon,
 } from "lucide-react";
@@ -31,7 +35,10 @@ export const sidebarLinks: SidebarLink[] = [
   { href: "/prompts", label: "Prompts", icon: MessageSquare, accent: "prompts" },
   { href: "/notes", label: "Notes", icon: StickyNote, accent: "notes" },
   { href: "/projects", label: "Projects", icon: FolderKanban, accent: "projects" },
+  { href: "/tags", label: "Tags", icon: Tags, accent: "tags" },
   { href: "/radar", label: "OS Radar", icon: Radio, accent: "radar" },
+  { href: "/graph", label: "Graph", icon: GitGraph, accent: "graph" },
+  { href: "/chat", label: "AI Chat", icon: Bot, accent: "chat" },
   { href: "/search", label: "Search", icon: Search, accent: "search" },
 ];
 
@@ -42,6 +49,8 @@ const sectionAccents: Record<string, { navLabel: string; wsLabel: string }> = {
   notes: { navLabel: "Navigation", wsLabel: "Workspace" },
   projects: { navLabel: "Navigation", wsLabel: "Workspace" },
   radar: { navLabel: "Navigation", wsLabel: "Workspace" },
+  graph: { navLabel: "Navigation", wsLabel: "Workspace" },
+  chat: { navLabel: "Navigation", wsLabel: "Workspace" },
   search: { navLabel: "Navigation", wsLabel: "Workspace" },
 };
 
@@ -127,6 +136,14 @@ export function Sidebar() {
       {/* Profile / Settings */}
       <div className="border-t border-sidebar-border/50 p-3">
         <div className="space-y-0.5">
+          <Link
+            href="/docs"
+            data-accent="settings"
+            className="sidebar-link sidebar-item text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:scale-[1.02] transition-transform duration-150"
+          >
+            <Book className="h-4 w-4" />
+            Docs
+          </Link>
           <Link
             href="/settings"
             data-accent="settings"

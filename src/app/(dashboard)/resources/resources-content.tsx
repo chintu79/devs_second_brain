@@ -19,15 +19,15 @@ interface Resource {
 }
 
 interface ResourcesContentProps {
-  resources: Resource[];
+  initialItems: Resource[];
+  nextCursor: string | null;
   allCategories: string[];
   allTags: string[];
-  topResources: Resource[];
   recentNotes: { id: string; title: string }[];
   projects: { id: string; title: string }[];
 }
 
-export function ResourcesContent({ resources, allCategories, allTags, topResources, recentNotes, projects }: ResourcesContentProps) {
+export function ResourcesContent({ initialItems, nextCursor, allCategories, allTags, recentNotes, projects }: ResourcesContentProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
 
   return (
@@ -45,9 +45,18 @@ export function ResourcesContent({ resources, allCategories, allTags, topResourc
           </div>
         </aside>
         <div className="flex-1 min-w-0 p-4">
-          <ResourceList resources={resources} allCategories={allCategories} allTags={allTags} />
+          <ResourceList
+            initialItems={initialItems}
+            nextCursor={nextCursor}
+            allCategories={allCategories}
+            allTags={allTags}
+          />
         </div>
-        <ResourceContextPanel topResources={topResources} recentNotes={recentNotes} projects={projects} />
+        <ResourceContextPanel
+          topResources={initialItems}
+          recentNotes={recentNotes}
+          projects={projects}
+        />
       </div>
       <ResourceDialog open={dialogOpen} onOpenChange={setDialogOpen} />
     </>

@@ -1,13 +1,14 @@
 "use client";
 
-import { Search, Plus, Bell, Bookmark, StickyNote, MessageSquare, FolderKanban } from "lucide-react";
+import { Search, Plus, Bell, Bookmark, StickyNote, MessageSquare, FolderKanban, Zap } from "lucide-react";
 import Link from "next/link";
 
 interface CommandBarProps {
   onOpenPalette: () => void;
+  onOpenCapture: () => void;
 }
 
-export function CommandBar({ onOpenPalette }: CommandBarProps) {
+export function CommandBar({ onOpenPalette, onOpenCapture }: CommandBarProps) {
   return (
     <div className="flex h-14 items-center gap-3 px-5 py-3 border-b border-border bg-background">
       <div className="flex-1 max-w-xl">
@@ -27,6 +28,13 @@ export function CommandBar({ onOpenPalette }: CommandBarProps) {
       </div>
 
       <div className="flex items-center gap-0.5">
+        <button
+          onClick={onOpenCapture}
+          title="Quick Capture"
+          className="flex h-8 w-8 items-center justify-center rounded-lg text-foreground hover:bg-muted/60 hover:scale-[1.1] transition-all duration-150"
+        >
+          <Zap className="h-4 w-4" />
+        </button>
         <QuickActionBtn icon={Bookmark} label="Save Resource" href="/resources" />
         <QuickActionBtn icon={StickyNote} label="Write Note" href="/notes" />
         <QuickActionBtn icon={MessageSquare} label="Add Prompt" href="/prompts" />

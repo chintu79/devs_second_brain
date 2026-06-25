@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Sparkles, Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +14,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { createResource, editResource } from "@/actions/resources";
 import { batchCreateReferences, type LinkItem } from "@/actions/references";
 import { LinkPicker } from "@/components/shared/link-picker";
+import { TagInput } from "@/components/shared/tag-input";
 import { resourceSchema } from "@/lib/schemas";
+import { aiSuggestCategory, aiSuggestTags } from "@/actions/ai";
 
 interface Resource {
   id?: string;
@@ -58,6 +61,7 @@ export function ResourceDialog({ open, onOpenChange, resource }: ResourceDialogP
     },
   });
 
+  const [aiLoading, setAiLoading] = useState<string | null>(null);
   const { errors, isSubmitting } = form.formState;
 
   async function onSubmit(values: ResourceFormValues) {
@@ -113,7 +117,32 @@ export function ResourceDialog({ open, onOpenChange, resource }: ResourceDialogP
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="category">Category</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="category">Category</Label>
+              <button
+                type="button"
+                onClick={async () => {
+                  setServerError(null);
+                  setAiLoading("category");
+                  const res = await aiSuggestCategory(
+                    form.watch("title"),
+                    form.watch("notes") || form.watch("reason") || "",
+                    ["frontend", "backend", "devops", "database", "mobile", "ai", "design", "other"]
+                  );
+                  setAiLoading(null);
+                  if (res.category) form.setValue("category", res.category as any);
+                  else if (res.error) setServerError(res.error);
+                }}
+                className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {aiLoading === "category" ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <Sparkles className="h-3 w-3" />
+                )}
+                Suggest
+              </button>
+            </div>
             <Controller
               control={form.control}
               name="category"
@@ -144,8 +173,32 @@ export function ResourceDialog({ open, onOpenChange, resource }: ResourceDialogP
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="tags">Tags (comma separated)</Label>
-            <Input id="tags" {...form.register("tags")} placeholder="react, typescript, tutorial" />
+            <div className="flex items-center justify-between">
+              <Label>Tags</Label>
+              <button
+                type="button"
+                onClick={async () => {
+                  setServerError(null);
+                  setAiLoading("tags");
+                  const res = await aiSuggestTags(
+                    form.watch("title"),
+                    form.watch("notes") || form.watch("reason") || ""
+                  );
+                  setAiLoading(null);
+                  if (res.tags) form.setValue("tags", res.tags);
+                  else if (res.error) setServerError(res.error);
+                }}
+                className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {aiLoading === "tags" ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <Sparkles className="h-3 w-3" />
+                )}
+                Suggest
+              </button>
+            </div>
+            <TagInput value={form.watch("tags")} onChange={(v) => form.setValue("tags", v)} />
           </div>
 
           <div className="space-y-2">

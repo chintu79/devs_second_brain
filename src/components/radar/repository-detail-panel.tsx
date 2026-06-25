@@ -6,6 +6,7 @@ import {
   X, Star, GitFork, Bookmark, BookmarkCheck, ExternalLink, TrendingUp, Zap, Sparkles, Clock,
   CheckCircle2, Lightbulb, Wrench, ArrowUpRight, FileText, Link2, Layers, Plus,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { slideInRight } from "@/lib/motion";
 import { createResource } from "@/actions/resources";
@@ -48,7 +49,12 @@ export function RepositoryDetailPanel({ repo, onClose, onBookmark }: RepositoryD
     formData.set("tags", repo.topics.slice(0, 5).join(", "));
     formData.set("reason", `Saved from Open Source Radar — ${repo.stars.toLocaleString()} stars, trending in ${repo.category}`);
     const result = await createResource(formData);
-    if (!result?.error) setSaved(true);
+    if (!result?.error) {
+      setSaved(true);
+      toast.success("Saved to Resources");
+    } else {
+      toast.error(result.error || "Failed to save");
+    }
     setSaving(false);
   }
 

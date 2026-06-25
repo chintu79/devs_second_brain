@@ -19,24 +19,24 @@ export const ease = {
   springSnappy: { type: "spring" as const, stiffness: 400, damping: 30, mass: 0.5 },
 } as const;
 
-/* ── Page Transition (blur + fade + slide) ── */
+/* ── Page Transition (fade + slide — no blur, cheaper GPU) ── */
 export const pageTransition = {
-  initial: { opacity: 0, y: 16, filter: "blur(6px)" },
+  initial: { opacity: 0, y: 16 },
   animate: {
-    opacity: 1, y: 0, filter: "blur(0px)",
+    opacity: 1, y: 0,
     transition: { duration: duration.page, ease: ease.decelerate },
   },
   exit: {
-    opacity: 0, y: -8, filter: "blur(6px)",
+    opacity: 0, y: -8,
     transition: { duration: duration.micro, ease: ease.accelerate },
   },
 };
 
 /* ── Section Reveal (scroll-triggered, once) ── */
 export const sectionReveal = {
-  hidden: { opacity: 0, y: 24, filter: "blur(8px)" },
+  hidden: { opacity: 0, y: 24 },
   visible: {
-    opacity: 1, y: 0, filter: "blur(0px)",
+    opacity: 1, y: 0,
     transition: { duration: duration.reveal, ease: ease.decelerate },
   },
 };

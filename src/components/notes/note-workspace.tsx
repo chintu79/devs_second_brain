@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useMemo, useCallback, useRef } from "react";
-import { AnimatePresence } from "framer-motion";
-import { Search, Plus } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { Search, Plus, Loader2, ChevronDown } from "lucide-react";
 import { NoteSidebar } from "./note-sidebar";
 import { NoteList } from "./note-list";
 import { NoteReaderPanel } from "./note-reader-panel";
 import { NoteDialog } from "@/components/vaults/note-dialog";
+import { deleteNote } from "@/actions/notes";
 import { useSearchParams, useRouter } from "next/navigation";
 
 interface Note {
@@ -61,6 +62,8 @@ export function NoteWorkspace({ notes, resources, prompts, projects }: NoteWorks
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [activeTag, setActiveTag] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const PAGE_SIZE = 20;
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -133,7 +136,10 @@ export function NoteWorkspace({ notes, resources, prompts, projects }: NoteWorks
     return result.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
   }, [notes, activeSection, activeCategory, activeTag, searchQuery]);
 
-  const flatList = useMemo(() => filtered.map((n) => n.id), [filtered]);
+  const displayedNotes = useMemo(() => filtered.slice(0, visibleCount), [filtered, visibleCount]);
+  const hasMore = visibleCount < filtered.length;
+
+  const flatList = useMemo(() => displayedNotes.map((n) => n.id), [displayedNotes]);
 
   const selectedNote = useMemo(() => {
     if (!selectedId) return null;
@@ -252,14 +258,32 @@ export function NoteWorkspace({ notes, resources, prompts, projects }: NoteWorks
           </span>
         </div>
 
-        <NoteList
-          ref={listRef}
-          notes={filtered}
-          projects={projects}
-          selectedId={selectedId}
-          onSelect={handleSelect}
-          onFavorite={() => { }}
-        />
+            <NoteList
+              ref={listRef}
+              notes={displayedNotes}
+              projects={projects}
+              selectedId={selectedId}
+              onSelect={setSelectedId}
+              onDelete={(id) => {
+                deleteNote(id).then(() => {
+                  if (selectedId === id) router.replace("/notes");
+                  router.refresh();
+                });
+              }}
+              onFavorite={() => { }}
+            />
+
+        {hasMore && (
+          <motion.button
+            onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+            className="flex items-center justify-center gap-2 w-full py-3 text-xs text-muted-foreground hover:text-foreground transition-colors border-t border-border/20 mt-1"
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <ChevronDown className="h-3.5 w-3.5" />
+            Load {Math.min(PAGE_SIZE, filtered.length - visibleCount)} more
+          </motion.button>
+        )}
       </div>
 
       {/* Reader panel */}

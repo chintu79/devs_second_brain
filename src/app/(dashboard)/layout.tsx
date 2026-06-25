@@ -8,10 +8,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <div className="flex flex-1 flex-col min-w-0">
         <DashboardShell>
           <main className="flex-1 overflow-y-auto overflow-x-hidden">
-            <div className="flex h-full">
-              <div className="flex-1 min-w-0 p-5 lg:p-6 pb-20">
-                {children}
-              </div>
+            <div className="h-full p-5 lg:p-6 pb-20 overflow-y-auto">
+              {children}
             </div>
           </main>
         </DashboardShell>

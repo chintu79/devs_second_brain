@@ -4,8 +4,11 @@ import "@fontsource/inter/500.css";
 import "@fontsource/inter/600.css";
 import "@fontsource/inter/700.css";
 import "./globals.css";
+import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/theme/theme-provider";
+import { AccentProvider } from "@/components/theme/accent-provider";
 import { AgentationWrapper } from "@/components/agentation-wrapper";
+import { ServiceWorkerRegister } from "@/components/layout/service-worker-register";
 
 export const metadata: Metadata = {
   title: "Dev Second Brain",
@@ -27,11 +30,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className="h-full" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <meta name="theme-color" content="#6366f1" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <link rel="apple-touch-icon" href="/icons/icon-512.svg" />
       </head>
       <body className="min-h-full flex flex-col">
         <ThemeProvider>
-          {children}
-          <AgentationWrapper />
+          <AccentProvider>
+            {children}
+            <AgentationWrapper />
+            <ServiceWorkerRegister />
+            <Toaster position="bottom-right" richColors closeButton />
+          </AccentProvider>
         </ThemeProvider>
       </body>
     </html>

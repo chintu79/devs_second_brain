@@ -7,11 +7,13 @@ import {
   Search, Star, Pencil, Trash2, Archive, X, ExternalLink,
   ClipboardList, FileText, Sparkles, Clock, Link2,
   CircleDot, Layers, FlaskConical, Hammer, CheckCircle2,
-  ChevronRight, Copy, FolderKanban, Plus,
+  ChevronRight, ChevronDown, Copy, FolderKanban, Plus, Loader2,
+  Columns3, List,
 } from "lucide-react";
 import { slideInRight } from "@/lib/motion";
 import { ProjectSidebar } from "./project-sidebar";
 import { ProjectList } from "./project-list";
+import { KanbanBoard } from "./kanban-board";
 import { toggleProjectFavorite, deleteProject, saveProjectPlan, archiveProject } from "@/actions/projects";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -52,6 +54,9 @@ export function ProjectWorkspace({ projects, resources, prompts, notes }: Projec
   const [activeTag, setActiveTag] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
   const [editDialog, setEditDialog] = useState(false);
+  const [viewMode, setViewMode] = useState<"list" | "kanban">("list");
+  const PAGE_SIZE = 20;
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const searchRef = useRef<HTMLInputElement>(null);
 
   /* ── Sidebar data ── */
@@ -81,7 +86,9 @@ export function ProjectWorkspace({ projects, resources, prompts, notes }: Projec
     return r.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
   }, [projects, activeSection, activeTag, searchQuery]);
 
-  const flatList = filtered.map((p) => p.id);
+  const displayedProjects = useMemo(() => filtered.slice(0, visibleCount), [filtered, visibleCount]);
+  const hasMore = visibleCount < filtered.length;
+  const flatList = displayedProjects.map((p) => p.id);
   const selectedProject = selectedId ? projects.find((p) => p.id === selectedId) || null : null;
 
   const setSelectedId = useCallback((id: string | null) => {
@@ -144,21 +151,68 @@ export function ProjectWorkspace({ projects, resources, prompts, notes }: Projec
         activeTag={activeTag} onTagChange={setActiveTag} onCreate={() => setEditDialog(true)}
       />
 
-      {/* ── List column ── */}
-      <div className={`${selectedId ? "w-80" : "flex-1"} shrink-0 border-r border-border/50 flex flex-col px-2`}>
-        <div className="px-3 pt-3 pb-2 border-b border-border/30">
-          <div className="relative">
+      {/* ── List / Kanban column ── */}
+      <div className={`${selectedId && viewMode === "list" ? "w-80" : "flex-1"} shrink-0 border-r border-border/50 flex flex-col ${viewMode === "kanban" ? "px-0" : "px-2"}`}>
+        <div className="px-4 pt-3 pb-2 pr-8 border-b border-border/30 flex items-center gap-3">
+          <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <input ref={searchRef} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search projects..."
               className="flex h-8 w-full rounded-md border border-border bg-card pl-8 pr-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/20 transition-all"
             />
           </div>
+          <div className="flex items-center rounded-lg border border-border/40 p-0.5 bg-card shrink-0">
+            <button
+              onClick={() => setViewMode("list")}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all ${
+                viewMode === "list"
+                  ? "bg-primary/10 text-primary shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+              title="List view"
+            >
+              <List className="h-3.5 w-3.5" />
+              <span>List</span>
+            </button>
+            <button
+              onClick={() => setViewMode("kanban")}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all ${
+                viewMode === "kanban"
+                  ? "bg-primary/10 text-primary shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+              title="Kanban board"
+            >
+              <Columns3 className="h-3.5 w-3.5" />
+              <span>Board</span>
+            </button>
+          </div>
         </div>
-        <div className="px-3 py-2 border-b border-border/20">
-          <span className="text-[10px] text-muted-foreground">{filtered.length} project{filtered.length !== 1 ? "s" : ""}</span>
-        </div>
-        <ProjectList projects={filtered} selectedId={selectedId} onSelect={select} />
+        {viewMode === "list" ? (
+          <>
+            <div className="px-3 py-2 border-b border-border/20">
+              <span className="text-[10px] text-muted-foreground">{filtered.length} project{filtered.length !== 1 ? "s" : ""}</span>
+            </div>
+            <ProjectList projects={displayedProjects} selectedId={selectedId} onSelect={select} />
+            {hasMore && (
+              <motion.button
+                onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+                className="flex items-center justify-center gap-2 w-full py-3 text-xs text-muted-foreground hover:text-foreground transition-colors border-t border-border/20 mt-1"
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <ChevronDown className="h-3.5 w-3.5" />
+                Load {Math.min(PAGE_SIZE, filtered.length - visibleCount)} more
+              </motion.button>
+            )}
+          </>
+        ) : (
+          <KanbanBoard
+            projects={projects}
+            selectedId={selectedId}
+            onSelect={select}
+          />
+        )}
       </div>
 
       {/* ── Workspace ── */}

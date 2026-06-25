@@ -3,12 +3,11 @@
 import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { parseTagNames, buildTagCreate, flattenListTags } from "@/lib/tags";
 
 export async function createResource(formData: FormData) {
   const session = await auth();
-  if (!session?.user?.id) {
-    return { error: "Not authenticated" };
-  }
+  if (!session?.user?.id) return { error: "Not authenticated" };
 
   const title = formData.get("title") as string;
   const url = formData.get("url") as string;
@@ -17,40 +16,29 @@ export async function createResource(formData: FormData) {
   const reason = formData.get("reason") as string;
   const tagsString = formData.get("tags") as string;
 
-  if (!title || !url || !category) {
-    return { error: "Title, URL, and Category are required" };
-  }
+  if (!title || !url || !category) return { error: "Title, URL, and Category are required" };
 
-  const tags = tagsString
-    ? tagsString.split(",").map((t) => t.trim()).filter(Boolean)
-    : [];
+  const tagNames = parseTagNames(tagsString || "");
 
   try {
     const resource = await prisma.resource.create({
       data: {
-        title,
-        url,
-        category,
-        tags,
-        notes,
-        reason,
+        title, url, category, notes, reason,
         userId: session.user.id,
+        tags: buildTagCreate(tagNames, session.user.id),
       },
     });
-
     revalidatePath("/resources");
-    return { success: true, resource };
-  } catch (error) {
-    console.error("Create resource error:", error);
+    if (tagNames.length > 0) revalidatePath("/tags");
+    return { success: true, id: resource.id };
+  } catch {
     return { error: "Failed to create resource" };
   }
 }
 
 export async function editResource(id: string, formData: FormData) {
   const session = await auth();
-  if (!session?.user?.id) {
-    return { error: "Not authenticated" };
-  }
+  if (!session?.user?.id) return { error: "Not authenticated" };
 
   const title = formData.get("title") as string;
   const url = formData.get("url") as string;
@@ -59,96 +47,66 @@ export async function editResource(id: string, formData: FormData) {
   const reason = formData.get("reason") as string;
   const tagsString = formData.get("tags") as string;
 
-  if (!title || !url || !category) {
-    return { error: "Title, URL, and Category are required" };
-  }
+  if (!title || !url || !category) return { error: "Title, URL, and Category are required" };
 
-  const tags = tagsString
-    ? tagsString.split(",").map((t) => t.trim()).filter(Boolean)
-    : [];
+  const tagNames = parseTagNames(tagsString || "");
 
   try {
-    const existing = await prisma.resource.findUnique({
-      where: { id: id as string },
+    await prisma.resourceTag.deleteMany({ where: { resourceId: id } });
+    await prisma.resource.update({
+      where: { id, userId: session.user.id },
+      data: { title, url, category, notes, reason, tags: buildTagCreate(tagNames, session.user.id) },
     });
-
-    if (!existing || existing.userId !== session.user.id) {
-      return { error: "Unauthorized" };
-    }
-
-    const resource = await prisma.resource.update({
-      where: { id: id as string },
-      data: {
-        title,
-        url,
-        category,
-        tags,
-        notes,
-        reason,
-        userId: session.user.id,
-      },
-    });
-
     revalidatePath("/resources");
-    revalidatePath(`/resources/${id}`);
-    return { success: true, resource };
-  } catch (error) {
-    console.error("Edit resource error:", error);
+    return { success: true };
+  } catch {
     return { error: "Failed to update resource" };
   }
 }
 
 export async function deleteResource(id: string) {
   const session = await auth();
-  if (!session?.user?.id) {
-    return { error: "Not authenticated" };
-  }
+  if (!session?.user?.id) return { error: "Not authenticated" };
 
   try {
-    const existing = await prisma.resource.findUnique({
-      where: { id },
-    });
-
-    if (!existing || existing.userId !== session.user.id) {
-      return { error: "Unauthorized" };
-    }
-
-    await prisma.resource.delete({
-      where: { id },
-    });
-
+    await prisma.resource.delete({ where: { id, userId: session.user.id } });
     revalidatePath("/resources");
     return { success: true };
-  } catch (error) {
-    console.error("Delete resource error:", error);
+  } catch {
     return { error: "Failed to delete resource" };
   }
 }
 
 export async function toggleFavorite(id: string, current: boolean) {
   const session = await auth();
-  if (!session?.user?.id) {
-    return { error: "Not authenticated" };
-  }
+  if (!session?.user?.id) return { error: "Not authenticated" };
 
   try {
-    const existing = await prisma.resource.findUnique({
-      where: { id },
-    });
-
-    if (!existing || existing.userId !== session.user.id) {
-      return { error: "Unauthorized" };
-    }
-
-    await prisma.resource.update({
-      where: { id },
-      data: { favorite: !current },
-    });
-
+    await prisma.resource.update({ where: { id, userId: session.user.id }, data: { favorite: !current } });
     revalidatePath("/resources");
     return { success: true };
-  } catch (error) {
-    console.error("Toggle favorite error:", error);
+  } catch {
     return { error: "Failed to toggle favorite" };
   }
+}
+
+export async function fetchMoreResources(cursor?: string, limit = 20) {
+  const session = await auth();
+  if (!session?.user?.id) return { items: [], nextCursor: null };
+
+  const items = await prisma.resource.findMany({
+    where: { userId: session.user.id },
+    orderBy: { createdAt: "desc" },
+    take: limit + 1,
+    ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+    include: { tags: { include: { tag: true } } },
+  });
+
+  const hasMore = items.length > limit;
+  if (hasMore) items.pop();
+
+  return {
+    items: flattenListTags(items.map((r) => ({ ...r, createdAt: r.createdAt, notes: r.notes, reason: r.reason }))),
+    nextCursor: hasMore ? items[items.length - 1].id : null,
+  };
 }

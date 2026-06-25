@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { SearchWorkspace } from "@/components/search/search-workspace";
+import { includeTags, flattenListTags } from "@/lib/tags";
 
 interface PageProps {
   searchParams: Promise<{ q?: string }>;
@@ -13,10 +14,11 @@ export default async function SearchPage({ searchParams }: PageProps) {
 
   let projects: { id: string; title: string; tags: string[] }[] = [];
   if (userId) {
-    projects = await prisma.project.findMany({
+    const raw = await prisma.project.findMany({
       where: { userId },
-      select: { id: true, title: true, tags: true },
+      ...includeTags,
     });
+    projects = flattenListTags(raw).map((p) => ({ id: p.id, title: p.title, tags: p.tags }));
   }
 
   return (

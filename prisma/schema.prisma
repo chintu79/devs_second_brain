@@ -22,9 +22,11 @@ model User {
   prompts       Prompt[]
   notes         Note[]
   projects      Project[]
+  tags          Tag[]
   references    Reference[]
   accounts      Account[]
   sessions      Session[]
+  apiKeys       ApiKey[]
 }
 
 model Account {
@@ -67,32 +69,32 @@ model VerificationToken {
 }
 
 model Resource {
-  id        String   @id @default(cuid())
+  id        String        @id @default(cuid())
   title     String
   url       String
   category  String
-  tags      String[]
   notes     String?
   reason    String?
-  favorite  Boolean  @default(false)
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id])
+  favorite  Boolean       @default(false)
+  createdAt DateTime      @default(now())
+  user      User          @relation(fields: [userId], references: [id])
   userId    String
+  tags      ResourceTag[]
 }
 
 model Prompt {
-  id         String    @id @default(cuid())
+  id         String       @id @default(cuid())
   title      String
   prompt     String
   category   String
-  tags       String[]
   useCase    String
-  favorite   Boolean   @default(false)
-  useCount   Int       @default(0)
+  favorite   Boolean      @default(false)
+  useCount   Int          @default(0)
   lastUsedAt DateTime?
-  createdAt  DateTime  @default(now())
-  user       User      @relation(fields: [userId], references: [id])
+  createdAt  DateTime     @default(now())
+  user       User         @relation(fields: [userId], references: [id])
   userId     String
+  tags       PromptTag[]
 }
 
 model Note {
@@ -100,28 +102,78 @@ model Note {
   title     String
   content   String
   category  String
-  tags      String[]
   favorite  Boolean   @default(false)
   archived  Boolean   @default(false)
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   user      User      @relation(fields: [userId], references: [id])
   userId    String
+  tags      NoteTag[]
 }
 
 model Project {
-  id          String    @id @default(cuid())
+  id          String       @id @default(cuid())
   title       String
   description String
   status      String
   techStack   String[]
-  tags        String[]
-  planMd      String    @default("")
-  favorite    Boolean   @default(false)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  user        User      @relation(fields: [userId], references: [id])
+  planMd      String       @default("")
+  favorite    Boolean      @default(false)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  user        User         @relation(fields: [userId], references: [id])
   userId      String
+  tags        ProjectTag[]
+}
+
+model Tag {
+  id        String       @id @default(cuid())
+  name      String
+  userId    String
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime     @default(now())
+  resources ResourceTag[]
+  prompts   PromptTag[]
+  notes     NoteTag[]
+  projects  ProjectTag[]
+
+  @@unique([name, userId])
+}
+
+model ResourceTag {
+  resourceId String
+  tagId      String
+  resource   Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  tag        Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([resourceId, tagId])
+}
+
+model PromptTag {
+  promptId String
+  tagId    String
+  prompt   Prompt @relation(fields: [promptId], references: [id], onDelete: Cascade)
+  tag      Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([promptId, tagId])
+}
+
+model NoteTag {
+  noteId String
+  tagId  String
+  note   Note @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  tag    Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([noteId, tagId])
+}
+
+model ProjectTag {
+  projectId String
+  tagId     String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tag       Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, tagId])
 }
 
 model Reference {
@@ -138,4 +190,16 @@ model Reference {
   @@unique([userId, fromType, fromId, toType, toId])
   @@index([fromType, fromId])
   @@index([toType, toId])
+}
+
+model ApiKey {
+  id        String   @id @default(cuid())
+  name      String
+  key       String   @unique
+  lastUsedAt DateTime?
+  createdAt DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([key])
 }

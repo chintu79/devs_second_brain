@@ -1,27 +1,35 @@
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { fetchMorePrompts } from "@/actions/prompts";
 import { PromptsContent } from "./prompts-content";
 
 export default async function PromptsPage() {
   const session = await auth();
   const userId = session?.user?.id;
 
-  const prompts = userId
-    ? await prisma.prompt.findMany({
+  if (!userId) {
+    return (
+      <div className="flex items-center justify-center h-48">
+        <p className="text-sm text-muted-foreground">Sign in to view your prompts.</p>
+      </div>
+    );
+  }
+
+  const [{ items: initialItems, nextCursor }, metaPrompts] = await Promise.all([
+    fetchMorePrompts(undefined, 20),
+    prisma.prompt.findMany({
       where: { userId },
-      orderBy: [{ favorite: "desc" }, { lastUsedAt: "desc" }, { createdAt: "desc" }],
-    })
-    : [];
+      select: { category: true },
+    }),
+  ]);
 
-  const serialized = prompts.map((p) => ({
-    ...p,
-    createdAt: p.createdAt,
-    lastUsedAt: p.lastUsedAt,
-  }));
-
-  const categories = [...new Set(prompts.map((p) => p.category))].sort();
+  const categories = [...new Set(metaPrompts.map((p) => p.category))].sort();
 
   return (
-    <PromptsContent prompts={serialized} categories={categories} />
+    <PromptsContent
+      initialItems={initialItems}
+      nextCursor={nextCursor}
+      categories={categories}
+    />
   );
 }

@@ -83,6 +83,21 @@
   --accent-bg: rgba(6, 182, 212, 0.1);
 }
 
+[data-accent="graph"] {
+  --accent: #0ea5e9;
+  --accent-bg: rgba(14, 165, 233, 0.1);
+}
+
+[data-accent="chat"] {
+  --accent: #a855f7;
+  --accent-bg: rgba(168, 85, 247, 0.1);
+}
+
+[data-accent="tags"] {
+  --accent: #ec4899;
+  --accent-bg: rgba(236, 72, 153, 0.1);
+}
+
 [data-accent="search"] {
   --accent: #ef4444;
   --accent-bg: rgba(239, 68, 68, 0.1);
@@ -116,6 +131,18 @@
 
 .sidebar-link[data-accent="radar"] {
   --sidebar-item-accent: #06b6d4;
+}
+
+.sidebar-link[data-accent="graph"] {
+  --sidebar-item-accent: #0ea5e9;
+}
+
+.sidebar-link[data-accent="chat"] {
+  --sidebar-item-accent: #a855f7;
+}
+
+.sidebar-link[data-accent="tags"] {
+  --sidebar-item-accent: #ec4899;
 }
 
 .sidebar-link[data-accent="search"] {
