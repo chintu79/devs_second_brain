@@ -3,23 +3,40 @@
 import { useState } from "react"
 import Link from "next/link"
 import { motion } from "framer-motion"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
 import { Eye, EyeOff, UserPlus } from "lucide-react"
 import { register } from "@/actions/auth"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { stagger, fadeInUp } from "@/lib/motion"
+import { registerSchema } from "@/lib/schemas"
+
+type RegisterFormValues = {
+  name: string;
+  email: string;
+  password: string;
+}
 
 export default function RegisterPage() {
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
-  const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
 
-  async function handleSubmit(formData: FormData) {
-    setLoading(true)
+  const form = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: { name: "", email: "", password: "" },
+  })
+
+  const { errors, isSubmitting } = form.formState
+
+  async function onSubmit(values: RegisterFormValues) {
     setMessage(null)
+    const formData = new FormData()
+    formData.set("name", values.name || "")
+    formData.set("email", values.email)
+    formData.set("password", values.password)
     const result = await register(formData)
-    setLoading(false)
     if (result?.error) {
       setMessage({ type: "error", text: result.error })
     } else if (result?.success) {
@@ -46,7 +63,7 @@ export default function RegisterPage() {
         </p>
       </motion.div>
 
-      <form action={handleSubmit} className="space-y-5">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
         {message && (
           <motion.div
             initial={{ opacity: 0, y: 8, filter: "blur(4px)" }}
@@ -77,7 +94,7 @@ export default function RegisterPage() {
           </Label>
           <Input
             id="name"
-            name="name"
+            {...form.register("name")}
             placeholder="John Doe"
             className="h-11 rounded-xl border-border/40 bg-muted/30 px-4 text-sm transition-all duration-200 placeholder:text-[var(--text-muted)] focus-visible:border-[var(--color-prompts)]/40 focus-visible:ring-[var(--color-prompts)]/15"
           />
@@ -89,12 +106,14 @@ export default function RegisterPage() {
           </Label>
           <Input
             id="email"
-            name="email"
             type="email"
+            {...form.register("email")}
             placeholder="you@example.com"
-            required
             className="h-11 rounded-xl border-border/40 bg-muted/30 px-4 text-sm transition-all duration-200 placeholder:text-[var(--text-muted)] focus-visible:border-[var(--color-prompts)]/40 focus-visible:ring-[var(--color-prompts)]/15"
           />
+          {errors.email && (
+            <p className="text-xs text-destructive">{errors.email.message}</p>
+          )}
         </motion.div>
 
         <motion.div variants={fadeInUp} className="space-y-2">
@@ -104,10 +123,9 @@ export default function RegisterPage() {
           <div className="relative">
             <Input
               id="password"
-              name="password"
               type={showPassword ? "text" : "password"}
+              {...form.register("password")}
               placeholder="••••••••"
-              required
               className="h-11 rounded-xl border-border/40 bg-muted/30 px-4 pr-10 text-sm transition-all duration-200 placeholder:text-[var(--text-muted)] focus-visible:border-[var(--color-prompts)]/40 focus-visible:ring-[var(--color-prompts)]/15"
             />
             <button
@@ -119,15 +137,18 @@ export default function RegisterPage() {
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
+          {errors.password && (
+            <p className="text-xs text-destructive">{errors.password.message}</p>
+          )}
         </motion.div>
 
         <motion.div variants={fadeInUp}>
           <Button
             type="submit"
             className="w-full h-11 rounded-xl text-sm font-medium"
-            disabled={loading}
+            disabled={isSubmitting}
           >
-            {loading ? "Creating account..." : "Create account"}
+            {isSubmitting ? "Creating account..." : "Create account"}
           </Button>
         </motion.div>
 

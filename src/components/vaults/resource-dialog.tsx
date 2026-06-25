@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { createResource, editResource } from "@/actions/resources";
 import { batchCreateReferences, type LinkItem } from "@/actions/references";
 import { LinkPicker } from "@/components/shared/link-picker";
+import { resourceSchema } from "@/lib/schemas";
 
 interface Resource {
   id?: string;
@@ -28,25 +31,51 @@ interface ResourceDialogProps {
   resource?: Resource;
 }
 
+type ResourceFormValues = {
+  title: string;
+  url: string;
+  category: "frontend" | "backend" | "devops" | "database" | "mobile" | "ai" | "design" | "other";
+  reason: string;
+  tags: string;
+  notes: string;
+};
+
 export function ResourceDialog({ open, onOpenChange, resource }: ResourceDialogProps) {
   const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
   const [links, setLinks] = useState<LinkItem[]>([]);
   const isEdit = !!resource?.id;
 
-  async function handleSubmit(formData: FormData) {
-    setLoading(true);
-    setError(null);
+  const form = useForm<ResourceFormValues>({
+    resolver: zodResolver(resourceSchema),
+    defaultValues: {
+      title: resource?.title || "",
+      url: resource?.url || "",
+      category: (resource?.category as ResourceFormValues["category"]) || "other",
+      reason: resource?.reason || "",
+      tags: resource?.tags?.join(", ") || "",
+      notes: resource?.notes || "",
+    },
+  });
+
+  const { errors, isSubmitting } = form.formState;
+
+  async function onSubmit(values: ResourceFormValues) {
+    setServerError(null);
+    const formData = new FormData();
+    formData.set("title", values.title);
+    formData.set("url", values.url);
+    formData.set("category", values.category);
+    formData.set("reason", values.reason || "");
+    formData.set("tags", values.tags || "");
+    formData.set("notes", values.notes || "");
 
     const result = isEdit
       ? await editResource(resource!.id!, formData)
       : await createResource(formData);
 
-    setLoading(false);
-
     if (result?.error) {
-      setError(result.error);
+      setServerError(result.error);
     } else {
       const newId = !isEdit && result?.resource?.id ? result.resource.id : null;
       if (newId && links.length > 0) {
@@ -66,53 +95,62 @@ export function ResourceDialog({ open, onOpenChange, resource }: ResourceDialogP
             {isEdit ? "Update the resource details below." : "Save a new resource link."}
           </DialogDescription>
         </DialogHeader>
-        <form action={handleSubmit} className="space-y-4">
-          {error && (
-            <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          {serverError && (
+            <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{serverError}</div>
           )}
 
           <div className="space-y-2">
             <Label htmlFor="title">Title</Label>
-            <Input id="title" name="title" defaultValue={resource?.title || ""} placeholder="My Resource" required />
+            <Input id="title" {...form.register("title")} placeholder="My Resource" />
+            {errors.title && <p className="text-xs text-destructive">{errors.title.message}</p>}
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="url">URL</Label>
-            <Input id="url" name="url" type="url" defaultValue={resource?.url || ""} placeholder="https://example.com" required />
+            <Input id="url" type="url" {...form.register("url")} placeholder="https://example.com" />
+            {errors.url && <p className="text-xs text-destructive">{errors.url.message}</p>}
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="category">Category</Label>
-            <Select name="category" defaultValue={resource?.category || "other"}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="frontend">Frontend</SelectItem>
-                <SelectItem value="backend">Backend</SelectItem>
-                <SelectItem value="devops">DevOps</SelectItem>
-                <SelectItem value="database">Database</SelectItem>
-                <SelectItem value="mobile">Mobile</SelectItem>
-                <SelectItem value="ai">AI</SelectItem>
-                <SelectItem value="design">Design</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
-              </SelectContent>
-            </Select>
+            <Controller
+              control={form.control}
+              name="category"
+              render={({ field }) => (
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="frontend">Frontend</SelectItem>
+                    <SelectItem value="backend">Backend</SelectItem>
+                    <SelectItem value="devops">DevOps</SelectItem>
+                    <SelectItem value="database">Database</SelectItem>
+                    <SelectItem value="mobile">Mobile</SelectItem>
+                    <SelectItem value="ai">AI</SelectItem>
+                    <SelectItem value="design">Design</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+            />
+            {errors.category && <p className="text-xs text-destructive">{errors.category.message}</p>}
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="reason">Why are you saving this?</Label>
-            <Textarea id="reason" name="reason" defaultValue={resource?.reason || ""} placeholder="For my voice assistant project, reference for authentication system..." rows={2} />
+            <Textarea id="reason" {...form.register("reason")} placeholder="For my voice assistant project, reference for authentication system..." rows={2} />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="tags">Tags (comma separated)</Label>
-            <Input id="tags" name="tags" defaultValue={resource?.tags?.join(", ") || ""} placeholder="react, typescript, tutorial" />
+            <Input id="tags" {...form.register("tags")} placeholder="react, typescript, tutorial" />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="notes">Notes</Label>
-            <Textarea id="notes" name="notes" defaultValue={resource?.notes || ""} placeholder="Optional notes..." rows={3} />
+            <Textarea id="notes" {...form.register("notes")} placeholder="Optional notes..." rows={3} />
           </div>
 
           <div className="pt-2 border-t border-border/50">
@@ -121,7 +159,7 @@ export function ResourceDialog({ open, onOpenChange, resource }: ResourceDialogP
 
           <div className="flex justify-end gap-3">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button type="submit" disabled={loading}>{loading ? "Saving..." : isEdit ? "Update" : "Create"}</Button>
+            <Button type="submit" disabled={isSubmitting}>{isSubmitting ? "Saving..." : isEdit ? "Update" : "Create"}</Button>
           </div>
         </form>
       </DialogContent>

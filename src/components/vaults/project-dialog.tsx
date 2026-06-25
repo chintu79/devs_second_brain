@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { createProject, editProject } from "@/actions/projects";
 import { batchCreateReferences, type LinkItem } from "@/actions/references";
 import { LinkPicker } from "@/components/shared/link-picker";
+import { projectSchema } from "@/lib/schemas";
 
 interface ProjectData {
   id?: string;
@@ -27,25 +30,48 @@ interface ProjectDialogProps {
   project?: ProjectData;
 }
 
+type ProjectFormValues = {
+  title: string;
+  description: string;
+  status: "idea" | "research" | "planning" | "building" | "completed" | "archived";
+  techStack: string;
+  tags: string;
+};
+
 export function ProjectDialog({ open, onOpenChange, project }: ProjectDialogProps) {
   const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
   const [links, setLinks] = useState<LinkItem[]>([]);
   const isEdit = !!project?.id;
 
-  async function handleSubmit(formData: FormData) {
-    setLoading(true);
-    setError(null);
+  const form = useForm<ProjectFormValues>({
+    resolver: zodResolver(projectSchema),
+    defaultValues: {
+      title: project?.title || "",
+      description: project?.description || "",
+      status: (project?.status as ProjectFormValues["status"]) || "idea",
+      techStack: project?.techStack?.join(", ") || "",
+      tags: project?.tags?.join(", ") || "",
+    },
+  });
+
+  const { errors, isSubmitting } = form.formState;
+
+  async function onSubmit(values: ProjectFormValues) {
+    setServerError(null);
+    const formData = new FormData();
+    formData.set("title", values.title);
+    formData.set("description", values.description || "");
+    formData.set("status", values.status);
+    formData.set("techStack", values.techStack || "");
+    formData.set("tags", values.tags || "");
 
     const result = isEdit
       ? await editProject(project!.id!, formData)
       : await createProject(formData);
 
-    setLoading(false);
-
     if (result?.error) {
-      setError(result.error);
+      setServerError(result.error);
     } else {
       const newId = !isEdit && "id" in result ? (result as any).id as string : null;
       if (newId && links.length > 0) {
@@ -65,48 +91,55 @@ export function ProjectDialog({ open, onOpenChange, project }: ProjectDialogProp
             {isEdit ? "Update the project details." : "Create a new project idea."}
           </DialogDescription>
         </DialogHeader>
-        <form action={handleSubmit} className="space-y-4">
-          {error && (
-            <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          {serverError && (
+            <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{serverError}</div>
           )}
 
           <div className="space-y-2">
             <Label htmlFor="title">Title</Label>
-            <Input id="title" name="title" defaultValue={project?.title || ""} placeholder="Project name" required />
+            <Input id="title" {...form.register("title")} placeholder="Project name" />
+            {errors.title && <p className="text-xs text-destructive">{errors.title.message}</p>}
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
-            <Textarea id="description" name="description" defaultValue={project?.description || ""} placeholder="Brief description..." rows={3} />
+            <Textarea id="description" {...form.register("description")} placeholder="Brief description..." rows={3} />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="status">Status</Label>
-              <Select name="status" defaultValue={project?.status || "idea"}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="idea">Idea</SelectItem>
-                  <SelectItem value="research">Research</SelectItem>
-                  <SelectItem value="planning">Planning</SelectItem>
-                  <SelectItem value="building">Building</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="archived">Archived</SelectItem>
-                </SelectContent>
-              </Select>
+              <Controller
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="idea">Idea</SelectItem>
+                      <SelectItem value="research">Research</SelectItem>
+                      <SelectItem value="planning">Planning</SelectItem>
+                      <SelectItem value="building">Building</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
+                      <SelectItem value="archived">Archived</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="techStack">Tech Stack (comma separated)</Label>
-              <Input id="techStack" name="techStack" defaultValue={project?.techStack?.join(", ") || ""} placeholder="React, Node, Postgres" />
+              <Input id="techStack" {...form.register("techStack")} placeholder="React, Node, Postgres" />
             </div>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="tags">Tags (comma separated)</Label>
-            <Input id="tags" name="tags" defaultValue={project?.tags?.join(", ") || ""} placeholder="web, saas, ai" />
+            <Input id="tags" {...form.register("tags")} placeholder="web, saas, ai" />
           </div>
 
           <div className="pt-2 border-t border-border/50">
@@ -115,7 +148,7 @@ export function ProjectDialog({ open, onOpenChange, project }: ProjectDialogProp
 
           <div className="flex justify-end gap-3">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button type="submit" disabled={loading}>{loading ? "Saving..." : isEdit ? "Update" : "Create"}</Button>
+            <Button type="submit" disabled={isSubmitting}>{isSubmitting ? "Saving..." : isEdit ? "Update" : "Create"}</Button>
           </div>
         </form>
       </DialogContent>

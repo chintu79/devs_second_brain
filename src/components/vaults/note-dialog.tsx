@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import ReactMarkdown from "react-markdown";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -12,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { createNote, editNote } from "@/actions/notes";
 import { batchCreateReferences, type LinkItem } from "@/actions/references";
 import { LinkPicker } from "@/components/shared/link-picker";
+import { noteSchema } from "@/lib/schemas";
 
 interface NoteData {
   id?: string;
@@ -27,29 +30,47 @@ interface NoteDialogProps {
   note?: NoteData;
 }
 
+type NoteFormValues = {
+  title: string;
+  content: string;
+  category: "personal" | "technical" | "learning" | "meeting" | "idea" | "other";
+  tags: string;
+};
+
 export function NoteDialog({ open, onOpenChange, note }: NoteDialogProps) {
   const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
   const [preview, setPreview] = useState(false);
-  const [content, setContent] = useState(note?.content || "");
   const [links, setLinks] = useState<LinkItem[]>([]);
   const isEdit = !!note?.id;
 
-  async function handleSubmit(formData: FormData) {
-    setLoading(true);
-    setError(null);
+  const form = useForm<NoteFormValues>({
+    resolver: zodResolver(noteSchema),
+    defaultValues: {
+      title: note?.title || "",
+      content: note?.content || "",
+      category: (note?.category as NoteFormValues["category"]) || "technical",
+      tags: note?.tags?.join(", ") || "",
+    },
+  });
 
-    formData.set("content", content);
+  const { errors, isSubmitting } = form.formState;
+  const content = form.watch("content");
+
+  async function onSubmit(values: NoteFormValues) {
+    setServerError(null);
+    const formData = new FormData();
+    formData.set("title", values.title);
+    formData.set("content", values.content || "");
+    formData.set("category", values.category);
+    formData.set("tags", values.tags || "");
 
     const result = isEdit
       ? await editNote(note!.id!, formData)
       : await createNote(formData);
 
-    setLoading(false);
-
     if (result?.error) {
-      setError(result.error);
+      setServerError(result.error);
     } else {
       const newId = !isEdit && "id" in result ? (result as any).id as string : null;
       if (newId && links.length > 0) {
@@ -69,14 +90,15 @@ export function NoteDialog({ open, onOpenChange, note }: NoteDialogProps) {
             {isEdit ? "Update your markdown note." : "Write a new markdown note."}
           </DialogDescription>
         </DialogHeader>
-        <form action={handleSubmit} className="space-y-4">
-          {error && (
-            <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          {serverError && (
+            <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{serverError}</div>
           )}
 
           <div className="space-y-2">
             <Label htmlFor="title">Title</Label>
-            <Input id="title" name="title" defaultValue={note?.title || ""} placeholder="Note title" required />
+            <Input id="title" {...form.register("title")} placeholder="Note title" />
+            {errors.title && <p className="text-xs text-destructive">{errors.title.message}</p>}
           </div>
 
           <div className="space-y-2">
@@ -93,8 +115,7 @@ export function NoteDialog({ open, onOpenChange, note }: NoteDialogProps) {
             ) : (
               <Textarea
                 id="content"
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
+                {...form.register("content")}
                 placeholder="Write your note in markdown..."
                 rows={10}
               />
@@ -104,24 +125,30 @@ export function NoteDialog({ open, onOpenChange, note }: NoteDialogProps) {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="category">Category</Label>
-              <Select name="category" defaultValue={note?.category || "technical"}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="personal">Personal</SelectItem>
-                  <SelectItem value="technical">Technical</SelectItem>
-                  <SelectItem value="learning">Learning</SelectItem>
-                  <SelectItem value="meeting">Meeting</SelectItem>
-                  <SelectItem value="idea">Idea</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
+              <Controller
+                control={form.control}
+                name="category"
+                render={({ field }) => (
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="personal">Personal</SelectItem>
+                      <SelectItem value="technical">Technical</SelectItem>
+                      <SelectItem value="learning">Learning</SelectItem>
+                      <SelectItem value="meeting">Meeting</SelectItem>
+                      <SelectItem value="idea">Idea</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="tags">Tags (comma separated)</Label>
-              <Input id="tags" name="tags" defaultValue={note?.tags?.join(", ") || ""} placeholder="react, tutorial" />
+              <Input id="tags" {...form.register("tags")} placeholder="react, tutorial" />
             </div>
           </div>
 
@@ -131,7 +158,7 @@ export function NoteDialog({ open, onOpenChange, note }: NoteDialogProps) {
 
           <div className="flex justify-end gap-3">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button type="submit" disabled={loading}>{loading ? "Saving..." : isEdit ? "Update" : "Create"}</Button>
+            <Button type="submit" disabled={isSubmitting}>{isSubmitting ? "Saving..." : isEdit ? "Update" : "Create"}</Button>
           </div>
         </form>
       </DialogContent>

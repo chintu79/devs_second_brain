@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { Star, GitFork, Bookmark, BookmarkCheck, ArrowUpRight, TrendingUp, Zap, Sparkles, Clock } from "lucide-react";
+import { Star, GitFork, Bookmark, BookmarkCheck, ArrowUpRight, TrendingUp, Zap, Sparkles, Clock, Plus } from "lucide-react";
 import { cardHover } from "@/lib/motion";
+import { createResource } from "@/actions/resources";
 import type { Repository } from "@/lib/mock-data";
 
 interface RepositoryCardProps {
@@ -10,7 +12,6 @@ interface RepositoryCardProps {
   selected?: boolean;
   onSelect: (id: string) => void;
   onBookmark: (id: string) => void;
-  onSave: (id: string) => void;
 }
 
 const growthConfig: Record<string, { label: string; icon: React.ComponentType<{ className?: string }>; color: string }> = {
@@ -21,9 +22,26 @@ const growthConfig: Record<string, { label: string; icon: React.ComponentType<{ 
   new: { label: "New", icon: Sparkles, color: "text-purple-400" },
 };
 
-export function RepositoryCard({ repo, selected, onSelect, onBookmark, onSave }: RepositoryCardProps) {
+export function RepositoryCard({ repo, selected, onSelect, onBookmark }: RepositoryCardProps) {
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
   const growth = growthConfig[repo.growthIndicator] || growthConfig.stable;
   const GrowthIcon = growth.icon;
+
+  async function handleSaveToResources() {
+    if (saving || saved) return;
+    setSaving(true);
+    const formData = new FormData();
+    formData.set("title", `${repo.owner}/${repo.name}`);
+    formData.set("url", repo.url);
+    formData.set("category", "other");
+    formData.set("notes", repo.description);
+    formData.set("tags", repo.topics.slice(0, 5).join(", "));
+    formData.set("reason", `Saved from Open Source Radar — ${repo.stars.toLocaleString()} stars, trending in ${repo.category}`);
+    const result = await createResource(formData);
+    if (!result?.error) setSaved(true);
+    setSaving(false);
+  }
 
   return (
     <motion.div
@@ -37,13 +55,11 @@ export function RepositoryCard({ repo, selected, onSelect, onBookmark, onSave }:
     >
       <div className="px-5 py-4">
         <div className="flex items-start gap-4">
-          {/* Icon */}
           <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${selected ? "bg-primary/10" : "bg-muted"}`}>
             <span className="text-sm font-bold text-foreground/60">{repo.owner[0].toUpperCase()}</span>
           </div>
 
           <div className="flex-1 min-w-0">
-            {/* Title row */}
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
@@ -54,7 +70,6 @@ export function RepositoryCard({ repo, selected, onSelect, onBookmark, onSave }:
               </div>
             </div>
 
-            {/* Why context */}
             {repo.highlight && (
               <p className="text-xs text-primary/70 mt-2 italic leading-relaxed">{repo.highlight}</p>
             )}
@@ -65,7 +80,6 @@ export function RepositoryCard({ repo, selected, onSelect, onBookmark, onSave }:
               </div>
             )}
 
-            {/* Meta row */}
             <div className="flex items-center flex-wrap gap-x-3 gap-y-1.5 mt-3">
               <span className="text-xs text-muted-foreground bg-muted/70 px-1.5 py-0.5 rounded capitalize">{repo.category}</span>
               <span className="text-xs text-muted-foreground">{repo.language}</span>
@@ -83,7 +97,6 @@ export function RepositoryCard({ repo, selected, onSelect, onBookmark, onSave }:
               </span>
             </div>
 
-            {/* Topics */}
             {repo.topics.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-3">
                 {repo.topics.slice(0, 4).map((topic) => (
@@ -96,7 +109,6 @@ export function RepositoryCard({ repo, selected, onSelect, onBookmark, onSave }:
             )}
           </div>
 
-          {/* Actions */}
           <div className="flex flex-col gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
             <button
               onClick={() => onBookmark(repo.id)}
@@ -106,6 +118,18 @@ export function RepositoryCard({ repo, selected, onSelect, onBookmark, onSave }:
               title={repo.bookmarked ? "Remove bookmark" : "Bookmark"}
             >
               {repo.bookmarked ? <BookmarkCheck className="h-3.5 w-3.5" /> : <Bookmark className="h-3.5 w-3.5" />}
+            </button>
+            <button
+              onClick={handleSaveToResources}
+              disabled={saving || saved}
+              className={`flex h-7 w-7 items-center justify-center rounded-md transition-all ${
+                saved
+                  ? "text-emerald-400"
+                  : "text-muted-foreground hover:text-emerald-400 opacity-0 group-hover:opacity-100"
+              }`}
+              title={saved ? "Saved to Resources" : "Save to Resources"}
+            >
+              <Plus className={`h-3.5 w-3.5 ${saving ? "animate-spin" : ""}`} />
             </button>
             <a
               href={repo.url}

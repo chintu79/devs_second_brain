@@ -28,7 +28,6 @@ interface RadarSidebarProps {
   activeSection: string;
   onSectionChange: (section: string) => void;
   bookmarkedCount: number;
-  savedCount: number;
   recentlyViewedCount: number;
 }
 
@@ -51,7 +50,6 @@ export function RadarSidebar({
   activeSection,
   onSectionChange,
   bookmarkedCount,
-  savedCount,
   recentlyViewedCount,
 }: RadarSidebarProps) {
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({
@@ -62,7 +60,6 @@ export function RadarSidebar({
 
   const personalItems = [
     { id: "bookmarked", label: "Bookmarks", icon: Bookmark, count: bookmarkedCount },
-    { id: "saved", label: "Saved Repositories", icon: Archive, count: savedCount },
     { id: "viewed", label: "Previously Viewed", icon: Clock, count: recentlyViewedCount },
   ];
 

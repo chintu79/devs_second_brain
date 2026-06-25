@@ -10,7 +10,7 @@ interface ContextPanelProps {
 
 export function ContextPanel({ recentActivity, recentNotes }: ContextPanelProps) {
   return (
-    <aside className="hidden xl:flex w-[300px] shrink-0 flex-col border-l border-border/50 bg-background overflow-y-auto">
+    <aside className="hidden xl:flex h-[100vh] w-[300px] shrink-0 flex-col border-l border-border/50 bg-background overflow-y-auto">
       <div className="p-6 space-y-10">
         {/* Activity */}
         {recentActivity.length > 0 && (

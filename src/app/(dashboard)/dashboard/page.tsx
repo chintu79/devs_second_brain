@@ -13,14 +13,14 @@ export default async function DashboardPage() {
 
   const [resourceCount, promptCount, noteCount, projectCount, recentResources, recentNotes, activeProjects] = userId
     ? await Promise.all([
-        prisma.resource.count({ where: { userId } }),
-        prisma.prompt.count({ where: { userId } }),
-        prisma.note.count({ where: { userId } }),
-        prisma.project.count({ where: { userId } }),
-        prisma.resource.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, take: 5, select: { id: true, title: true, url: true, createdAt: true } }),
-        prisma.note.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, take: 5, select: { id: true, title: true, createdAt: true } }),
-        prisma.project.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, take: 6, select: { id: true, title: true, status: true, createdAt: true } }),
-      ])
+      prisma.resource.count({ where: { userId } }),
+      prisma.prompt.count({ where: { userId } }),
+      prisma.note.count({ where: { userId } }),
+      prisma.project.count({ where: { userId } }),
+      prisma.resource.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, take: 5, select: { id: true, title: true, url: true, createdAt: true } }),
+      prisma.note.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, take: 5, select: { id: true, title: true, createdAt: true } }),
+      prisma.project.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, take: 6, select: { id: true, title: true, status: true, createdAt: true } }),
+    ])
     : [0, 0, 0, 0, [], [], []];
 
   const vaultCounts = { resources: resourceCount, prompts: promptCount, notes: noteCount, projects: projectCount };
@@ -55,7 +55,7 @@ export default async function DashboardPage() {
     <div data-accent="dashboard">
       <PageTransition>
         <div className="flex h-full">
-          <div className="flex-1 min-w-0 max-w-4xl">
+          <div className="flex-1 min-w-0 max-w-4xl pr-6">
             {/* Greeting — hero */}
             <div className="mb-8">
               <h1 className="text-3xl font-semibold tracking-tight text-foreground">

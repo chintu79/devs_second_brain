@@ -4,26 +4,41 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { motion } from "framer-motion"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
 import { Eye, EyeOff, LogIn } from "lucide-react"
 import { login } from "@/actions/auth"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { stagger, fadeInUp } from "@/lib/motion"
+import { loginSchema } from "@/lib/schemas"
+
+type LoginFormValues = {
+  email: string;
+  password: string;
+}
 
 export default function LoginPage() {
   const router = useRouter()
-  const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
+  const [serverError, setServerError] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
 
-  async function handleSubmit(formData: FormData) {
-    setLoading(true)
-    setError(null)
+  const form = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: "", password: "" },
+  })
+
+  const { errors, isSubmitting } = form.formState
+
+  async function onSubmit(values: LoginFormValues) {
+    setServerError(null)
+    const formData = new FormData()
+    formData.set("email", values.email)
+    formData.set("password", values.password)
     const result = await login(formData)
-    setLoading(false)
     if (result?.error) {
-      setError(result.error)
+      setServerError(result.error)
     } else {
       router.push("/dashboard")
     }
@@ -48,15 +63,15 @@ export default function LoginPage() {
         </p>
       </motion.div>
 
-      <form action={handleSubmit} className="space-y-5">
-        {error && (
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+        {serverError && (
           <motion.div
             variants={fadeInUp}
             initial="hidden"
             animate="visible"
             className="rounded-xl border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive"
           >
-            {error}
+            {serverError}
           </motion.div>
         )}
 
@@ -66,12 +81,14 @@ export default function LoginPage() {
           </Label>
           <Input
             id="email"
-            name="email"
             type="email"
+            {...form.register("email")}
             placeholder="you@example.com"
-            required
             className="h-11 rounded-xl border-border/40 bg-muted/30 px-4 text-sm transition-all duration-200 placeholder:text-[var(--text-muted)] focus-visible:border-[var(--color-dashboard)]/40 focus-visible:ring-[var(--color-dashboard)]/15"
           />
+          {errors.email && (
+            <p className="text-xs text-destructive">{errors.email.message}</p>
+          )}
         </motion.div>
 
         <motion.div variants={fadeInUp} className="space-y-2">
@@ -89,10 +106,9 @@ export default function LoginPage() {
           <div className="relative">
             <Input
               id="password"
-              name="password"
               type={showPassword ? "text" : "password"}
+              {...form.register("password")}
               placeholder="••••••••"
-              required
               className="h-11 rounded-xl border-border/40 bg-muted/30 px-4 pr-10 text-sm transition-all duration-200 placeholder:text-[var(--text-muted)] focus-visible:border-[var(--color-dashboard)]/40 focus-visible:ring-[var(--color-dashboard)]/15"
             />
             <button
@@ -104,15 +120,18 @@ export default function LoginPage() {
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
+          {errors.password && (
+            <p className="text-xs text-destructive">{errors.password.message}</p>
+          )}
         </motion.div>
 
         <motion.div variants={fadeInUp}>
           <Button
             type="submit"
             className="w-full h-11 rounded-xl text-sm font-medium"
-            disabled={loading}
+            disabled={isSubmitting}
           >
-            {loading ? "Signing in..." : "Sign in"}
+            {isSubmitting ? "Signing in..." : "Sign in"}
           </Button>
         </motion.div>
 

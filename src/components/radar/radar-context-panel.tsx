@@ -4,26 +4,16 @@ import { Bookmark, Clock, TrendingUp, Layers, Sparkles } from "lucide-react";
 import type { Repository } from "@/lib/mock-data";
 
 interface RadarContextPanelProps {
-  savedRepos: Repository[];
   recentlyViewed: Repository[];
   bookmarkedRepos: Repository[];
   trendingRepos: Repository[];
 }
 
 export function RadarContextPanel({
-  savedRepos, recentlyViewed, bookmarkedRepos, trendingRepos,
+  recentlyViewed, bookmarkedRepos, trendingRepos,
 }: RadarContextPanelProps) {
   return (
     <div className="w-64 shrink-0 border-l border-border/30 bg-muted/20 overflow-y-auto px-4 py-5 space-y-6">
-      {/* Recently Saved */}
-      {savedRepos.length > 0 && (
-        <ContextSection icon={Bookmark} label="Recently Saved">
-          {savedRepos.slice(0, 4).map((r) => (
-            <ContextItem key={r.id} label={r.name} subtitle={r.owner} />
-          ))}
-        </ContextSection>
-      )}
-
       {/* Bookmarks */}
       {bookmarkedRepos.length > 0 && (
         <ContextSection icon={Bookmark} label="Bookmarks">

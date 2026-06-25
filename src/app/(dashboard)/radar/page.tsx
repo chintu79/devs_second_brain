@@ -1,16 +1,21 @@
-import { allRepos, discoverySections, sidebarCategories } from "@/lib/mock-data";
-import { RadarWorkspace } from "@/components/radar/radar-workspace";
+import { fetchTrendingRepos } from "@/lib/github"
+import { allRepos, discoverySections, sidebarCategories } from "@/lib/mock-data"
+import { RadarWorkspace } from "@/components/radar/radar-workspace"
 
-export const dynamic = "force-static";
+export default async function RadarPage() {
+  const realData = await fetchTrendingRepos()
 
-export default function RadarPage() {
+  const repos = realData?.repos ?? allRepos
+  const sections = realData?.sections ?? discoverySections
+  const categories = realData?.categories ?? sidebarCategories
+
   return (
     <div data-accent="radar" className="-m-5 pb-8 lg:-m-6 h-[calc(100vh-var(--header-height,0px))] flex overflow-hidden">
       <RadarWorkspace
-        repos={allRepos}
-        sections={discoverySections}
-        categories={sidebarCategories}
+        repos={repos}
+        sections={sections}
+        categories={categories}
       />
     </div>
-  );
+  )
 }

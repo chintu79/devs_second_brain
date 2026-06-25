@@ -15,11 +15,10 @@ interface RadarFeedProps {
   onSearchChange: (q: string) => void;
   onSelect: (id: string) => void;
   onBookmark: (id: string) => void;
-  onSave: (id: string) => void;
 }
 
 export function RadarFeed({
-  repos, sections, selectedId, searchQuery, onSearchChange, onSelect, onBookmark, onSave,
+  repos, sections, selectedId, searchQuery, onSearchChange, onSelect, onBookmark,
 }: RadarFeedProps) {
   const searchRef = useRef<HTMLInputElement>(null);
 
@@ -96,7 +95,6 @@ export function RadarFeed({
                         selected={selectedId === repo.id}
                         onSelect={onSelect}
                         onBookmark={onBookmark}
-                        onSave={onSave}
                       />
                     </motion.div>
                   ))}

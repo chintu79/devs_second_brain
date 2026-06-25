@@ -23,7 +23,6 @@ export function RadarWorkspace({ repos, sections, categories }: RadarWorkspacePr
   const [searchQuery, setSearchQuery] = useState("");
   const [activeSection, setActiveSection] = useState("all");
   const [bookmarked, setBookmarked] = useState<Set<string>>(new Set());
-  const [saved, setSaved] = useState<Set<string>>(new Set());
   const [recentlyViewed, setRecentlyViewed] = useState<string[]>([]);
 
   const setSelectedId = useCallback(
@@ -59,20 +58,11 @@ export function RadarWorkspace({ repos, sections, categories }: RadarWorkspacePr
     });
   }
 
-  function handleSave(id: string) {
-    setSaved((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }
-
   // Filter repos by active section
   const filteredRepos = useMemo(() => {
     if (activeSection === "all") return repos;
     if (activeSection === "bookmarked") return repos.filter((r) => bookmarked.has(r.id));
-    if (activeSection === "saved") return repos.filter((r) => saved.has(r.id));
+    if (activeSection === "saved") return [];
     if (activeSection === "viewed") return recentlyViewed.map((id) => repos.find((r) => r.id === id)).filter(Boolean) as Repository[];
     return repos.filter((r) => {
       const catMatch = r.category.toLowerCase().replace(/\s+/g, "") === activeSection;
@@ -80,7 +70,7 @@ export function RadarWorkspace({ repos, sections, categories }: RadarWorkspacePr
       const recentMatch = activeSection === "recent" ? r.growthIndicator === "new" : false;
       return catMatch || idMatch || recentMatch;
     });
-  }, [repos, activeSection, bookmarked, saved, recentlyViewed]);
+  }, [repos, activeSection, bookmarked, recentlyViewed]);
 
   // Build feed sections from filtered repos
   const feedSections = useMemo(() => {
@@ -90,23 +80,23 @@ export function RadarWorkspace({ repos, sections, categories }: RadarWorkspacePr
     return sections;
   }, [sections, filteredRepos, activeSection]);
 
-  // Enrich repos with bookmark/save state
+  // Enrich repos with bookmark state
   const enrichedRepos = useMemo(
-    () => repos.map((r) => ({ ...r, bookmarked: bookmarked.has(r.id), saved: saved.has(r.id) })),
-    [repos, bookmarked, saved]
+    () => repos.map((r) => ({ ...r, bookmarked: bookmarked.has(r.id) })),
+    [repos, bookmarked]
   );
 
   const enrichedFiltered = useMemo(
-    () => filteredRepos.map((r) => ({ ...r, bookmarked: bookmarked.has(r.id), saved: saved.has(r.id) })),
-    [filteredRepos, bookmarked, saved]
+    () => filteredRepos.map((r) => ({ ...r, bookmarked: bookmarked.has(r.id) })),
+    [filteredRepos, bookmarked]
   );
 
   const enrichedSections = useMemo(
     () => feedSections.map((s) => ({
       ...s,
-      repos: s.repos.map((r) => ({ ...r, bookmarked: bookmarked.has(r.id), saved: saved.has(r.id) })),
+      repos: s.repos.map((r) => ({ ...r, bookmarked: bookmarked.has(r.id) })),
     })),
-    [feedSections, bookmarked, saved]
+    [feedSections, bookmarked]
   );
 
   const selectedRepo = useMemo(() => {
@@ -115,7 +105,6 @@ export function RadarWorkspace({ repos, sections, categories }: RadarWorkspacePr
   }, [selectedId, enrichedRepos]);
 
   // Context panel data
-  const savedRepos = useMemo(() => enrichedRepos.filter((r) => r.saved), [enrichedRepos]);
   const bookmarkedRepos = useMemo(() => enrichedRepos.filter((r) => r.bookmarked), [enrichedRepos]);
   const viewedRepos = useMemo(
     () => recentlyViewed.map((id) => enrichedRepos.find((r) => r.id === id)).filter(Boolean) as Repository[],
@@ -134,7 +123,6 @@ export function RadarWorkspace({ repos, sections, categories }: RadarWorkspacePr
         activeSection={activeSection}
         onSectionChange={(s) => { setActiveSection(s); setSelectedId(null); }}
         bookmarkedCount={bookmarked.size}
-        savedCount={saved.size}
         recentlyViewedCount={recentlyViewed.length}
       />
 
@@ -148,7 +136,6 @@ export function RadarWorkspace({ repos, sections, categories }: RadarWorkspacePr
           onSearchChange={setSearchQuery}
           onSelect={handleSelect}
           onBookmark={handleBookmark}
-          onSave={handleSave}
         />
       </div>
 
@@ -163,7 +150,6 @@ export function RadarWorkspace({ repos, sections, categories }: RadarWorkspacePr
           />
         ) : (
           <RadarContextPanel
-            savedRepos={savedRepos}
             recentlyViewed={viewedRepos}
             bookmarkedRepos={bookmarkedRepos}
             trendingRepos={trendingRepos}
