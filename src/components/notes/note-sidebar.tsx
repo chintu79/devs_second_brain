@@ -69,6 +69,7 @@ export function NoteSidebar({
         <span className="text-xs font-semibold text-section-foreground uppercase tracking-[0.1em]">Notes</span>
         <button
           onClick={onCreate}
+          aria-label="Create new note"
           className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 text-primary hover:bg-primary/20 hover:scale-[1.1] transition-all duration-150"
         >
           <Plus className="h-4 w-4" />

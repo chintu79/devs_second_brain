@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback, useRef } from "react";
+import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Search, Plus, Loader2, ChevronDown } from "lucide-react";
 import { NoteSidebar } from "./note-sidebar";
@@ -66,6 +66,8 @@ export function NoteWorkspace({ notes, resources, prompts, projects }: NoteWorks
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const selectedIdRef = useRef(selectedId);
+  useEffect(() => { selectedIdRef.current = selectedId; }, [selectedId]);
 
   // Compute sidebar data
   const categories = useMemo(() => {
@@ -266,8 +268,11 @@ export function NoteWorkspace({ notes, resources, prompts, projects }: NoteWorks
               onSelect={setSelectedId}
               onDelete={(id) => {
                 deleteNote(id).then(() => {
-                  if (selectedId === id) router.replace("/notes");
-                  router.refresh();
+                  if (selectedIdRef.current === id) {
+                    router.replace("/notes");
+                  } else {
+                    router.refresh();
+                  }
                 });
               }}
               onFavorite={() => { }}

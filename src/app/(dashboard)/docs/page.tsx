@@ -1,5 +1,6 @@
-import { PageTransition } from "@/components/dashboard/page-transition";
-import { Book, Link2, MessageSquare, StickyNote, FolderKanban, Radio, Search, Bot, Tags, Command, LayoutDashboard, Key, Zap, Workflow, Palette, Sparkles } from "lucide-react";
+import { ReadingProgress } from "@/components/docs/reading-progress";
+import { DocsTOC } from "@/components/docs/docs-toc";
+import { Book, Link2, MessageSquare, StickyNote, FolderKanban, Radio, Search, Bot, Tags, Command, LayoutDashboard, Zap, Workflow, Palette, Sparkles, Server } from "lucide-react";
 
 const useCases = [
   {
@@ -9,7 +10,7 @@ const useCases = [
     color: "#6366F1",
     content: [
       {
-        heading: "What is Dev Second Brain?",
+        heading: "What is DevCache?",
         text: "A developer knowledge OS — save resources, prompts, notes, and projects, all connected through tags. Think of it as your personal memory system for everything you learn.",
       },
       {
@@ -344,31 +345,38 @@ const useCases = [
     ],
   },
   {
-    id: "api",
-    icon: Key,
-    title: "REST API — Program Your Vault",
-    color: "#EC4899",
+    id: "self-hosting",
+    icon: Server,
+    title: "Self-Hosting",
+    color: "#A1A1AA",
     content: [
       {
-        heading: "Use cases",
+        heading: "Prerequisites",
         items: [
-          "Automate saving resources from a bookmarking script",
-          "Sync prompts from your editor or CLI",
-          "Build a custom dashboard or integration",
-          "Backup or migrate your vault programmatically",
+          "Node.js 18+",
+          "PostgreSQL database (Render, Neon, Supabase, or local)",
+          "A GitHub account (for deployment)",
         ],
       },
       {
-        heading: "Getting started",
+        heading: "Quick deploy (Render)",
         steps: [
-          "Go to Settings → API Keys.",
-          'Click "Generate", give it a name (e.g. "CLI automation"), and copy the key immediately.',
-          "Use the key in the Authorization header for all requests.",
-          "Base URL: https://your-site.com/api/v1",
+          "Push this repo to GitHub.",
+          "Create a new Web Service on Render and connect your repo.",
+          'Set Build Command: npm install && npm run build',
+          'Set Start Command: npm start',
+          "Add environment variables: DATABASE_URL (PostgreSQL connection string), NEXTAUTH_SECRET (run openssl rand -base64 32), NEXTAUTH_URL (your Render URL).",
+          "Deploy. Render auto-deploys on every push.",
         ],
       },
       {
-        heading: "Examples",
+        heading: "Local development",
+        steps: [
+          "Clone the repo and run npm install.",
+          "Copy .env.example to .env and fill in your database URL and auth secret.",
+          "Run npx prisma db push to create the database schema.",
+          "Run npm run dev — the app starts at http://localhost:3000.",
+        ],
       },
     ],
   },
@@ -403,168 +411,129 @@ const shortcuts = [
   { keys: "Backspace", desc: "Remove last tag when input is empty" },
 ];
 
-const apiEndpoints = [
-  { method: "GET", path: "/api/v1/resources", desc: "List resources" },
-  { method: "POST", path: "/api/v1/resources", desc: "Create resource", body: "{ title, url, category, notes?, reason?, tags? }" },
-  { method: "GET", path: "/api/v1/prompts", desc: "List prompts" },
-  { method: "POST", path: "/api/v1/prompts", desc: "Create prompt", body: "{ title, prompt, category, useCase?, tags? }" },
-  { method: "GET", path: "/api/v1/notes", desc: "List notes" },
-  { method: "POST", path: "/api/v1/notes", desc: "Create note", body: "{ title, content, category, tags? }" },
-  { method: "GET", path: "/api/v1/projects", desc: "List projects" },
-  { method: "POST", path: "/api/v1/projects", desc: "Create project", body: "{ title, description?, status?, techStack?, tags? }" },
-  { method: "GET", path: "/api/v1/tags", desc: "List tags" },
-];
+const tocSections = useCases.map((s) => ({ id: s.id, title: s.title, color: s.color }));
 
 export default function DocsPage() {
   return (
-    <PageTransition>
-      <div className="max-w-3xl mx-auto" data-accent="settings">
-        {/* Hero */}
-        <div className="mb-12">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
-              <Book className="h-5 w-5 text-primary" />
+    <>
+      <ReadingProgress />
+      <div className="max-w-6xl mx-auto flex gap-8 h-full" data-accent="settings">
+        {/* TOC sidebar */}
+        <DocsTOC sections={tocSections} />
+
+        {/* Main content */}
+        <div className="flex-1 min-w-0 overflow-y-auto py-6 pr-4">
+          {/* Hero */}
+          <div className="mb-12">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+                <Book className="h-5 w-5 text-primary" />
+              </div>
+              <h1 className="text-2xl font-semibold text-[#FAFAFA]">Docs</h1>
             </div>
-            <h1 className="text-2xl font-semibold text-[#FAFAFA]">Docs</h1>
+            <p className="text-[#A1A1AA] text-sm leading-relaxed max-w-2xl">
+              Full how-to guide for Dev Second Brain. Each section covers use cases, step-by-step instructions, and tips.
+            </p>
           </div>
-          <p className="text-[#A1A1AA] text-sm leading-relaxed max-w-2xl">
-            Full how-to guide for Dev Second Brain. Each section covers use cases, step-by-step instructions, and tips.
-          </p>
-        </div>
 
-        {/* Table of Contents */}
-        <div className="mb-12">
-          <h2 className="text-sm font-semibold text-[#E4E4E7] mb-3">Sections</h2>
-          <div className="grid sm:grid-cols-2 gap-2">
-            {useCases.map((s) => (
-              <a
-                key={s.id}
-                href={`#${s.id}`}
-                className="flex items-center gap-2.5 rounded-lg border border-border/20 bg-card px-4 py-2.5 text-sm text-[#D4D4D8] hover:border-border/60 hover:text-[#F4F4F5] transition-all duration-150"
-              >
-                <s.icon className="h-4 w-4 shrink-0" style={{ color: s.color }} />
-                {s.title}
-              </a>
-            ))}
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="space-y-8 mb-12">
-          {useCases.map((section) => (
-            <section
-              key={section.id}
-              id={section.id}
-              className="scroll-mt-8 rounded-xl border border-border/20 bg-card overflow-hidden hover:border-border/40 transition-colors"
-            >
-              <div className="px-6 py-4 border-b border-border/20 bg-muted/30 flex items-center gap-3">
-                <div
-                  className="flex h-8 w-8 items-center justify-center rounded-lg"
-                  style={{ backgroundColor: `${section.color}15` }}
+          {/* Grid Table of Contents */}
+          <div className="mb-12">
+            <h2 className="text-sm font-semibold text-[#E4E4E7] mb-3">Sections</h2>
+            <div className="grid sm:grid-cols-2 gap-2">
+              {useCases.map((s) => (
+                <a
+                  key={s.id}
+                  href={`#${s.id}`}
+                  className="flex items-center gap-2.5 rounded-lg border border-border/20 bg-card px-4 py-2.5 text-sm text-[#D4D4D8] hover:border-border/60 hover:text-[#F4F4F5] transition-all duration-150"
                 >
-                  <section.icon className="h-4 w-4" style={{ color: section.color }} />
-                </div>
-                <h2 className="text-base font-semibold text-[#F4F4F5]">{section.title}</h2>
-              </div>
-              <div className="px-6 py-5 space-y-5">
-                {section.content.map((block, i) => (
-                  <div key={i}>
-                    {"heading" in block && (
-                      <h3 className="text-sm font-medium text-[#E4E4E7] mb-2">{block.heading}</h3>
-                    )}
-                    {"text" in block && block.text && (
-                      <p className="text-sm text-[#A1A1AA] leading-relaxed">{block.text}</p>
-                    )}
-                    {"items" in block && block.items && (
-                      <ul className="space-y-1.5">
-                        {block.items.map((item: string, j: number) => (
-                          <li key={j} className="flex items-start gap-2 text-sm text-[#A1A1AA]">
-                            <span className="mt-[7px] h-1 w-1 shrink-0 rounded-full" style={{ backgroundColor: section.color }} />
-                            {item}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                    {"steps" in block && block.steps && (
-                      <ol className="space-y-1.5">
-                        {block.steps.map((step: string, j: number) => (
-                          <li key={j} className="flex items-start gap-2.5 text-sm text-[#A1A1AA]">
-                            <span
-                              className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold text-white"
-                              style={{ backgroundColor: section.color }}
-                            >
-                              {j + 1}
-                            </span>
-                            {step}
-                          </li>
-                        ))}
-                      </ol>
-                    )}
-                  </div>
-                ))}
+                  <s.icon className="h-4 w-4 shrink-0 accent-text" style={{ '--accent-c': s.color } as React.CSSProperties} />
+                  {s.title}
+                </a>
+              ))}
+            </div>
+          </div>
 
-                {/* API Examples (inline in API section) */}
-                {section.id === "api" && (
-                  <div className="space-y-4 pt-2">
-                    <pre className="text-xs text-[#D4D4D8] bg-muted/50 rounded-lg p-4 font-mono leading-relaxed overflow-x-auto">
-{`# Set your key
-export KEY=dsb_abc123...
-export BASE=https://your-site.com/api/v1
-
-# List your resources
-curl $BASE/resources -H "Authorization: Bearer $KEY"
-
-# Create a resource
-curl -X POST $BASE/resources \\
-  -H "Authorization: Bearer $KEY" \\
-  -H "Content-Type: application/json" \\
-  -d '{"title":"My article","url":"https://...","category":"frontend","tags":"react,typescript"}'`}
-                    </pre>
-                    <div className="divide-y divide-border/20">
-                      {apiEndpoints.map((ep, i) => (
-                        <div key={i} className="flex items-start gap-3 py-2.5 first:pt-0 last:pb-0">
-                          <span className={`shrink-0 inline-flex items-center justify-center h-5 w-14 rounded text-[10px] font-semibold font-mono ${
-                            ep.method === "GET" ? "bg-[#22C55E]/10 text-[#22C55E]" : "bg-[#F59E0B]/10 text-[#F59E0B]"
-                          }`}>
-                            {ep.method}
-                          </span>
-                          <div className="min-w-0">
-                            <code className="text-xs text-[#D4D4D8] font-mono">{ep.path}</code>
-                            <span className="text-xs text-[#71717A] ml-2">{ep.desc}</span>
-                            {"body" in ep && ep.body && (
-                              <p className="text-[11px] text-[#71717A] mt-0.5 font-mono">{ep.body}</p>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </section>
-          ))}
-        </div>
-
-        {/* Keyboard Shortcuts */}
-        <div className="mb-12">
-          <h2 className="text-sm font-semibold text-[#F4F4F5] mb-4">Keyboard Shortcuts</h2>
-          <div className="rounded-xl border border-border/20 overflow-hidden">
-            {shortcuts.map((s, i) => (
-              <div
-                key={i}
-                className={`flex items-center justify-between px-5 py-3 ${
-                  i < shortcuts.length - 1 ? "border-b border-border/20" : ""
-                }`}
+          {/* Content */}
+          <div className="space-y-8 mb-12">
+            {useCases.map((section) => (
+              <section
+                key={section.id}
+                id={section.id}
+                className="scroll-mt-20 rounded-xl border border-border/20 bg-card overflow-hidden hover:border-border/40 transition-colors"
               >
-                <span className="text-sm text-[#D4D4D8]">{s.desc}</span>
-                <kbd className="inline-flex items-center h-6 px-2 rounded text-xs font-medium bg-muted text-muted-foreground border border-border/40 font-mono">
-                  {s.keys}
-                </kbd>
-              </div>
+                <div className="px-6 py-4 border-b border-border/20 bg-muted/30 flex items-center gap-3">
+                  <div
+                    className="flex h-8 w-8 items-center justify-center rounded-lg accent-bg-15"
+                    style={{ '--accent-c': section.color } as React.CSSProperties}
+                  >
+                    <section.icon className="h-4 w-4 accent-text" />
+                  </div>
+                  <h2 className="text-base font-semibold text-[#F4F4F5]">{section.title}</h2>
+                </div>
+                <div className="px-6 py-5 space-y-5">
+                  {section.content.map((block, i) => (
+                    <div key={i}>
+                      {"heading" in block && (
+                        <h3 className="text-sm font-medium text-[#E4E4E7] mb-2">{block.heading}</h3>
+                      )}
+                      {"text" in block && block.text && (
+                        <p className="text-sm text-[#A1A1AA] leading-relaxed">{block.text}</p>
+                      )}
+                      {"items" in block && block.items && (
+                        <ul className="space-y-1.5">
+                          {block.items.map((item: string, j: number) => (
+                            <li key={j} className="flex items-start gap-2 text-sm text-[#A1A1AA]">
+                              <span className="mt-[7px] h-1 w-1 shrink-0 rounded-full accent-bg" style={{ '--accent-c': section.color } as React.CSSProperties} />
+                              {item}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      {"steps" in block && block.steps && (
+                        <ol className="space-y-1.5">
+                          {block.steps.map((step: string, j: number) => (
+                            <li key={j} className="flex items-start gap-2.5 text-sm text-[#A1A1AA]">
+                              <span
+                                className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold text-white accent-bg"
+                                style={{ '--accent-c': section.color } as React.CSSProperties}
+                              >
+                                {j + 1}
+                              </span>
+                              {step}
+                            </li>
+                          ))}
+                        </ol>
+                      )}
+                    </div>
+                  ))}
+
+
+                </div>
+              </section>
             ))}
+          </div>
+
+          {/* Keyboard Shortcuts */}
+          <div className="mb-12">
+            <h2 className="text-sm font-semibold text-[#F4F4F5] mb-4">Keyboard Shortcuts</h2>
+            <div className="rounded-xl border border-border/20 overflow-hidden">
+              {shortcuts.map((s, i) => (
+                <div
+                  key={i}
+                  className={`flex items-center justify-between px-5 py-3 ${
+                    i < shortcuts.length - 1 ? "border-b border-border/20" : ""
+                  }`}
+                >
+                  <span className="text-sm text-[#D4D4D8]">{s.desc}</span>
+                  <kbd className="inline-flex items-center h-6 px-2 rounded text-xs font-medium bg-muted text-muted-foreground border border-border/40 font-mono">
+                    {s.keys}
+                  </kbd>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
-    </PageTransition>
+    </>
   );
 }

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import ReactMarkdown from "react-markdown";
+import { Markdown } from "@/components/shared/markdown";
 import { Sparkles, Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -76,7 +76,7 @@ export function NoteDialog({ open, onOpenChange, note }: NoteDialogProps) {
     if (result?.error) {
       setServerError(result.error);
     } else {
-      const newId = !isEdit && "id" in result ? (result as any).id as string : null;
+      const newId = !isEdit && "id" in result ? result.id as string : null;
       if (newId && links.length > 0) {
         await batchCreateReferences("note", newId, links);
       }
@@ -114,7 +114,7 @@ export function NoteDialog({ open, onOpenChange, note }: NoteDialogProps) {
             </div>
             {preview ? (
               <div className="min-h-[200px] rounded-md border p-4 prose prose-sm dark:prose-invert max-w-none">
-                <ReactMarkdown>{content}</ReactMarkdown>
+                <Markdown>{content}</Markdown>
               </div>
             ) : (
               <Textarea
@@ -131,7 +131,7 @@ export function NoteDialog({ open, onOpenChange, note }: NoteDialogProps) {
               <div className="flex items-center justify-between">
                 <Label htmlFor="category">Category</Label>
                 <button
-                  type="button"
+                  type="button" disabled={aiLoading !== null}
                   onClick={async () => {
                     setServerError(null);
                     setAiLoading("category");
@@ -141,6 +141,7 @@ export function NoteDialog({ open, onOpenChange, note }: NoteDialogProps) {
                       ["personal", "technical", "learning", "meeting", "idea", "other"]
                     );
                     setAiLoading(null);
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     if (res.category) form.setValue("category", res.category as any);
                     else if (res.error) setServerError(res.error);
                   }}
@@ -175,7 +176,7 @@ export function NoteDialog({ open, onOpenChange, note }: NoteDialogProps) {
               <div className="flex items-center justify-between">
                 <Label>Tags</Label>
                 <button
-                  type="button"
+                  type="button" disabled={aiLoading !== null}
                   onClick={async () => {
                     setServerError(null);
                     setAiLoading("tags");

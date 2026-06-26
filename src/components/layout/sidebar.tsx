@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, LayoutGroup } from "framer-motion";
@@ -42,37 +43,25 @@ export const sidebarLinks: SidebarLink[] = [
   { href: "/search", label: "Search", icon: Search, accent: "search" },
 ];
 
-const sectionAccents: Record<string, { navLabel: string; wsLabel: string }> = {
-  dashboard: { navLabel: "Navigation", wsLabel: "Workspace" },
-  resources: { navLabel: "Navigation", wsLabel: "Workspace" },
-  prompts: { navLabel: "Navigation", wsLabel: "Workspace" },
-  notes: { navLabel: "Navigation", wsLabel: "Workspace" },
-  projects: { navLabel: "Navigation", wsLabel: "Workspace" },
-  radar: { navLabel: "Navigation", wsLabel: "Workspace" },
-  graph: { navLabel: "Navigation", wsLabel: "Workspace" },
-  chat: { navLabel: "Navigation", wsLabel: "Workspace" },
-  search: { navLabel: "Navigation", wsLabel: "Workspace" },
-};
-
-export function Sidebar() {
+export const Sidebar = memo(function Sidebar() {
   const pathname = usePathname();
 
   return (
     <aside className="hidden md:flex w-[240px] shrink-0 flex-col border-r border-sidebar-border bg-sidebar">
       {/* Logo */}
       <div className="flex h-14 items-center gap-2.5 px-4 border-b border-sidebar-border">
-        <div className="flex h-7 w-7 items-center justify-center rounded-md shrink-0" style={{ backgroundColor: "var(--accent, #6366f1)" }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <div className="flex h-7 w-7 items-center justify-center rounded-md shrink-0 sidebar-logo-bg">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M12 3a6 6 0 0 0-6 6v1h12V9a6 6 0 0 0-6-6z" />
             <path d="M8 14v1a4 4 0 0 0 8 0v-1" />
           </svg>
         </div>
-        <span className="text-sm font-semibold tracking-tight" style={{ color: "var(--sidebar-item-accent, #fafafa)" }}>Dev Second Brain</span>
+        <span className="text-sm font-semibold tracking-tight text-sidebar-primary-foreground">Dev Second Brain</span>
       </div>
 
       {/* Navigation */}
       <div className="flex-1 flex flex-col gap-0.5 p-3 pt-5 overflow-y-auto">
-        <span className="text-[10px] font-semibold uppercase tracking-[0.12em] px-3 pb-2" style={{ color: "color-mix(in srgb, var(--sidebar-item-accent, #a1a1aa) 60%, transparent)" }}>
+        <span className="text-[10px] font-semibold uppercase tracking-[0.12em] px-3 pb-2 text-sidebar-foreground">
           Navigation
         </span>
         <LayoutGroup id="nav-group">
@@ -89,8 +78,7 @@ export function Sidebar() {
                 {isActive && (
                   <motion.div
                     layoutId="nav-indicator"
-                    className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-0.5 rounded-full"
-                    style={{ backgroundColor: "var(--sidebar-item-accent, #6366f1)" }}
+                    className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-0.5 rounded-full sidebar-indicator"
                     transition={{ type: "spring", stiffness: 350, damping: 28, mass: 0.9 }}
                   />
                 )}
@@ -103,7 +91,7 @@ export function Sidebar() {
 
         <div className="divider-sidebar mx-3" />
 
-        <span className="text-[10px] font-semibold uppercase tracking-[0.12em] px-3 pb-2" style={{ color: "color-mix(in srgb, var(--sidebar-item-accent, #a1a1aa) 60%, transparent)" }}>
+        <span className="text-[10px] font-semibold uppercase tracking-[0.12em] px-3 pb-2 text-sidebar-foreground">
           Workspace
         </span>
         <LayoutGroup id="workspace-group">
@@ -120,8 +108,7 @@ export function Sidebar() {
                 {isActive && (
                   <motion.div
                     layoutId="workspace-indicator"
-                    className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-0.5 rounded-full"
-                    style={{ backgroundColor: "var(--sidebar-item-accent, #6366f1)" }}
+                    className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-0.5 rounded-full sidebar-indicator"
                     transition={{ type: "spring", stiffness: 350, damping: 28, mass: 0.9 }}
                   />
                 )}
@@ -163,4 +150,4 @@ export function Sidebar() {
       </div>
     </aside>
   );
-}
+});

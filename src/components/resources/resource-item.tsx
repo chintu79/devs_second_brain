@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { ExternalLink, Heart, Archive, MoreHorizontal, Pencil, Trash2, Bookmark } from "lucide-react";
-import Link from "next/link";
 import { deleteResource, toggleFavorite } from "@/actions/resources";
 import { ResourceDialog } from "@/components/vaults/resource-dialog";
 
@@ -20,6 +19,8 @@ interface Resource {
 
 interface ResourceItemProps {
   resource: Resource;
+  isSelected?: boolean;
+  onSelect?: (id: string | null) => void;
 }
 
 const categoryColors: Record<string, string> = {
@@ -32,20 +33,28 @@ const categoryColors: Record<string, string> = {
   design: "bg-pink-500/10 text-pink-400",
 };
 
-export function ResourceItem({ resource }: ResourceItemProps) {
+export function ResourceItem({ resource, isSelected, onSelect }: ResourceItemProps) {
   const [open, setOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [isFav, setIsFav] = useState(resource.favorite);
+  const [favPending, setFavPending] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   async function handleDelete() {
+    if (deleting) return;
     if (confirm("Delete this resource?")) {
+      setDeleting(true);
       await deleteResource(resource.id);
+      setDeleting(false);
     }
   }
 
   async function handleFavorite() {
+    if (favPending) return;
+    setFavPending(true);
     setIsFav(!isFav);
     await toggleFavorite(resource.id, resource.favorite);
+    setFavPending(false);
   }
 
   let domain = resource.url;
@@ -57,7 +66,7 @@ export function ResourceItem({ resource }: ResourceItemProps) {
 
   return (
     <>
-      <div className="group relative rounded-xl border border-border bg-card transition-all duration-200 hover:border-[var(--border-hover)] hover:shadow-[var(--shadow-elevated)]">
+      <div className={`group relative rounded-xl border bg-card w-full transition-all duration-200 hover:border-[var(--border-hover)] hover:shadow-[var(--shadow-elevated)] ${isSelected ? "border-primary/40 bg-primary/[0.02]" : "border-border"}`}>
         <div className="px-5 py-4">
           <div className="flex items-start gap-4">
             {/* Icon */}
@@ -70,11 +79,11 @@ export function ResourceItem({ resource }: ResourceItemProps) {
               {/* Title + Domain */}
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <Link href={`/resources/${resource.id}`} className="group/title">
+                  <button onClick={() => onSelect?.(resource.id)} className="text-left group/title">
                     <h3 className="text-base font-semibold text-foreground group-hover/title:text-primary transition-colors truncate">
                       {resource.title}
                     </h3>
-                  </Link>
+                  </button>
                   <div className="flex items-center gap-2.5 mt-1">
                     <span className={`text-[11px] font-medium px-1.5 py-0.5 rounded ${catColor}`}>{resource.category}</span>
                     <a href={resource.url} target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1">
@@ -113,6 +122,8 @@ export function ResourceItem({ resource }: ResourceItemProps) {
             <div className="flex items-center gap-0.5 shrink-0">
               <button
                 onClick={handleFavorite}
+                disabled={favPending}
+                aria-label={isFav ? "Unfavorite" : "Favorite"}
                 className={`flex h-7 w-7 items-center justify-center rounded-md transition-all ${
                   isFav ? "text-red-400 hover:text-red-300" : "text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100"
                 }`}
@@ -123,6 +134,7 @@ export function ResourceItem({ resource }: ResourceItemProps) {
                 href={resource.url}
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label="Open in new tab"
                 className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-all"
               >
                 <ExternalLink className="h-3.5 w-3.5" />
@@ -130,6 +142,7 @@ export function ResourceItem({ resource }: ResourceItemProps) {
               <div className="relative">
                 <button
                   onClick={() => setMenuOpen(!menuOpen)}
+                  aria-label="More options"
                   className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-all"
                 >
                   <MoreHorizontal className="h-3.5 w-3.5" />
@@ -147,6 +160,7 @@ export function ResourceItem({ resource }: ResourceItemProps) {
                       </button>
                       <button
                         onClick={() => { handleDelete(); setMenuOpen(false); }}
+                        disabled={deleting}
                         className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-destructive hover:bg-destructive/10 transition-colors"
                       >
                         <Trash2 className="h-3.5 w-3.5" />

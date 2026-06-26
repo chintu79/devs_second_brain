@@ -14,7 +14,7 @@ export function Mockup() {
             <div className="h-2.5 w-2.5 rounded-full bg-[#22C55E]" />
           </div>
           <div className="flex-1 text-center">
-            <span className="text-xs text-muted-foreground/50 font-medium tracking-tight">Dev Second Brain — workspace</span>
+            <span className="text-xs text-muted-foreground/50 font-medium tracking-tight">DevCache — workspace</span>
           </div>
         </div>
 

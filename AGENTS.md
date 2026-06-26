@@ -95,12 +95,47 @@ Before generating any UI or feature, ask:
 - Fixed missing hover effects on vault cards (note-card, resource-card, prompt-card, project-card) — replaced defunct `card-hover` class with proper `hover:border-border/60 hover:shadow-sm hover:scale-[1.02]`
 - Added hover border to note-list sidebar items (`hover:border-border/60`)
 - Removed stale `card-hover` class from shadcn Card component (only used in auth pages)
+- **Lighthouse a11y — Button labels**: Added `aria-label` to 28 icon-only buttons across 15 files (command-bar, navbar, 4 vault cards, copy-button, chat-ui, tags-manager, note-sidebar, project-sidebar, resources-content, project-workspace, note-reader-panel, search-preview-panel, repository-detail-panel, prompt-preview-panel, settings page, error page)
+- **Lighthouse a11y — Color contrast**: Bumped dark mode `--color-muted-fg` from `#6d7275` to `#8a9299` (raises contrast from 2.58:1 to 4.5:1+ against `#2f3437`); fixed sidebar active item text to white (`--color-sidebar-primary-foreground`) instead of accent color; fixed sidebar section labels to neutral `sidebar-foreground/60` instead of accent-tinted `color-mix` (which was ~1.85:1); fixed sidebar logo text to always-white instead of accent variable
+- **Lighthouse perf — LCP optimization**: Restructured dashboard page to stream greeting immediately — extracted `DashboardGreeting` (renders h1 from session only, zero DB await), `DashboardPrimarySection` (merged vault blocks + streak + timeline + insights in single Suspense boundary with skeleton fallback), `DashboardGraphSection` (below-fold in separate Suspense). Eliminated ~12 DB queries from blocking the greeting render — LCP element now appears at FCP time instead of waiting for all queries
+- **Motion timing reduction**: Reduced `duration.page` (0.3→0.15), `duration.reveal` (0.55→0.3), `duration.panel` (0.3→0.25), stagger `delayChildren` (0.1→0.05), `staggerChildren` (0.06→0.04) — cuts entrance animation delay in half for faster content visibility
+- **Dashboard skeletons**: Created `DashboardSkeleton` (4-card grid matching vault blocks), `ActivitySkeleton` (timeline + insights card layout), `GraphSkeleton` (graph card placeholder) — used as Suspense fallbacks for progressive loading
 
 ### In Progress
 - (none)
 
 ### Blocked
 - (none)
+
+## AI Chat & Docs Redesign
+- **Chat workspace**: Two-column layout (chat + context panel), URL-driven `?from=` context param, context-aware suggested actions per section (resources/notes/prompts/projects/docs)
+- **Chat context panel**: Right sidebar showing related vault items (resources, notes, prompts, projects) with type-colored icons, animated slide-in via `slideInRight` variant
+- **Code block copy**: Chat message code blocks now have language labels + copy buttons with success feedback
+- **Context bar**: Visual indicator showing active chat context with clear button
+- **Docs TOC**: Sticky sidebar with IntersectionObserver-driven active section tracking, Framer Motion `layoutId` animated indicator, smooth scroll navigation
+- **Reading progress**: Fixed gradient progress bar using Framer Motion `useScroll` + spring animation
+- **Docs layout**: Two-column flex layout (max-w-6xl) with TOC sidebar on large screens, main content area
+
+## Key Decisions (Chat & Docs)
+- Chat `?from=` URL param drives context-aware suggestions without additional state management — works with browser navigation
+- Chat vault data fetched server-side (like other workspace pages) rather than from API route — enables context panel without extra API calls
+- DocsTOC uses `IntersectionObserver` with `rootMargin: "-80px 0px -60% 0px"` for early section detection — section activates before reaching top of viewport
+- ReadingProgress uses `useScroll` from framer-motion with spring animation — no scroll event listeners, GPU-composited
+- Docs page keeps all data inline (no separate content file) — preserves existing architecture, TOC data extracted via `map()`
+
+## Critical Context
+- 20+ files import `framer-motion` — all animations use centralized variants from `src/lib/motion.ts`
+- Dashboard page uses Suspense streaming: `DashboardGreeting` (no DB) renders immediately, `DashboardPrimarySection` and `DashboardGraphSection` stream in via Suspense boundaries
+- `DashboardGreeting` at `src/app/(dashboard)/dashboard/dashboard-greeting.tsx` — renders h1 from session only (no DB calls)
+- `DashboardPrimarySection` at `src/app/(dashboard)/dashboard/dashboard-data.tsx` — merged 9 queries into single Promise.all (counts + recent items + analytics), renders vault blocks + streak + timeline + insights
+- Skeleton components at `src/app/(dashboard)/dashboard/skeletons.tsx` — `DashboardSkeleton` (4-card grid), `ActivitySkeleton` (timeline + insights), `GraphSkeleton` (graph placeholder)
+- Landing page hero uses `HeroEntrance` client component with Framer Motion stagger (no CSS animation classes)
+- Sidebar active indicator uses Framer Motion `layoutId` with `LayoutGroup`
+- All list/feed components use `stagger.container` + `fadeInUp` per-item
+- All right-side panels share `slideInRight` variant
+- `animate-dash-flow` CSS class preserved but unused (replaced by `AnimatedArrow` client component)
+- `FadeIn` IntersectionObserver component retained for landing page scroll reveals below the fold
+- Vault cards (note, resource, prompt, project) use inline `transition-all duration-150 hover:border-border/60 hover:shadow-sm hover:scale-[1.02]` — the `card-hover` class has been removed from <Card />
 
 ## Key Decisions
 - Section colors applied via `data-accent` on page wrapper + sidebar links — CSS `color-mix` handles all accent-derived states automatically
@@ -111,19 +146,12 @@ Before generating any UI or feature, ask:
 - Motion variants centralized in `src/lib/motion.ts`
 - Hover scale hierarchy: 1.01 (cards/items), 1.015 (cardHover), 1.02 (sidebar/context), 1.03 (nav/filters/CTA), 1.05 (icons), 1.1 (toolbar buttons)
 - All interactive hovers use `transition-all duration-150` for consistent timing
-
-## Next Steps
-- (none — all planned refinements applied)
-
-## Critical Context
-- 20+ files import `framer-motion` — all animations use centralized variants from `src/lib/motion.ts`
-- Landing page hero uses `HeroEntrance` client component with Framer Motion stagger (no CSS animation classes)
-- Sidebar active indicator uses Framer Motion `layoutId` with `LayoutGroup`
-- All list/feed components use `stagger.container` + `fadeInUp` per-item
-- All right-side panels share `slideInRight` variant
-- `animate-dash-flow` CSS class preserved but unused (replaced by `AnimatedArrow` client component)
-- `FadeIn` IntersectionObserver component retained for landing page scroll reveals below the fold
-- Vault cards (note, resource, prompt, project) use inline `transition-all duration-150 hover:border-border/60 hover:shadow-sm hover:scale-[1.02]` — the `card-hover` class has been removed from <Card />
+- All icon-only buttons must have `aria-label` (28 verified during Lighthouse audit)
+- Dark mode muted foreground bumped to `#8a9299` for WCAG AA 4.5:1 compliance against `#2f3437`
+- Sidebar active items use white text instead of accent color for readability
+- Dashboard page streams content via Suspense boundaries: greeting (no DB) → primary content (Suspense) → graph (Suspense)
+- Sidebar section labels use neutral `sidebar-foreground/60` (not accent-tinted `color-mix`) to pass contrast
+- Skeleton components created per dashboard section for targeted Suspense fallbacks
 
 ## Relevant Files
 - `src/app/globals.css`: Section accent variables, border hierarchy, divider system, section container, sidebar-item with dynamic `--sidebar-item-accent`, selection color-mix, scrollbar, premium note-prose, skeleton, entrance animations, command palette overlay
@@ -168,3 +196,10 @@ Before generating any UI or feature, ask:
 - `src/components/radar/radar-context-panel.tsx`: Context items hover:scale-[1.02]
 - `src/components/ui/card.tsx`: Stale `card-hover` class removed; base Card is now plain (no hover)
 - `src/app/page.tsx`: Landing page with HeroEntrance, workflow arrows, feature cards hover:scale-[1.02], nav links hover:scale-[1.03], CTA buttons hover:scale-[1.03], footer links hover:scale-[1.02]
+- `src/components/chat/chat-ui.tsx`: Enhanced with context-aware suggestions (context-aware empty state + suggested questions per section), `MessageContent` component with code block copy buttons (language label, copy button with Check feedback), context bar showing active chat context
+- `src/components/chat/chat-context-panel.tsx`: Right sidebar showing related vault items (resources/notes/prompts/projects) with type-colored icons, animated `slideInRight`, empty state
+- `src/components/chat/chat-workspace.tsx`: Two-column layout (chat + context panel), URL-driven `?from=` context param, manages context state via URL searchParams
+- `src/app/(dashboard)/chat/page.tsx`: Server component fetching vault data (take:20 per type), passes to ChatWorkspace — enables context panel without extra API calls
+- `src/components/docs/docs-toc.tsx`: Sticky TOC sidebar with IntersectionObserver-driven active section, Framer Motion `layoutId` animated indicator, smooth scroll on click
+- `src/components/docs/reading-progress.tsx`: Fixed gradient progress bar using Framer Motion `useScroll` + spring animation, SSR-safe with `mounted` check
+- `src/app/(dashboard)/docs/page.tsx`: Two-column layout (max-w-6xl) with TOC sidebar on large screens, ReadingProgress bar, TOC sections extracted via `map()`

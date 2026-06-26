@@ -10,8 +10,8 @@ export async function aiSuggestCategory(title: string, content: string, categori
   try {
     const category = await suggestCategory(title, content, categories);
     return { category };
-  } catch (e: any) {
-    return { error: e.message || "Failed to suggest category" };
+  } catch (e: unknown) {
+    return { error: (e instanceof Error ? e.message : String(e)) || "Failed to suggest category" };
   }
 }
 
@@ -22,8 +22,8 @@ export async function aiSuggestTags(title: string, content: string) {
   try {
     const tags = await suggestTags(title, content);
     return { tags: tags.join(", ") };
-  } catch (e: any) {
-    return { error: e.message || "Failed to suggest tags" };
+  } catch (e: unknown) {
+    return { error: (e instanceof Error ? e.message : String(e)) || "Failed to suggest tags" };
   }
 }
 
@@ -34,7 +34,7 @@ export async function aiSummarize(content: string) {
   try {
     const summary = await summarizeContent(content);
     return { summary };
-  } catch (e: any) {
-    return { error: e.message || "Failed to summarize" };
+  } catch (e: unknown) {
+    return { error: (e instanceof Error ? e.message : String(e)) || "Failed to summarize" };
   }
 }

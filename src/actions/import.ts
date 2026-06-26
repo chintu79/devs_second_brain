@@ -209,7 +209,7 @@ export async function importVault(json: string) {
     revalidatePath("/projects");
     revalidatePath("/tags");
     return { success: true, count: imported };
-  } catch (e: any) {
-    return { error: e.message || "Import failed" };
+  } catch {
+    return { error: "Import failed. Check your file and try again." };
   }
 }

@@ -27,11 +27,13 @@ interface ResourceListProps {
   nextCursor: string | null;
   allCategories: string[];
   allTags: string[];
+  selectedId?: string | null;
+  onSelect?: (id: string | null) => void;
 }
 
 type SortBy = "newest" | "oldest" | "recently-opened";
 
-export function ResourceList({ initialItems, nextCursor: initialCursor, allCategories, allTags }: ResourceListProps) {
+export function ResourceList({ initialItems, nextCursor: initialCursor, allCategories, allTags, selectedId, onSelect }: ResourceListProps) {
   const [items, setItems] = useState<Resource[]>(initialItems);
   const [cursor, setCursor] = useState<string | null>(initialCursor);
   const [loading, setLoading] = useState(false);
@@ -155,7 +157,7 @@ export function ResourceList({ initialItems, nextCursor: initialCursor, allCateg
                   >
                     {sections.favorites.map((r) => (
                       <motion.div key={r.id} variants={fadeInUp}>
-                        <ResourceItem resource={r} />
+                        <ResourceItem resource={r} isSelected={selectedId === r.id} onSelect={onSelect} />
                       </motion.div>
                     ))}
                   </motion.div>
@@ -172,7 +174,7 @@ export function ResourceList({ initialItems, nextCursor: initialCursor, allCateg
                   >
                     {sections.today.map((r) => (
                       <motion.div key={r.id} variants={fadeInUp}>
-                        <ResourceItem resource={r} />
+                        <ResourceItem resource={r} isSelected={selectedId === r.id} onSelect={onSelect} />
                       </motion.div>
                     ))}
                   </motion.div>
@@ -189,7 +191,7 @@ export function ResourceList({ initialItems, nextCursor: initialCursor, allCateg
                   >
                     {sections.thisWeek.map((r) => (
                       <motion.div key={r.id} variants={fadeInUp}>
-                        <ResourceItem resource={r} />
+                        <ResourceItem resource={r} isSelected={selectedId === r.id} onSelect={onSelect} />
                       </motion.div>
                     ))}
                   </motion.div>
@@ -206,7 +208,7 @@ export function ResourceList({ initialItems, nextCursor: initialCursor, allCateg
                   >
                     {sections.thisMonth.map((r) => (
                       <motion.div key={r.id} variants={fadeInUp}>
-                        <ResourceItem resource={r} />
+                        <ResourceItem resource={r} isSelected={selectedId === r.id} onSelect={onSelect} />
                       </motion.div>
                     ))}
                   </motion.div>
@@ -223,7 +225,7 @@ export function ResourceList({ initialItems, nextCursor: initialCursor, allCateg
                   >
                     {sections.earlier.map((r) => (
                       <motion.div key={r.id} variants={fadeInUp}>
-                        <ResourceItem resource={r} />
+                        <ResourceItem resource={r} isSelected={selectedId === r.id} onSelect={onSelect} />
                       </motion.div>
                     ))}
                   </motion.div>

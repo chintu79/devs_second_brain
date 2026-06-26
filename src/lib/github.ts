@@ -87,7 +87,21 @@ function getHeaders(): Record<string, string> {
   return headers
 }
 
-function mapRepo(item: any): Repository {
+interface GitHubRepoItem {
+  id: number;
+  name: string;
+  owner?: { login?: string };
+  description?: string | null;
+  stargazers_count?: number;
+  forks_count?: number;
+  language?: string | null;
+  html_url?: string;
+  topics?: string[];
+  created_at?: string;
+  updated_at?: string;
+}
+
+function mapRepo(item: GitHubRepoItem): Repository {
   const topics: string[] = item.topics || []
   const language = item.language
   return {
@@ -100,14 +114,14 @@ function mapRepo(item: any): Repository {
     language: language || "Unknown",
     url: item.html_url || "",
     topics,
-    category: inferCategory(topics, language),
-    growthIndicator: inferGrowthIndicator(item.stargazers_count || 0, item.created_at),
+    category: inferCategory(topics, language ?? null),
+    growthIndicator: inferGrowthIndicator(item.stargazers_count || 0, item.created_at ?? ""),
     useCases: [],
     keyFeatures: [],
     saved: false,
     bookmarked: false,
-    createdAt: new Date(item.created_at),
-    updatedAt: new Date(item.updated_at),
+    createdAt: new Date(item.created_at ?? Date.now()),
+    updatedAt: new Date(item.updated_at ?? Date.now()),
   }
 }
 
@@ -160,6 +174,31 @@ function buildCategories(repos: Repository[]) {
   return order
     .filter((id) => counts[id])
     .map((id) => ({ id, label: labelMap[id] || id, count: counts[id] }))
+}
+
+export async function fetchRepoByUrl(url: string) {
+  const match = url.match(/github\.com\/([^/]+)\/([^/#?]+)/);
+  if (!match) return null;
+  const [, owner, repo] = match;
+  try {
+    const res = await fetch(`${GITHUB_API}/repos/${owner}/${repo}`, {
+      headers: getHeaders(),
+      next: { revalidate: 300 },
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return {
+      title: data.name,
+      description: data.description || "",
+      url: data.html_url,
+      category: inferCategory(data.topics || [], data.language ?? null),
+      tags: (data.topics || []).join(", "),
+      language: data.language || "",
+      stars: data.stargazers_count || 0,
+    };
+  } catch {
+    return null;
+  }
 }
 
 export async function fetchTrendingRepos() {

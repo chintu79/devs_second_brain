@@ -20,10 +20,13 @@ interface NoteCardProps {
 
 export function NoteCard({ note }: NoteCardProps) {
   const [open, setOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   async function handleDelete() {
     if (confirm("Delete this note?")) {
+      setDeleting(true);
       await deleteNote(note.id);
+      setDeleting(false);
     }
   }
 
@@ -47,10 +50,10 @@ export function NoteCard({ note }: NoteCardProps) {
             <div className="flex items-start justify-between gap-2">
               <span className="text-sm font-medium line-clamp-1">{note.title}</span>
               <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                <button className="flex h-7 w-7 items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-150 hover:scale-[1.1]" onClick={() => setOpen(true)}>
+                <button aria-label="Edit note" className="flex h-7 w-7 items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-150 hover:scale-[1.1]" onClick={() => setOpen(true)}>
                   <Pencil className="h-3 w-3" />
                 </button>
-                <button className="flex h-7 w-7 items-center justify-center rounded text-muted-foreground hover:text-red-400 hover:bg-muted transition-all duration-150 hover:scale-[1.1]" onClick={handleDelete}>
+                <button aria-label="Delete note" disabled={deleting} className="flex h-7 w-7 items-center justify-center rounded text-muted-foreground hover:text-red-400 hover:bg-muted transition-all duration-150 hover:scale-[1.1]" onClick={handleDelete}>
                   <Trash2 className="h-3 w-3" />
                 </button>
               </div>

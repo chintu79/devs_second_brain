@@ -52,7 +52,7 @@ export function RepositoryCard({ repo, selected, onSelect, onBookmark }: Reposit
   return (
     <motion.div
       whileHover={cardHover}
-      className={`group relative rounded-xl border bg-card cursor-pointer ${
+      className={`group relative rounded-xl border bg-card cursor-pointer w-[480px] shrink-0 ${
         selected
           ? "border-primary/40 shadow-sm"
           : "border-border hover:border-primary/20 hover:shadow-sm"
@@ -121,7 +121,7 @@ export function RepositoryCard({ repo, selected, onSelect, onBookmark }: Reposit
               className={`flex h-7 w-7 items-center justify-center rounded-md transition-all ${
                 repo.bookmarked ? "text-amber-400" : "text-muted-foreground hover:text-amber-400 opacity-0 group-hover:opacity-100"
               }`}
-              title={repo.bookmarked ? "Remove bookmark" : "Bookmark"}
+              aria-label={repo.bookmarked ? "Remove bookmark" : "Bookmark"}
             >
               {repo.bookmarked ? <BookmarkCheck className="h-3.5 w-3.5" /> : <Bookmark className="h-3.5 w-3.5" />}
             </button>
@@ -133,7 +133,7 @@ export function RepositoryCard({ repo, selected, onSelect, onBookmark }: Reposit
                   ? "text-emerald-400"
                   : "text-muted-foreground hover:text-emerald-400 opacity-0 group-hover:opacity-100"
               }`}
-              title={saved ? "Saved to Resources" : "Save to Resources"}
+              aria-label={saved ? "Saved to Resources" : "Save to Resources"}
             >
               <Plus className={`h-3.5 w-3.5 ${saving ? "animate-spin" : ""}`} />
             </button>
@@ -142,7 +142,7 @@ export function RepositoryCard({ repo, selected, onSelect, onBookmark }: Reposit
               target="_blank"
               rel="noopener noreferrer"
               className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-all"
-              title="Open repository"
+              aria-label="Open repository"
               onClick={(e) => e.stopPropagation()}
             >
               <ArrowUpRight className="h-3.5 w-3.5" />

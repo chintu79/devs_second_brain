@@ -5,12 +5,13 @@ import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 
 export async function getTagsWithCounts() {
-  const session = await auth();
-  if (!session?.user?.id) return [];
+  try {
+    const session = await auth();
+    if (!session?.user?.id) return [];
 
-  const userId = session.user.id;
+    const userId = session.user.id;
 
-  const tags = await prisma.tag.findMany({
+    const tags = await prisma.tag.findMany({
     where: { userId },
     include: {
       _count: {
@@ -30,20 +31,27 @@ export async function getTagsWithCounts() {
     totalCount: t._count.resources + t._count.prompts + t._count.notes + t._count.projects,
     createdAt: t.createdAt,
   }));
+  } catch {
+    return [];
+  }
 }
 
 export async function searchTags(query: string) {
-  const session = await auth();
-  if (!session?.user?.id) return [];
+  try {
+    const session = await auth();
+    if (!session?.user?.id) return [];
 
-  const tags = await prisma.tag.findMany({
+    const tags = await prisma.tag.findMany({
     where: { userId: session.user.id, name: { contains: query, mode: "insensitive" } },
     select: { id: true, name: true },
     take: 10,
     orderBy: { name: "asc" },
   });
 
-  return tags;
+    return tags;
+  } catch {
+    return [];
+  }
 }
 
 export async function mergeTags(sourceId: string, targetId: string) {

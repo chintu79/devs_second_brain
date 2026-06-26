@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { getTagsWithCounts, mergeTags, deleteTag } from "@/actions/tags";
-import { PageTransition } from "@/components/dashboard/page-transition";
 import { Search, Trash2, Merge, Tags, Hash, Loader2, X, Link2, MessageSquare, StickyNote, FolderKanban } from "lucide-react";
 import { toast } from "sonner";
 
@@ -48,6 +47,7 @@ export default function TagsManager() {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchTags();
   }, [fetchTags]);
 
@@ -97,11 +97,10 @@ export default function TagsManager() {
   const typeKeys = ["resources", "prompts", "notes", "projects"] as const;
 
   return (
-    <PageTransition>
       <div data-accent="tags">
         <div className="flex items-center gap-3 mb-6">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl" style={{ backgroundColor: "var(--accent-bg, rgba(236, 72, 153, 0.1))" }}>
-            <Tags className="h-5 w-5" style={{ color: "var(--accent, #ec4899)" }} />
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl accent-bg" style={{ '--accent-c': 'var(--accent, #ec4899)' } as React.CSSProperties}>
+            <Tags className="h-5 w-5 accent-text" />
           </div>
           <div>
             <h1 className="text-xl font-semibold text-[#FAFAFA]">Tags</h1>
@@ -186,10 +185,10 @@ export default function TagsManager() {
                     )}
                   </button>
 
-                  <div className="flex items-center gap-2 mb-3 pr-6">
-                    <Hash className="h-4 w-4 shrink-0" style={{ color: "var(--accent, #ec4899)" }} />
+                  <div className="flex items-center gap-2 mb-3 pr-6" style={{ '--accent-c': 'var(--accent, #ec4899)' } as React.CSSProperties}>
+                    <Hash className="h-4 w-4 shrink-0 accent-text" />
                     <span className="font-medium text-sm text-[#F4F4F5] truncate">{tag.name}</span>
-                    <span className="ml-auto shrink-0 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary/10 px-1.5 text-[11px] font-medium" style={{ color: "var(--accent, #ec4899)" }}>
+                    <span className="ml-auto shrink-0 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary/10 px-1.5 text-[11px] font-medium accent-text">
                       {tag.totalCount}
                     </span>
                   </div>
@@ -220,7 +219,9 @@ export default function TagsManager() {
                       }
                       setDeletingId(null);
                     }}
-                    className="absolute bottom-3 right-3 flex h-6 w-6 items-center justify-center rounded-md text-[#71717A] opacity-0 group-hover:opacity-100 hover:bg-red-500/10 hover:text-red-400 transition-all duration-150"
+                    disabled={deletingId === tag.id}
+                    aria-label="Delete tag"
+                    className="absolute bottom-3 right-3 flex h-6 w-6 items-center justify-center rounded-md text-[#71717A] opacity-0 group-hover:opacity-100 hover:bg-red-500/10 hover:text-red-400 transition-all duration-150 disabled:opacity-50"
                   >
                     {deletingId === tag.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
                   </button>
@@ -261,6 +262,5 @@ export default function TagsManager() {
           </div>
         )}
       </div>
-    </PageTransition>
   );
 }

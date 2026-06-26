@@ -26,8 +26,8 @@ export function DashboardQuickActions() {
             onClick={() => setOpen(action.key)}
             className="flex items-center gap-2 rounded-lg border border-border/60 bg-card px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted hover:border-border transition-all duration-150"
           >
-            <div className="flex h-6 w-6 items-center justify-center rounded-md" style={{ backgroundColor: `${action.accent}15` }}>
-              <action.icon className="h-3.5 w-3.5" style={{ color: action.accent }} />
+            <div className="flex h-6 w-6 items-center justify-center rounded-md accent-bg-15" style={{ '--accent-c': action.accent } as React.CSSProperties}>
+              <action.icon className="h-3.5 w-3.5 accent-text" />
             </div>
             {action.label}
             <Plus className="h-3.5 w-3.5 text-muted-foreground" />

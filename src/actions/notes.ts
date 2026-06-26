@@ -27,6 +27,7 @@ export async function createNote(formData: FormData) {
     });
     revalidatePath("/notes");
     if (tagNames.length > 0) revalidatePath("/tags");
+
     return { success: true, id: note.id };
   } catch {
     return { error: "Failed to create note" };
@@ -53,6 +54,7 @@ export async function editNote(id: string, formData: FormData) {
       data: { title, content: content || "", category, tags: buildTagCreate(tagNames, session.user.id) },
     });
     revalidatePath("/notes");
+
     return { success: true };
   } catch {
     return { error: "Failed to update note" };
@@ -66,6 +68,7 @@ export async function deleteNote(id: string) {
   try {
     await prisma.note.delete({ where: { id, userId: session.user.id } });
     revalidatePath("/notes");
+
     return { success: true };
   } catch {
     return { error: "Failed to delete note" };
@@ -81,6 +84,7 @@ export async function toggleNoteFavorite(id: string) {
     if (!note || note.userId !== session.user.id) return { error: "Unauthorized" };
     await prisma.note.update({ where: { id }, data: { favorite: !note.favorite } });
     revalidatePath("/notes");
+
     return { success: true };
   } catch {
     return { error: "Failed to toggle favorite" };
@@ -96,6 +100,7 @@ export async function archiveNote(id: string) {
     if (!note || note.userId !== session.user.id) return { error: "Unauthorized" };
     await prisma.note.update({ where: { id }, data: { archived: !note.archived } });
     revalidatePath("/notes");
+
     return { success: true };
   } catch {
     return { error: "Failed to archive note" };

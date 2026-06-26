@@ -66,8 +66,8 @@ export default function RegisterPage() {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
         {message && (
           <motion.div
-            initial={{ opacity: 0, y: 8, filter: "blur(4px)" }}
-            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.25, ease: [0, 0, 0.2, 1] }}
             className={`rounded-xl border p-3 text-sm ${
               message.type === "success"

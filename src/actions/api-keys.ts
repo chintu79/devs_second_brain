@@ -18,49 +18,65 @@ export async function generateApiKey(name: string) {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
 
-  const rawKey = generateRawKey();
-  const hashedKey = await bcrypt.hash(rawKey, 10);
+  try {
+    const rawKey = generateRawKey();
+    const hashedKey = await bcrypt.hash(rawKey, 10);
 
-  await prisma.apiKey.create({
-    data: { name, key: hashedKey, userId: session.user.id },
-  });
+    await prisma.apiKey.create({
+      data: { name, key: hashedKey, userId: session.user.id },
+    });
 
-  revalidatePath("/settings");
-  return { rawKey, maskedKey: maskKey(rawKey) };
+    revalidatePath("/settings");
+    return { rawKey, maskedKey: maskKey(rawKey) };
+  } catch {
+    throw new Error("Failed to generate API key");
+  }
 }
 
 export async function listApiKeys() {
   const session = await auth();
   if (!session?.user?.id) return [];
 
-  const keys = await prisma.apiKey.findMany({
-    where: { userId: session.user.id },
-    select: { id: true, name: true, lastUsedAt: true, createdAt: true },
-    orderBy: { createdAt: "desc" },
-  });
+  try {
+    const keys = await prisma.apiKey.findMany({
+      where: { userId: session.user.id },
+      select: { id: true, name: true, lastUsedAt: true, createdAt: true },
+      orderBy: { createdAt: "desc" },
+    });
 
-  return keys;
+    return keys;
+  } catch {
+    return [];
+  }
 }
 
 export async function revokeApiKey(id: string) {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
 
-  await prisma.apiKey.delete({ where: { id } });
-  revalidatePath("/settings");
+  try {
+    await prisma.apiKey.delete({ where: { id } });
+    revalidatePath("/settings");
+  } catch {
+    throw new Error("Failed to revoke API key");
+  }
 }
 
 export async function verifyApiKey(rawKey: string) {
-  const keys = await prisma.apiKey.findMany();
-  for (const apiKey of keys) {
-    const match = await bcrypt.compare(rawKey, apiKey.key);
-    if (match) {
-      await prisma.apiKey.update({
-        where: { id: apiKey.id },
-        data: { lastUsedAt: new Date() },
-      });
-      return apiKey.userId;
+  try {
+    const keys = await prisma.apiKey.findMany();
+    for (const apiKey of keys) {
+      const match = await bcrypt.compare(rawKey, apiKey.key);
+      if (match) {
+        await prisma.apiKey.update({
+          where: { id: apiKey.id },
+          data: { lastUsedAt: new Date() },
+        });
+        return apiKey.userId;
+      }
     }
+    return null;
+  } catch {
+    return null;
   }
-  return null;
 }

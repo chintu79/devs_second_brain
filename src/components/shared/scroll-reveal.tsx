@@ -18,11 +18,11 @@ export function ScrollReveal({ children, className = "", delay = 0 }: ScrollReve
     <motion.div
       ref={ref}
       className={className}
-      initial={{ opacity: 0, y: 24, filter: "blur(8px)" }}
+      initial={{ opacity: 0, y: 24 }}
       animate={
         inView
-          ? { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.55, delay: delay / 1000, ease: ease.decelerate } }
-          : { opacity: 0, y: 24, filter: "blur(8px)", transition: { duration: 0.3 } }
+          ? { opacity: 1, y: 0, transition: { duration: 0.55, delay: delay / 1000, ease: ease.decelerate } }
+          : { opacity: 0, y: 24, transition: { duration: 0.3 } }
       }
     >
       {children}

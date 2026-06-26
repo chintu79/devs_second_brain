@@ -20,10 +20,6 @@ export const includeTags = {
   include: { tags: { include: { tag: true } } },
 } as const;
 
-export type WithTagRels<T> = T & {
-  tags: { tag: { id: string; name: string } }[];
-};
-
 export function flattenItemTags<T extends { tags?: { tag: { name: string } }[] }>(
   item: T
 ): Omit<T, "tags"> & { tags: string[] } {

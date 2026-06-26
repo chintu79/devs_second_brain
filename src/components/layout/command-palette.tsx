@@ -52,7 +52,7 @@ export function CommandPalette({ open: controlledOpen, onOpenChange }: CommandPa
   const [internalOpen, setInternalOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<{
-    resources: any[]; prompts: any[]; notes: any[]; projects: any[];
+    resources: any[]; prompts: any[]; notes: any[]; projects: any[]; // eslint-disable-line @typescript-eslint/no-explicit-any
   }>({ resources: [], prompts: [], notes: [], projects: [] });
   const [searching, setSearching] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -84,27 +84,35 @@ export function CommandPalette({ open: controlledOpen, onOpenChange }: CommandPa
 
   useEffect(() => {
     if (!open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setQuery("");
+       
       setResults({ resources: [], prompts: [], notes: [], projects: [] });
     }
   }, [open]);
 
   useEffect(() => {
     if (!query.trim()) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setResults({ resources: [], prompts: [], notes: [], projects: [] });
       setSearching(false);
       return;
     }
 
+    let cancelled = false;
     setSearching(true);
     clearTimeout(timerRef.current);
     timerRef.current = setTimeout(async () => {
       const res = await globalSearch(query);
+      if (cancelled) return;
       setResults(res);
       setSearching(false);
     }, 200);
 
-    return () => clearTimeout(timerRef.current);
+    return () => {
+      cancelled = true;
+      clearTimeout(timerRef.current);
+    };
   }, [query]);
 
   const handleNavSelect = useCallback(
@@ -165,6 +173,7 @@ export function CommandPalette({ open: controlledOpen, onOpenChange }: CommandPa
               const Icon = typeConfig[type].icon;
               return (
                 <CommandGroup key={type} heading={typeConfig[type].label}>
+                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                   {items.map((item: any) => (
                     <CommandItem
                       key={`${type}-${item.id}`}

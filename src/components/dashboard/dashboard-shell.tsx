@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { CommandBar } from "./command-bar";
 import { CommandPalette } from "@/components/layout/command-palette";
-import { PageTransitionProvider } from "@/components/layout/page-transition-provider";
 import { QuickCaptureDialog } from "@/components/chat/quick-capture-dialog";
 
 interface DashboardShellProps {
@@ -28,7 +27,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
   return (
     <>
       <CommandBar onOpenPalette={() => setPaletteOpen(true)} onOpenCapture={() => setCaptureOpen(true)} />
-      <PageTransitionProvider>{children}</PageTransitionProvider>
+      {children}
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
       <QuickCaptureDialog open={captureOpen} onOpenChange={setCaptureOpen} />
     </>

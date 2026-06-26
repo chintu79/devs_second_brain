@@ -40,10 +40,10 @@ export function DashboardTimeline({ items }: DashboardTimelineProps) {
               href={item.href}
               className="flex items-center gap-3 px-4 py-3 transition-all duration-150 hover:bg-muted/30 hover:scale-[1.005]"
             >
-              <div className="flex h-7 w-7 items-center justify-center rounded-md shrink-0"
-                style={{ backgroundColor: `${config.color}12` }}
+              <div className="flex h-7 w-7 items-center justify-center rounded-md shrink-0 accent-bg-12"
+                style={{ '--accent-c': config.color } as React.CSSProperties}
               >
-                <Icon className="h-3.5 w-3.5" style={{ color: config.color }} />
+                <Icon className="h-3.5 w-3.5 accent-text" />
               </div>
               <span className="text-sm text-foreground/90 truncate flex-1">{item.title}</span>
               <span className="text-[11px] text-muted-foreground">{formatRelative(item.createdAt)}</span>

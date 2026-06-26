@@ -1,5 +1,6 @@
+import { Suspense } from "react";
 import { auth } from "@/lib/auth";
-import prisma from "@/lib/prisma";
+import prisma, { safeQuery } from "@/lib/prisma";
 import { fetchMorePrompts } from "@/actions/prompts";
 import { PromptsContent } from "./prompts-content";
 
@@ -15,21 +16,23 @@ export default async function PromptsPage() {
     );
   }
 
-  const [{ items: initialItems, nextCursor }, metaPrompts] = await Promise.all([
-    fetchMorePrompts(undefined, 20),
-    prisma.prompt.findMany({
+  const [initialResult, metaPrompts] = await Promise.all([
+    safeQuery("prompts.fetchMore", () => fetchMorePrompts(undefined, 20), { items: [], nextCursor: null }),
+    safeQuery("prompts.categories", () => prisma.prompt.findMany({
       where: { userId },
       select: { category: true },
-    }),
+    }), []),
   ]);
 
   const categories = [...new Set(metaPrompts.map((p) => p.category))].sort();
 
   return (
-    <PromptsContent
-      initialItems={initialItems}
-      nextCursor={nextCursor}
-      categories={categories}
-    />
+    <Suspense fallback={<div className="flex-1" />}>
+      <PromptsContent
+        initialItems={initialResult.items}
+        nextCursor={initialResult.nextCursor}
+        categories={categories}
+      />
+    </Suspense>
   );
 }

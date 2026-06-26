@@ -8,7 +8,7 @@ interface PromptContextPanelProps {
 
 export function PromptContextPanel({ favorites, recentPrompts }: PromptContextPanelProps) {
   return (
-    <aside className="hidden xl:flex w-[280px] shrink-0 flex-col border-l border-border/50 bg-background overflow-y-auto">
+    <aside className="hidden xl:flex w-[320px] shrink-0 flex-col border-l border-border/50 bg-background overflow-y-auto">
       <div className="p-5 space-y-8">
         {/* Favorites */}
         {favorites.length > 0 && (

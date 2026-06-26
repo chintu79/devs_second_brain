@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import ReactMarkdown from "react-markdown";
+import { Markdown } from "@/components/shared/markdown";
 import { X, Star, Copy, Pencil, Trash2, ExternalLink, Sparkles, Hash, Clock, Calendar, Bookmark, Check } from "lucide-react";
 import { slideInRight } from "@/lib/motion";
 import { deletePrompt, toggleFavorite, recordPromptUsage, editPrompt } from "@/actions/prompts";
@@ -48,10 +48,13 @@ export function PromptPreviewPanel({ prompt: initialPrompt, onClose, onUpdate }:
   const [editing, setEditing] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [favPending, setFavPending] = useState(false);
+  const [copyPending, setCopyPending] = useState(false);
   const [prompt, setPrompt] = useState(initialPrompt);
   const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPrompt(initialPrompt);
     setIsFav(initialPrompt.favorite);
     setEditing(false);
@@ -62,15 +65,21 @@ export function PromptPreviewPanel({ prompt: initialPrompt, onClose, onUpdate }:
   }, [prompt.id]);
 
   async function handleFavorite() {
+    if (favPending) return;
+    setFavPending(true);
     setIsFav(!isFav);
     await toggleFavorite(prompt.id);
+    setFavPending(false);
   }
 
   async function handleCopy() {
+    if (copyPending) return;
+    setCopyPending(true);
     await navigator.clipboard.writeText(prompt.prompt);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
     await recordPromptUsage(prompt.id);
+    setCopyPending(false);
     onUpdate();
   }
 
@@ -79,7 +88,6 @@ export function PromptPreviewPanel({ prompt: initialPrompt, onClose, onUpdate }:
       setDeleting(true);
       await deletePrompt(prompt.id);
       onClose();
-      router.refresh();
     }
   }
 
@@ -120,7 +128,7 @@ export function PromptPreviewPanel({ prompt: initialPrompt, onClose, onUpdate }:
       initial="initial"
       animate="animate"
       exit="exit"
-      className="w-[45vw] shrink-0 border-l border-border/50 bg-background flex flex-col outline-none min-h-0"
+      className="panel-detail outline-none min-h-0"
     >
       {/* Header bar */}
       <div className="flex items-center justify-between px-5 py-3 border-b border-border/50 shrink-0">
@@ -130,6 +138,7 @@ export function PromptPreviewPanel({ prompt: initialPrompt, onClose, onUpdate }:
             <>
               <button
                 onClick={handleCopy}
+                disabled={copyPending}
                 className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground transition-colors"
                 title="Copy (⌘+Enter)"
               >
@@ -171,7 +180,7 @@ export function PromptPreviewPanel({ prompt: initialPrompt, onClose, onUpdate }:
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <h2 className="text-lg font-semibold text-foreground">{prompt.title}</h2>
-                    <button onClick={handleFavorite} className={`shrink-0 ${isFav ? "text-amber-400" : "text-muted-foreground hover:text-amber-400"} transition-colors`}>
+                    <button onClick={handleFavorite} disabled={favPending} aria-label={isFav ? "Unfavorite prompt" : "Favorite prompt"} className={`shrink-0 ${isFav ? "text-amber-400" : "text-muted-foreground hover:text-amber-400"} transition-colors`}>
                       <Star className={`h-4 w-4 ${isFav ? "fill-amber-400" : ""}`} />
                     </button>
                   </div>
@@ -233,37 +242,35 @@ export function PromptPreviewPanel({ prompt: initialPrompt, onClose, onUpdate }:
                 <h3 className="text-xs font-semibold text-section-foreground uppercase tracking-[0.12em] mb-2">Prompt</h3>
                 <div className="rounded-xl border border-border/60 bg-card p-5">
                   <div className="note-prose">
-                    <ReactMarkdown
-                      components={{
-                        code: ({ className, children, ...props }) => {
-                          const m = /language-(\w+)/.exec(className || "");
-                          if (!className || !m) return <code className="inline-code" {...props}>{children}</code>;
-                          return (
-                            <div className="code-block-wrapper">
-                              <div className="code-block-header"><span className="code-block-lang">{m[1]}</span></div>
-                              <pre className="code-block has-header"><code className={className} {...props}>{children}</code></pre>
-                            </div>
-                          );
-                        },
-                        blockquote: ({ children, ...props }) => <blockquote className="note-blockquote" {...props}>{children}</blockquote>,
-                        a: ({ children, href, ...props }) => <a className="note-link" href={href} target="_blank" rel="noopener noreferrer" {...props}>{children}</a>,
-                        ul: ({ children, ...props }) => <ul className="note-list" {...props}>{children}</ul>,
-                        ol: ({ children, ...props }) => <ol className="note-list" {...props}>{children}</ol>,
-                        table: ({ children, ...props }) => <div className="note-table-wrapper"><table className="note-table" {...props}>{children}</table></div>,
-                      }}
-                    >
+                    <Markdown components={{
+                      code: ({ className, children, ...props }) => {
+                        const m = /language-(\w+)/.exec(className || "");
+                        if (!className || !m) return <code className="inline-code" {...props}>{children}</code>;
+                        return (
+                          <div className="code-block-wrapper">
+                            <div className="code-block-header"><span className="code-block-lang">{m[1]}</span></div>
+                            <pre className="code-block has-header"><code className={className} {...props}>{children}</code></pre>
+                          </div>
+                        );
+                      },
+                      blockquote: ({ children, ...props }) => <blockquote className="note-blockquote" {...props}>{children}</blockquote>,
+                      a: ({ children, href, ...props }) => <a className="note-link" href={href} target="_blank" rel="noopener noreferrer" {...props}>{children}</a>,
+                      ul: ({ children, ...props }) => <ul className="note-list" {...props}>{children}</ul>,
+                      ol: ({ children, ...props }) => <ol className="note-list" {...props}>{children}</ol>,
+                      table: ({ children, ...props }) => <div className="note-table-wrapper"><table className="note-table" {...props}>{children}</table></div>,
+                    }}>
                       {prompt.prompt}
-                    </ReactMarkdown>
+                    </Markdown>
                   </div>
                 </div>
               </motion.div>
             </div>
           </div>
 
-          {/* Sticky footer actions */}
-          <div className="fixed bottom-0 w-[45vw] border-t border-border/30 bg-background px-5 py-3 flex items-center justify-between gap-2">
+          {/* Footer actions */}
+          <div className="shrink-0 border-t border-border/30 px-5 py-3 flex items-center justify-between gap-2">
             <div className="flex gap-2">
-              <Button onClick={handleCopy} variant="default" size="sm" className="h-9 text-sm gap-1.5">
+              <Button onClick={handleCopy} disabled={copyPending} variant="default" size="sm" className="h-9 text-sm gap-1.5">
                 <Copy className="h-4 w-4" />
                 {copied ? "Copied!" : "Copy"}
               </Button>
@@ -338,7 +345,7 @@ function EditForm({
         <Textarea id="edit-prompt" name="prompt" defaultValue={prompt.prompt} rows={10} className="text-sm font-mono" required />
       </div>
 
-      <div className="fixed bottom-0 bg-background w-[40vw] flex items-center justify-between gap-2 pt-2">
+      <div className="flex items-center justify-between gap-2 pt-4 border-t border-border/30 mt-4">
         <Button type="submit" disabled={saving} size="sm" className="h-8 text-xs">
           {saving ? "Saving..." : "Save changes"}
         </Button>

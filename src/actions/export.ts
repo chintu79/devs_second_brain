@@ -82,7 +82,7 @@ export async function exportVault() {
     };
 
     return { data: JSON.stringify(data, null, 2) };
-  } catch (e: any) {
-    return { error: e.message || "Export failed" };
+  } catch (e: unknown) {
+    return { error: (e instanceof Error ? e.message : String(e)) || "Export failed" };
   }
 }

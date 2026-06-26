@@ -1,10 +1,45 @@
 import { NextRequest } from "next/server";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import { includeTags, flattenListTags } from "@/lib/tags";
+import { getApiKey } from "@/lib/ai";
 
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || "meta-llama/llama-3.2-3b-instruct:free";
+
+type VaultCacheValue = {
+  resources: unknown[];
+  prompts: unknown[];
+  notes: unknown[];
+  projects: unknown[];
+};
+
+// In-memory cache for vault data (30s TTL)
+const vaultCache = new Map<string, { data: VaultCacheValue; expiry: number }>();
+const CACHE_TTL = 30_000;
+
+async function getVaultData(userId: string) {
+  const cached = vaultCache.get(userId);
+  if (cached && Date.now() < cached.expiry) return cached.data;
+
+  const [resources, prompts, notes, projects] = await Promise.all([
+    prisma.resource.findMany({ where: { userId }, take: 500, include: { tags: { include: { tag: { select: { name: true } } } } } }),
+    prisma.prompt.findMany({ where: { userId }, take: 500, include: { tags: { include: { tag: { select: { name: true } } } } } }),
+    prisma.note.findMany({ where: { userId }, take: 500, include: { tags: { include: { tag: { select: { name: true } } } } } }),
+    prisma.project.findMany({ where: { userId }, take: 500, include: { tags: { include: { tag: { select: { name: true } } } } } }),
+  ]);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const mapTags = (item: any) => ({ ...item, tags: item.tags.map((t: any) => t.tag.name) });
+
+  const data = {
+    resources: resources.map(mapTags),
+    prompts: prompts.map(mapTags),
+    notes: notes.map(mapTags),
+    projects: projects.map(mapTags),
+  };
+
+  vaultCache.set(userId, { data, expiry: Date.now() + CACHE_TTL });
+  return data;
+}
 
 function scoreRelevance(query: string, item: {
   type: string; title: string; tags: string[]; description?: string; content?: string; url?: string;
@@ -29,6 +64,11 @@ export async function POST(req: NextRequest) {
     return new Response("Unauthorized", { status: 401 });
   }
 
+  const apiKey = await getApiKey();
+  if (!apiKey) {
+    return new Response("OPENROUTER_API_KEY not configured. Set it in Settings → System.", { status: 500 });
+  }
+
   const { message, history = [] } = await req.json();
   if (!message || typeof message !== "string") {
     return new Response("Message required", { status: 400 });
@@ -36,32 +76,20 @@ export async function POST(req: NextRequest) {
 
   const userId = session.user.id;
 
-  const [resources, prompts, notes, projects] = await Promise.all([
-    prisma.resource.findMany({ where: { userId }, ...includeTags }),
-    prisma.prompt.findMany({ where: { userId }, ...includeTags }),
-    prisma.note.findMany({ where: { userId }, ...includeTags }),
-    prisma.project.findMany({ where: { userId }, ...includeTags }),
-  ]);
+  const vault = await getVaultData(userId);
 
-  const flatResources = flattenListTags(resources).map((r: any) => ({
-    type: "resource" as const, id: r.id, title: r.title, tags: r.tags,
-    description: r.category, content: r.notes, url: r.url,
-  }));
-  const flatPrompts = flattenListTags(prompts).map((p: any) => ({
-    type: "prompt" as const, id: p.id, title: p.title, tags: p.tags,
-    description: p.category, content: p.prompt,
-  }));
-  const flatNotes = flattenListTags(notes).map((n: any) => ({
-    type: "note" as const, id: n.id, title: n.title, tags: n.tags,
-    description: n.category, content: n.content,
-  }));
-  const flatProjects = flattenListTags(projects).map((p: any) => ({
-    type: "project" as const, id: p.id, title: p.title, tags: p.tags,
-    description: p.description, content: p.planMd,
-  }));
-
-  const allItems = [...flatResources, ...flatPrompts, ...flatNotes, ...flatProjects];
+  const allItems = [
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ...vault.resources.map((r: any) => ({ type: "resource" as const, id: r.id, title: r.title, tags: r.tags, description: r.category, content: r.notes, url: r.url })),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ...vault.prompts.map((p: any) => ({ type: "prompt" as const, id: p.id, title: p.title, tags: p.tags, description: p.category, content: p.prompt })),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ...vault.notes.map((n: any) => ({ type: "note" as const, id: n.id, title: n.title, tags: n.tags, description: n.category, content: n.content })),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ...vault.projects.map((p: any) => ({ type: "project" as const, id: p.id, title: p.title, tags: p.tags, description: p.description, content: p.planMd })),
+  ];
   const scored = allItems
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .map((item) => ({ item, score: scoreRelevance(message, item as any) }))
     .filter((s) => s.score > 0)
     .sort((a, b) => b.score - a.score)
@@ -85,7 +113,7 @@ export async function POST(req: NextRequest) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${OPENROUTER_API_KEY}`,
+        Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
         model: OPENROUTER_MODEL,
@@ -149,7 +177,7 @@ export async function POST(req: NextRequest) {
         "Cache-Control": "no-cache",
       },
     });
-  } catch (err: any) {
-    return new Response(`AI error: ${err.message}`, { status: 500 });
+  } catch (err: unknown) {
+    return new Response(`AI error: ${err instanceof Error ? err.message : String(err)}`, { status: 500 });
   }
 }

@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { PageTransition } from "@/components/dashboard/page-transition";
-import { Palette, RotateCcw, Download, Upload, Loader2, Key, Plus, Trash2, Copy, Check, Eye, EyeOff } from "lucide-react";
+import { Palette, RotateCcw, Download, Upload, Loader2, Key, Plus, Trash2, Copy, Check, Eye, EyeOff, Server, Wifi, WifiOff } from "lucide-react";
 import { toast } from "sonner";
 import { getAccents, setAccents, defaultAccents, type SectionAccent } from "@/components/theme/accent-provider";
 import { exportVault } from "@/actions/export";
 import { importVault } from "@/actions/import";
 import { generateApiKey, listApiKeys, revokeApiKey } from "@/actions/api-keys";
+import { getEnvStatus, getConfigValue, setConfig } from "@/actions/config";
 
 const sections: { id: SectionAccent; label: string }[] = [
   { id: "dashboard", label: "Dashboard" },
@@ -46,17 +46,20 @@ export default function SettingsPage() {
   const [copied, setCopied] = useState(false);
   const [showNewKey, setShowNewKey] = useState(true);
   const [revokingId, setRevokingId] = useState<string | null>(null);
+  const [envStatus, setEnvStatus] = useState<Record<string, boolean> | null>(null);
+  const [aiKey, setAiKey] = useState("");
+  const [savingAiKey, setSavingAiKey] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setAccentsState(getAccents());
-    loadApiKeys();
+    listApiKeys().then(setApiKeys);
+    Promise.all([getEnvStatus(), getConfigValue("OPENROUTER_API_KEY")]).then(([env, ai]) => {
+      if (env) setEnvStatus(env);
+      if (ai !== null) setAiKey(ai);
+    });
   }, []);
-
-  async function loadApiKeys() {
-    const keys = await listApiKeys();
-    setApiKeys(keys);
-  }
 
   function updateAccent(id: SectionAccent, value: string) {
     if (!isValidHex(value)) return;
@@ -67,6 +70,14 @@ export default function SettingsPage() {
     setAccents(accents);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
+  }
+
+  async function handleSaveAiKey() {
+    setSavingAiKey(true);
+    await setConfig("OPENROUTER_API_KEY", aiKey);
+    setSavingAiKey(false);
+    setEnvStatus((prev) => prev ? { ...prev, OPENROUTER_API_KEY: !!aiKey } : prev);
+    toast.success(aiKey ? "AI provider key saved" : "AI provider key cleared");
   }
 
   function resetAccents() {
@@ -119,7 +130,8 @@ export default function SettingsPage() {
       setNewKey(res.rawKey);
       setShowNewKey(true);
       setKeyName("");
-      await loadApiKeys();
+      const keys = await listApiKeys();
+      setApiKeys(keys);
       toast.success("API key generated");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to generate key");
@@ -152,7 +164,6 @@ export default function SettingsPage() {
   }
 
   return (
-    <PageTransition>
       <div className="max-w-2xl mx-auto" data-accent="settings">
         <div className="flex items-center gap-3 mb-8">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
@@ -173,19 +184,21 @@ export default function SettingsPage() {
 
           {newKey && (
             <div className="rounded-lg border border-[#22C55E]/30 bg-[#22C55E]/5 p-4 space-y-3">
-              <p className="text-xs font-medium text-[#22C55E]">Key generated — copy it now. You won't see it again.</p>
+              <p className="text-xs font-medium text-[#22C55E]">Key generated — copy it now. You won&apos;t see it again.</p>
               <div className="flex items-center gap-2">
                 <code className="flex-1 text-xs bg-card border border-border/20 rounded-lg px-3 py-2 font-mono text-[#F4F4F5] truncate">
                   {showNewKey ? newKey : "••••••••••••••••••••••••••••"}
                 </code>
                 <button
                   onClick={() => setShowNewKey(!showNewKey)}
+                  aria-label={showNewKey ? "Hide API key" : "Show API key"}
                   className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/40 text-[#71717A] hover:text-foreground transition-colors"
                 >
                   {showNewKey ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                 </button>
                 <button
                   onClick={copyKey}
+                  aria-label="Copy API key"
                   className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/40 text-[#71717A] hover:text-foreground transition-colors"
                 >
                   {copied ? <Check className="h-3.5 w-3.5 text-[#22C55E]" /> : <Copy className="h-3.5 w-3.5" />}
@@ -244,6 +257,45 @@ export default function SettingsPage() {
           </div>
         </div>
 
+        {/* System */}
+        <h2 className="text-sm font-semibold text-[#E4E4E7] mb-3">System</h2>
+        <div className="rounded-xl border border-border/20 p-5 space-y-4 mb-8">
+          <p className="text-sm text-[#A1A1AA] leading-relaxed">Environment status and runtime configuration. Changes apply immediately.</p>
+
+          {envStatus && (
+            <div className="grid grid-cols-2 gap-2">
+              {Object.entries(envStatus).map(([key, ok]) => (
+                <div key={key} className="flex items-center gap-2 rounded-lg bg-muted/30 px-3 py-2">
+                  {ok ? <Wifi className="h-3.5 w-3.5 text-[#22C55E]" /> : <WifiOff className="h-3.5 w-3.5 text-red-400" />}
+                  <span className="text-xs text-[#D4D4D8] font-mono">{key}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="border-t border-border/20 pt-4 space-y-3">
+            <p className="text-xs font-medium text-[#A1A1AA]">AI Provider Key (OpenRouter)</p>
+            <div className="flex items-center gap-3">
+              <input
+                value={aiKey}
+                onChange={(e) => setAiKey(e.target.value)}
+                placeholder="sk-or-..."
+                className="flex-1 h-9 rounded-lg border border-border/20 bg-card px-3 text-sm text-foreground placeholder:text-[#71717A] focus:outline-none focus:border-border/60 transition-colors font-mono"
+              />
+              <button
+                onClick={handleSaveAiKey}
+                disabled={savingAiKey}
+                className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+              >
+                {savingAiKey ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save"}
+              </button>
+            </div>
+            <p className="text-xs text-[#71717A]">
+              Get a free key at <a href="https://openrouter.ai/keys" className="text-primary underline underline-offset-2 hover:opacity-80">openrouter.ai/keys</a>. Leave empty to use the <code className="text-xs bg-muted px-1 rounded">OPENROUTER_API_KEY</code> env var.
+            </p>
+          </div>
+        </div>
+
         {/* Accent Colors */}
         <h2 className="text-sm font-semibold text-[#E4E4E7] mb-3">Accent Colors</h2>
         <div className="rounded-xl border border-border/20 overflow-hidden mb-8">
@@ -252,8 +304,8 @@ export default function SettingsPage() {
               <div key={id} className="flex items-center justify-between px-5 py-4">
                 <div className="flex items-center gap-3">
                   <div
-                    className="h-6 w-6 rounded-full border border-border/40"
-                    style={{ backgroundColor: accents[id] }}
+                    className="h-6 w-6 rounded-full border border-border/40 accent-bg"
+                    style={{ '--accent-c': accents[id] } as React.CSSProperties}
                   />
                   <span className="text-sm text-[#D4D4D8]">{label}</span>
                 </div>
@@ -318,6 +370,5 @@ export default function SettingsPage() {
           </div>
         </div>
       </div>
-    </PageTransition>
   );
 }

@@ -36,6 +36,8 @@ interface NoteListProps {
 
 export const NoteList = forwardRef<HTMLDivElement, NoteListProps>(
   function NoteList({ notes, projects, selectedId, onSelect, onDelete, onFavorite }, ref) {
+    const [deletingId, setDeletingId] = useState<string | null>(null);
+
     if (notes.length === 0) {
       return (
         <div className="flex-1 flex items-center justify-center">
@@ -112,9 +114,10 @@ export const NoteList = forwardRef<HTMLDivElement, NoteListProps>(
                 </div>
               </button>
               <button
-                onClick={(e) => { e.stopPropagation(); onDelete(note.id); }}
-                className="absolute top-3 right-3 flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all duration-150"
-                title="Delete note"
+                onClick={async (e) => { e.stopPropagation(); setDeletingId(note.id); try { await onDelete(note.id); } finally { setDeletingId(null); } }}
+                disabled={deletingId === note.id}
+                className="absolute top-3 right-3 flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all duration-150 disabled:opacity-50 disabled:pointer-events-none"
+                aria-label="Delete note"
               >
                 <Trash2 className="h-3.5 w-3.5" />
               </button>

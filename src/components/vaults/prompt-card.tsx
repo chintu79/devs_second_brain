@@ -23,10 +23,13 @@ interface PromptCardProps {
 
 export function PromptCard({ prompt: p }: PromptCardProps) {
   const [open, setOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   async function handleDelete() {
     if (confirm("Delete this prompt?")) {
+      setDeleting(true);
       await deletePrompt(p.id);
+      setDeleting(false);
     }
   }
 
@@ -46,7 +49,7 @@ export function PromptCard({ prompt: p }: PromptCardProps) {
                 </div>
                 <div className="flex items-center gap-0.5 shrink-0">
                   <form action={async () => { await toggleFavorite(p.id); }}>
-                    <button type="submit" className={`flex h-7 w-7 items-center justify-center rounded transition-all duration-150 hover:scale-[1.1] ${p.favorite ? "text-amber-400" : "text-muted-foreground hover:text-amber-400 hover:bg-muted"}`}>
+                    <button type="submit" aria-label={p.favorite ? "Unfavorite prompt" : "Favorite prompt"} className={`flex h-7 w-7 items-center justify-center rounded transition-all duration-150 hover:scale-[1.1] ${p.favorite ? "text-amber-400" : "text-muted-foreground hover:text-amber-400 hover:bg-muted"}`}>
                       <Star className={`h-3 w-3 ${p.favorite ? "fill-amber-400" : ""}`} />
                     </button>
                   </form>
@@ -68,10 +71,10 @@ export function PromptCard({ prompt: p }: PromptCardProps) {
                     {p.tags.length > 3 && <span className="text-[10px] text-muted-foreground">+{p.tags.length - 3}</span>}
                   </div>
                   <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button className="flex h-7 w-7 items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-150 hover:scale-[1.1]" onClick={() => setOpen(true)}>
+                    <button aria-label="Edit prompt" className="flex h-7 w-7 items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-150 hover:scale-[1.1]" onClick={() => setOpen(true)}>
                       <Pencil className="h-3 w-3" />
                     </button>
-                    <button className="flex h-7 w-7 items-center justify-center rounded text-muted-foreground hover:text-red-400 hover:bg-muted transition-all duration-150 hover:scale-[1.1]" onClick={handleDelete}>
+                    <button aria-label="Delete prompt" disabled={deleting} className="flex h-7 w-7 items-center justify-center rounded text-muted-foreground hover:text-red-400 hover:bg-muted transition-all duration-150 hover:scale-[1.1]" onClick={handleDelete}>
                       <Trash2 className="h-3 w-3" />
                     </button>
                   </div>

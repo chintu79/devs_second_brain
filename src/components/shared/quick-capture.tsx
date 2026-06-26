@@ -52,7 +52,7 @@ export function QuickCapture() {
     const result = await createResource(formData);
     setLoading(false);
     if (result?.error) { setError(result.error); return; }
-    const newId = result?.resource?.id;
+    const newId = result?.id;
     if (newId && links.length > 0) {
       await batchCreateReferences("resource", newId, links);
     }
@@ -67,7 +67,7 @@ export function QuickCapture() {
     const result = await createNote(formData);
     setLoading(false);
     if (result?.error) { setError(result.error); return; }
-    const newId = "id" in result ? (result as any).id as string : null;
+    const newId = "id" in result ? result.id : null;
     if (newId && links.length > 0) {
       await batchCreateReferences("note", newId, links);
     }
@@ -82,7 +82,7 @@ export function QuickCapture() {
     const result = await createPrompt(formData);
     setLoading(false);
     if (result?.error) { setError(result.error); return; }
-    const newId = "id" in result ? (result as any).id as string : null;
+    const newId = "id" in result ? result.id : null;
     if (newId && links.length > 0) {
       await batchCreateReferences("prompt", newId, links);
     }
@@ -95,7 +95,7 @@ export function QuickCapture() {
     <>
       <button
         onClick={() => setOpen(!open)}
-        className="fixed bottom-6 right-6 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-200"
+        className="fixed bottom-6 left-6 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-200"
         title="Quick Capture (⌘⇧C)"
       >
         {open ? <X className="h-5 w-5" /> : <Zap className="h-5 w-5" />}
@@ -106,7 +106,7 @@ export function QuickCapture() {
       )}
 
       <div
-        className={`fixed bottom-24 right-6 z-40 w-[400px] rounded-xl border border-border bg-card shadow-2xl transition-all duration-250 origin-bottom-right ${
+        className={`fixed bottom-24 left-6 z-40 w-[400px] rounded-xl border border-border bg-card shadow-2xl transition-all duration-250 origin-bottom-left ${
           open ? "scale-100 opacity-100" : "scale-95 opacity-0 pointer-events-none"
         }`}
       >
@@ -120,10 +120,10 @@ export function QuickCapture() {
                 onClick={() => { setTab(t.id); setError(null); }}
                 className={`flex-1 flex items-center justify-center gap-2 py-3 text-xs font-medium transition-all duration-150 ${
                   active
-                    ? "text-foreground border-b-2"
+                    ? "accent-text border-b-2"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
-                style={active ? { borderBottomColor: t.color, color: t.color } : {}}
+                style={active ? { '--accent-c': t.color, borderBottomColor: 'var(--accent-c)' } as React.CSSProperties : {}}
               >
                 <Icon className="h-3.5 w-3.5" />
                 {t.label}

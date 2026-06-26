@@ -60,7 +60,7 @@ export function SearchResultCard({ result, selected, onSelect }: SearchResultCar
   return (
     <motion.div
       whileHover={cardHover}
-      className={`group relative rounded-xl border bg-card cursor-pointer border-l-2 ${
+      className={`group relative rounded-xl border bg-card cursor-pointer border-l-2 w-full ${
         selected ? "border-primary/40 border-l-primary shadow-sm" : `${config.border} border-border hover:border-primary/20 hover:shadow-sm`
       }`}
       onClick={() => onSelect(result.id)}

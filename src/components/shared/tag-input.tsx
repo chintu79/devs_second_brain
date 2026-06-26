@@ -21,10 +21,11 @@ export function TagInput({ value, onChange, placeholder = "Add tags..." }: TagIn
 
   const tags = value ? value.split(",").map((t) => t.trim()).filter(Boolean) : [];
   const tagsRef = useRef(tags);
-  tagsRef.current = tags;
+  useEffect(() => { tagsRef.current = tags; }, [tags]);
 
   useEffect(() => {
     if (!inputValue.trim()) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSuggestions([]);
       setOpen(false);
       return;

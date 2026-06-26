@@ -36,6 +36,7 @@ export function GraphView({ resources, prompts, notes, projects, compact = false
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const simRef = useRef<any>(null);
   const posRef = useRef<Record<string, { x: number; y: number }>>({});
   const rafRef = useRef<number | null>(null);
@@ -94,14 +95,19 @@ export function GraphView({ resources, prompts, notes, projects, compact = false
 
     if (simNodes.length === 0) return;
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const sim = forceSimulation(simNodes as any)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .force("link", forceLink(simEdges as any).id((d: any) => d.id).distance(160).strength(0.4) as any)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .force("charge", forceManyBody().strength(-300) as any)
       .force("center", forceCenter(width / 2, height / 2))
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .force("collision", forceCollide(45) as any)
       .alphaDecay(0.015)
       .velocityDecay(0.3)
       .on("tick", () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (sim.nodes() as any[]).forEach((n: any) => {
           posRef.current[n.id] = { x: n.x ?? 0, y: n.y ?? 0 };
         });
@@ -283,8 +289,8 @@ export function GraphView({ resources, prompts, notes, projects, compact = false
                 }`}
             >
               <span
-                className="h-2 w-2 rounded-full shrink-0"
-                style={{ backgroundColor: typeConfig[type].color }}
+                className="h-2 w-2 rounded-full shrink-0 accent-bg"
+                style={{ '--accent-c': typeConfig[type].color } as React.CSSProperties}
               />
               {compact ? "" : typeConfig[type].label}
               <span className="text-muted-foreground tabular-nums">
@@ -464,7 +470,7 @@ export function GraphView({ resources, prompts, notes, projects, compact = false
           <div className="absolute top-4 left-1/2 -translate-x-1/2">
             <div className="bg-card border border-border/40 rounded-lg px-4 py-2 shadow-sm">
               <p className="text-xs text-muted-foreground">
-                No nodes match "{query}"
+                No nodes match &quot;{query}&quot;
               </p>
             </div>
           </div>
@@ -478,8 +484,8 @@ export function GraphView({ resources, prompts, notes, projects, compact = false
             (type) => (
               <div key={type} className="flex items-center gap-1.5">
                 <span
-                  className="h-1.5 w-1.5 rounded-full"
-                  style={{ backgroundColor: typeConfig[type].color }}
+                  className="h-1.5 w-1.5 rounded-full accent-bg"
+                  style={{ '--accent-c': typeConfig[type].color } as React.CSSProperties}
                 />
                 <span className="text-[11px] text-muted-foreground">
                   {typeConfig[type].label}

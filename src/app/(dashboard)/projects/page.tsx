@@ -1,6 +1,7 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
-import prisma from "@/lib/prisma";
+import prisma, { safeQuery } from "@/lib/prisma";
 import { ProjectWorkspace } from "@/components/projects/project-workspace";
 import { includeTags, flattenListTags } from "@/lib/tags";
 
@@ -17,20 +18,22 @@ export default async function ProjectsPage() {
   }
 
   const [projects, resources, prompts, notes] = await Promise.all([
-    prisma.project.findMany({ where: { userId }, orderBy: { updatedAt: "desc" }, ...includeTags }),
-    prisma.resource.findMany({ where: { userId }, ...includeTags }),
-    prisma.prompt.findMany({ where: { userId }, ...includeTags }),
-    prisma.note.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, ...includeTags }),
+    safeQuery("projects", () => prisma.project.findMany({ where: { userId }, orderBy: { updatedAt: "desc" }, take: 200, ...includeTags }), []),
+    safeQuery("projects.resources", () => prisma.resource.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, take: 200, ...includeTags }), []),
+    safeQuery("projects.prompts", () => prisma.prompt.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, take: 200, ...includeTags }), []),
+    safeQuery("projects.notes", () => prisma.note.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, take: 200, ...includeTags }), []),
   ]);
 
   return (
     <div data-accent="projects" className="flex h-full -m-5 lg:-m-6">
-      <ProjectWorkspace
-        projects={flattenListTags(projects) as unknown as any[]}
-        resources={flattenListTags(resources.map((r) => ({ ...r, url: r.url, category: r.category })))}
-        prompts={flattenListTags(prompts.map((p) => ({ ...p, prompt: p.prompt })))}
-        notes={flattenListTags(notes.map((n) => ({ ...n, content: n.content })))}
-      />
+      <Suspense fallback={<div className="flex-1" />}>
+        <ProjectWorkspace
+          projects={flattenListTags(projects)}
+          resources={flattenListTags(resources.map((r) => ({ ...r, url: r.url, category: r.category })))}
+          prompts={flattenListTags(prompts.map((p) => ({ ...p, prompt: p.prompt })))}
+          notes={flattenListTags(notes.map((n) => ({ ...n, content: n.content })))}
+        />
+      </Suspense>
     </div>
   );
 }

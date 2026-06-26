@@ -40,8 +40,8 @@ export default function AuthBrand() {
       <div className="relative z-10">
         <motion.div
           className="flex items-center gap-3"
-          initial={{ opacity: 0, y: 20, filter: "blur(8px)" }}
-          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: [0, 0, 0.2, 1] }}
         >
           <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[var(--color-dashboard)]/10">
@@ -55,8 +55,8 @@ export default function AuthBrand() {
 
         <motion.div
           className="mt-16 space-y-3"
-          initial={{ opacity: 0, y: 20, filter: "blur(8px)" }}
-          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25, duration: 0.5, ease: [0, 0, 0.2, 1] }}
         >
           <h2 className="text-2xl font-semibold tracking-tight text-[var(--text-primary)]">
@@ -72,18 +72,18 @@ export default function AuthBrand() {
         {floatingCards.map((card, i) => (
           <motion.div
             key={card.title}
-            initial={{ opacity: 0, y: 40, filter: "blur(12px)" }}
-            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 + i * 0.2, duration: 0.6, ease: [0, 0, 0.2, 1] }}
           >
             <motion.div
-              className="flex items-center gap-3 rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm p-3.5 w-72"
-              style={{ borderLeftColor: card.accent, borderLeftWidth: 2 }}
+              className="flex items-center gap-3 rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm p-3.5 w-72 accent-border-left"
+              style={{ '--accent-c': card.accent } as React.CSSProperties}
               animate={{ y: [0, -6 + i * 2, 0] }}
               transition={{ duration: 4 + i * 1.2, repeat: Infinity, ease: "easeInOut" }}
             >
-              <div className="flex items-center justify-center w-9 h-9 rounded-lg shrink-0" style={{ backgroundColor: `${card.accent}15` }}>
-                <card.icon className="h-4 w-4" style={{ color: card.accent }} />
+              <div className="flex items-center justify-center w-9 h-9 rounded-lg shrink-0 accent-bg-15">
+                <card.icon className="h-4 w-4 accent-text" />
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-medium text-[var(--text-primary)] truncate">{card.title}</p>

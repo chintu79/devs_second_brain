@@ -30,6 +30,7 @@ export async function createResource(formData: FormData) {
     });
     revalidatePath("/resources");
     if (tagNames.length > 0) revalidatePath("/tags");
+
     return { success: true, id: resource.id };
   } catch {
     return { error: "Failed to create resource" };
@@ -58,6 +59,7 @@ export async function editResource(id: string, formData: FormData) {
       data: { title, url, category, notes, reason, tags: buildTagCreate(tagNames, session.user.id) },
     });
     revalidatePath("/resources");
+
     return { success: true };
   } catch {
     return { error: "Failed to update resource" };
@@ -71,6 +73,7 @@ export async function deleteResource(id: string) {
   try {
     await prisma.resource.delete({ where: { id, userId: session.user.id } });
     revalidatePath("/resources");
+
     return { success: true };
   } catch {
     return { error: "Failed to delete resource" };
@@ -84,6 +87,7 @@ export async function toggleFavorite(id: string, current: boolean) {
   try {
     await prisma.resource.update({ where: { id, userId: session.user.id }, data: { favorite: !current } });
     revalidatePath("/resources");
+
     return { success: true };
   } catch {
     return { error: "Failed to toggle favorite" };

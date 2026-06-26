@@ -1,11 +1,12 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
 import { Bookmark, Sparkles, StickyNote, FolderKanban, Radio, History, GitFork, ArrowRight, Search, Layers, Eye, Key, Terminal, Code } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollReveal } from "@/components/shared/scroll-reveal";
 import { HeroEntrance } from "@/components/landing/hero-entrance";
 import { AnimatedArrow } from "@/components/landing/animated-arrow";
 import { Navbar } from "@/components/landing/navbar";
-import { SmoothScroll } from "@/components/landing/smooth-scroll";
 
 const features = [
   { icon: Bookmark, title: "Resource Vault", desc: "Save useful links, articles, and dev tools. Extract key insights and tag them for later uses." },
@@ -24,11 +25,11 @@ const workflowSteps = [
   { icon: History, label: "Rediscover" },
 ];
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const session = await auth();
   return (
-    <SmoothScroll>
     <div className="flex flex-col min-h-screen bg-background text-foreground selection:bg-primary/30">
-      <Navbar />
+      <Navbar session={session} />
 
       <main>
         {/* ── Hero ── */}
@@ -147,17 +148,17 @@ export default function LandingPage() {
                     ].map((item) => {
                       const Icon = item.icon;
                       return (
-                        <div key={item.label} className="flex items-center gap-3 rounded-md px-2.5 py-2 text-sm text-muted-foreground/70 hover:bg-muted/40 transition-colors cursor-pointer">
+                        <div key={item.label} role="presentation" className="flex items-center gap-3 rounded-md px-2.5 py-2 text-sm text-muted-foreground/70">
                           <Icon className="h-3.5 w-3.5 shrink-0" />
                           {item.label}
                         </div>
                       );
                     })}
-                    <div className="flex items-center gap-3 rounded-md px-2.5 py-2 text-sm text-muted-foreground/70 hover:bg-muted/40 transition-colors cursor-pointer">
+                    <div role="presentation" className="flex items-center gap-3 rounded-md px-2.5 py-2 text-sm text-muted-foreground/70">
                       <Sparkles className="h-3.5 w-3.5 shrink-0" />
                       Debug server action errors — prompt
                     </div>
-                    <div className="flex items-center gap-3 rounded-md px-2.5 py-2 text-sm text-muted-foreground/70 hover:bg-muted/40 transition-colors cursor-pointer">
+                    <div role="presentation" className="flex items-center gap-3 rounded-md px-2.5 py-2 text-sm text-muted-foreground/70">
                       <StickyNote className="h-3.5 w-3.5 shrink-0" />
                       Server Actions architecture notes
                     </div>
@@ -344,7 +345,7 @@ print(resp.json())`}</pre>
         </section>
 
         {/* ── Open Source ── */}
-        <section className="py-24 md:py-32">
+        <section id="open-source" className="py-24 md:py-32">
           <div className="mx-auto max-w-3xl px-6 text-center">
             <ScrollReveal>
               <div className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/40 px-4 py-1.5 text-xs font-medium text-muted-foreground/80 mb-6">
@@ -356,15 +357,15 @@ print(resp.json())`}</pre>
                 Fully open source and self-hostable. No vendor lock-in. Your data stays yours. Contributions and feedback are welcome.
               </p>
               <div className="flex items-center justify-center gap-3 mt-10">
-                <Link href="https://github.com">
+                <Link href="https://github.com/chintu79/devs_second_brain">
                   <Button variant="outline" className="h-10 px-5 text-sm gap-2 border-border/60 text-muted-foreground/80 hover:text-foreground hover:border-border transition-all duration-200">
                     <GitFork className="h-4 w-4" />
                     View on GitHub
                   </Button>
                 </Link>
-                <Link href="/docs">
+                <Link href="/setup">
                   <Button variant="ghost" className="h-10 px-5 text-sm text-muted-foreground/70 hover:text-foreground transition-all duration-200">
-                    Read the docs
+                    Setup guide
                   </Button>
                 </Link>
               </div>
@@ -385,7 +386,7 @@ print(resp.json())`}</pre>
                     <ArrowRight className="h-4 w-4" />
                   </Button>
                 </Link>
-                <Link href="https://github.com">
+                <Link href="https://github.com/chintu79/devs_second_brain">
                   <Button variant="outline" size="lg" className="h-12 px-7 text-sm gap-2 border-border/60 text-muted-foreground/80 hover:text-foreground hover:border-border transition-all duration-200">
                     <GitFork className="h-4 w-4" />
                     View GitHub
@@ -403,26 +404,24 @@ print(resp.json())`}</pre>
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-2.5">
               <div className="flex h-6 w-6 items-center justify-center rounded bg-primary/90">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" className="stroke-white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M12 3a6 6 0 0 0-6 6v2.5c0 3.5 2 6.5 6 8.5 4-2 6-5 6-8.5V9a6 6 0 0 0-6-6z" />
                 </svg>
               </div>
-              <span className="text-xs text-muted-foreground/60">Dev Second Brain</span>
+              <span className="text-xs text-muted-foreground/60">DevCache</span>
             </div>
             <div className="flex items-center gap-6 text-xs text-muted-foreground/60">
-              <Link href="#" className="hover:text-foreground/80 hover:scale-[1.02] transition-all duration-150">Documentation</Link>
-              <Link href="https://github.com" className="hover:text-foreground/80 hover:scale-[1.02] transition-all duration-150">GitHub</Link>
-              <Link href="#" className="hover:text-foreground/80 hover:scale-[1.02] transition-all duration-150">Privacy</Link>
-              <Link href="#" className="hover:text-foreground/80 hover:scale-[1.02] transition-all duration-150">Terms</Link>
-              <Link href="#" className="hover:text-foreground/80 hover:scale-[1.02] transition-all duration-150">Contact</Link>
+              <Link href="/setup" className="hover:text-foreground/80 hover:scale-[1.02] transition-all duration-150">Setup</Link>
+              <Link href="https://github.com/chintu79/devs_second_brain" className="hover:text-foreground/80 hover:scale-[1.02] transition-all duration-150">GitHub</Link>
+              <span className="text-muted-foreground/60 select-none">Privacy</span>
+              <span className="text-muted-foreground/60 select-none">Terms</span>
             </div>
           </div>
           <div className="mt-8 text-center text-[11px] text-muted-foreground/40">
-            &copy; {new Date().getFullYear()} Dev Second Brain. Open source. Self-hostable. Built for developers.
+            &copy; {new Date().getFullYear()} DevCache. Built by <Link href="https://github.com/chintu79" className="hover:text-foreground/80 hover:scale-[1.02] transition-all duration-150 underline underline-offset-2">chintu79</Link>. Open source. Self-hostable.
           </div>
         </div>
       </footer>
     </div>
-    </SmoothScroll>
   );
 }

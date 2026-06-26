@@ -1,3 +1,4 @@
+import { Suspense } from "react"
 import { fetchTrendingRepos } from "@/lib/github"
 import { allRepos, discoverySections, sidebarCategories } from "@/lib/mock-data"
 import { RadarWorkspace } from "@/components/radar/radar-workspace"
@@ -11,11 +12,13 @@ export default async function RadarPage() {
 
   return (
     <div data-accent="radar" className="-m-5 pb-8 lg:-m-6 h-[calc(100vh-var(--header-height,0px))] flex overflow-hidden">
-      <RadarWorkspace
-        repos={repos}
-        sections={sections}
-        categories={categories}
-      />
+      <Suspense fallback={<div className="flex-1" />}>
+        <RadarWorkspace
+          repos={repos}
+          sections={sections}
+          categories={categories}
+        />
+      </Suspense>
     </div>
   )
 }

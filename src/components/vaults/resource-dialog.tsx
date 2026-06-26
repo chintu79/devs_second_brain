@@ -81,7 +81,7 @@ export function ResourceDialog({ open, onOpenChange, resource }: ResourceDialogP
     if (result?.error) {
       setServerError(result.error);
     } else {
-      const newId = !isEdit && result?.resource?.id ? result.resource.id : null;
+      const newId = !isEdit && "id" in result ? result.id as string : null;
       if (newId && links.length > 0) {
         await batchCreateReferences("resource", newId, links);
       }
@@ -120,7 +120,7 @@ export function ResourceDialog({ open, onOpenChange, resource }: ResourceDialogP
             <div className="flex items-center justify-between">
               <Label htmlFor="category">Category</Label>
               <button
-                type="button"
+                type="button" disabled={aiLoading !== null}
                 onClick={async () => {
                   setServerError(null);
                   setAiLoading("category");
@@ -130,7 +130,8 @@ export function ResourceDialog({ open, onOpenChange, resource }: ResourceDialogP
                     ["frontend", "backend", "devops", "database", "mobile", "ai", "design", "other"]
                   );
                   setAiLoading(null);
-                  if (res.category) form.setValue("category", res.category as any);
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    if (res.category) form.setValue("category", res.category as any);
                   else if (res.error) setServerError(res.error);
                 }}
                 className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
@@ -176,7 +177,7 @@ export function ResourceDialog({ open, onOpenChange, resource }: ResourceDialogP
             <div className="flex items-center justify-between">
               <Label>Tags</Label>
               <button
-                type="button"
+                type="button" disabled={aiLoading !== null}
                 onClick={async () => {
                   setServerError(null);
                   setAiLoading("tags");

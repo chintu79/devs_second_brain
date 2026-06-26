@@ -2,10 +2,12 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import ReactMarkdown from "react-markdown";
+import { Markdown } from "@/components/shared/markdown";
 import {
   X,
   Star,
+  Copy,
+  Check,
   Pencil,
   Trash2,
   Clock,
@@ -95,10 +97,19 @@ export function NoteReaderPanel({
   const [deleting, setDeleting] = useState(false);
   const [summarizing, setSummarizing] = useState(false);
   const [summary, setSummary] = useState<string | null>(null);
+  const [favPending, setFavPending] = useState(false);
+  const [copied, setCopied] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
+
+  async function handleCopy() {
+    await navigator.clipboard.writeText(note.content);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setNote(initialNote);
     setIsFav(initialNote.favorite);
     setEditing(false);
@@ -110,8 +121,11 @@ export function NoteReaderPanel({
   }, [note.id]);
 
   async function handleFavorite() {
+    if (favPending) return;
+    setFavPending(true);
     setIsFav(!isFav);
     await toggleNoteFavorite(note.id);
+    setFavPending(false);
   }
 
   async function handleDelete() {
@@ -119,7 +133,6 @@ export function NoteReaderPanel({
       setDeleting(true);
       await deleteNote(note.id);
       onClose();
-      router.refresh();
     }
   }
 
@@ -179,7 +192,7 @@ export function NoteReaderPanel({
       initial="initial"
       animate="animate"
       exit="exit"
-      className="flex-1 min-w-0 border-l border-border/50 bg-background overflow-hidden flex flex-col outline-none"
+      className="panel-detail outline-none"
     >
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-3 border-b border-border/50 shrink-0">
@@ -189,6 +202,8 @@ export function NoteReaderPanel({
             <>
               <button
                 onClick={handleFavorite}
+                disabled={favPending}
+                aria-label={isFav ? "Unfavorite note" : "Favorite note"}
                 className={`flex h-7 w-7 items-center justify-center rounded-md transition-colors ${
                   isFav ? "text-amber-400" : "text-muted-foreground hover:text-amber-400"
                 }`}
@@ -198,15 +213,16 @@ export function NoteReaderPanel({
               <button
                 onClick={handleSummarize}
                 disabled={summarizing}
+                aria-label={summary ? "Summary available" : "Summarize"}
                 className={`flex h-7 w-7 items-center justify-center rounded-md transition-colors ${
                   summary ? "text-primary" : "text-muted-foreground hover:text-foreground"
                 }`}
-                title={summary ? "Summary available" : "Summarize"}
               >
                 <Bot className={`h-3.5 w-3.5 ${summarizing ? "animate-pulse" : ""}`} />
               </button>
               <button
                 onClick={() => setEditing(true)}
+                aria-label="Edit note"
                 className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground transition-colors"
               >
                 <Pencil className="h-3.5 w-3.5" />
@@ -216,6 +232,7 @@ export function NoteReaderPanel({
           )}
           <button
             onClick={onClose}
+            aria-label="Close panel"
             className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground transition-colors"
           >
             <X className="h-4 w-4" />
@@ -276,64 +293,26 @@ export function NoteReaderPanel({
 
                 {/* Markdown content */}
                 <div className="note-prose">
-                  <ReactMarkdown
-                    components={{
-                      code: ({ className, children, ...props }) => {
-                        const match = /language-(\w+)/.exec(className || "");
-                        const isInline = !className && !match;
-                        if (isInline) {
-                          return (
-                            <code className="inline-code" {...props}>
-                              {children}
-                            </code>
-                          );
-                        }
-                        return (
-                          <div className="code-block-wrapper">
-                            {match && (
-                              <div className="code-block-header">
-                                <span className="code-block-lang">{match[1]}</span>
-                              </div>
-                            )}
-                            <pre className={`code-block ${match ? "has-header" : ""}`}>
-                              <code className={className} {...props}>
-                                {children}
-                              </code>
-                            </pre>
-                          </div>
-                        );
-                      },
-                      blockquote: ({ children, ...props }) => (
-                        <blockquote className="note-blockquote" {...props}>
-                          {children}
-                        </blockquote>
-                      ),
-                      a: ({ children, href, ...props }) => (
-                        <a className="note-link" href={href} target="_blank" rel="noopener noreferrer" {...props}>
-                          {children}
-                        </a>
-                      ),
-                      ul: ({ children, ...props }) => (
-                        <ul className="note-list" {...props}>
-                          {children}
-                        </ul>
-                      ),
-                      ol: ({ children, ...props }) => (
-                        <ol className="note-list" {...props}>
-                          {children}
-                        </ol>
-                      ),
-                      table: ({ children, ...props }) => (
-                        <div className="note-table-wrapper">
-                          <table className="note-table" {...props}>
-                            {children}
-                          </table>
+                  <Markdown components={{
+                    code: ({ className, children, ...props }) => {
+                      const match = /language-(\w+)/.exec(className || "");
+                      const isInline = !className && !match;
+                      if (isInline) return <code className="inline-code" {...props}>{children}</code>;
+                      return (
+                        <div className="code-block-wrapper">
+                          {match && <div className="code-block-header"><span className="code-block-lang">{match[1]}</span></div>}
+                          <pre className={`code-block ${match ? "has-header" : ""}`}><code className={className} {...props}>{children}</code></pre>
                         </div>
-                      ),
-                    }}
-                  >
+                      );
+                    },
+                    blockquote: ({ children, ...props }) => <blockquote className="note-blockquote" {...props}>{children}</blockquote>,
+                    a: ({ children, href, ...props }) => <a className="note-link" href={href} target="_blank" rel="noopener noreferrer" {...props}>{children}</a>,
+                    ul: ({ children, ...props }) => <ul className="note-list" {...props}>{children}</ul>,
+                    ol: ({ children, ...props }) => <ol className="note-list" {...props}>{children}</ol>,
+                    table: ({ children, ...props }) => <div className="note-table-wrapper"><table className="note-table" {...props}>{children}</table></div>,
+                  }}>
                     {note.content}
-                  </ReactMarkdown>
+                  </Markdown>
                 </div>
 
                 {/* Footer meta */}
@@ -426,6 +405,13 @@ export function NoteReaderPanel({
             <Pencil className="h-3.5 w-3.5" />
             Edit
           </Button>
+          <button
+            onClick={handleCopy}
+            className="flex h-8 items-center gap-1 rounded-md px-2.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            {copied ? <Check className="h-3.5 w-3.5 text-green-400" /> : <Copy className="h-3.5 w-3.5" />}
+            {copied ? "Copied" : "Copy"}
+          </button>
           <button
             onClick={handleDelete}
             disabled={deleting}

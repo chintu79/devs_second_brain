@@ -42,29 +42,23 @@ export function DashboardVaultBlocks({ resources, prompts, notes, projects }: Da
   const data: Record<string, VaultBlockData & { items: VaultItem[] }> = { resources, prompts, notes, projects };
 
   return (
-    <div className="grid grid-cols-4 gap-4">
+    <div className="grid grid-cols-4 gap-4 z-10">
       {vaultConfig.map((config) => {
         const block = data[config.key];
         const Icon = config.icon;
         const lastItem = block.items[0];
 
         return (
-          <Link key={config.key} href={config.href} className="group">
-            <div
-              className="rounded-xl border border-border/60 bg-card p-5 transition-all duration-200 hover:border-[var(--border-hover)] hover:shadow-[var(--shadow-elevated)] hover:scale-[1.01] h-full flex flex-col"
-              style={{ borderLeftColor: config.accent, borderLeftWidth: 2 }}
-            >
+          <Link key={config.key} href={config.href} className="group" style={{ '--accent-c': config.accent } as React.CSSProperties}>
+            <div className="rounded-xl border border-border/60 bg-card p-5 transition-all duration-200 hover:border-[var(--border-hover)] hover:shadow-[var(--shadow-elevated)] hover:scale-[1.01] h-full flex flex-col accent-border-left">
               <div className="flex items-center gap-3 mb-3">
-                <div
-                  className="flex h-9 w-9 items-center justify-center rounded-lg"
-                  style={{ backgroundColor: config.bg }}
-                >
-                  <Icon className="h-4 w-4" style={{ color: config.accent }} />
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg accent-bg-15">
+                  <Icon className="h-4 w-4 accent-text" />
                 </div>
                 <div>
                   <div className="text-sm font-medium text-foreground">{config.label}</div>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-lg font-semibold" style={{ color: config.accent }}>{block.count}</span>
+                    <span className="text-lg font-semibold accent-text">{block.count}</span>
                     <span className="text-xs text-muted-foreground">{block.count === 1 ? "item" : "items"}</span>
                   </div>
                 </div>
@@ -84,8 +78,8 @@ export function DashboardVaultBlocks({ resources, prompts, notes, projects }: Da
                     return (
                       <span
                         key={p.id}
-                        className="text-[10px] px-1.5 py-0.5 rounded capitalize"
-                        style={{ backgroundColor: `${color}15`, color }}
+                        className="text-[10px] px-1.5 py-0.5 rounded capitalize accent-badge"
+                        style={{ '--accent-c': color } as React.CSSProperties}
                       >
                         {p.status}
                       </span>

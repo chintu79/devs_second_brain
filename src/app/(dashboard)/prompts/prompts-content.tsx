@@ -1,8 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Plus } from "lucide-react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { AnimatePresence } from "framer-motion";
 import { PromptList } from "@/components/prompts/prompt-list";
+import { PromptContextPanel } from "@/components/prompts/prompt-context-panel";
+import { PromptPreviewPanel } from "@/components/prompts/prompt-preview-panel";
 import { PromptDialog } from "@/components/vaults/prompt-dialog";
 
 interface Prompt {
@@ -25,12 +29,27 @@ interface PromptsContentProps {
 }
 
 export function PromptsContent({ initialItems, nextCursor, categories }: PromptsContentProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const selectedId = searchParams.get("id");
   const [dialogOpen, setDialogOpen] = useState(false);
+
+  const selectedPrompt = selectedId ? initialItems.find((p) => p.id === selectedId) || null : null;
+
+  const setSelectedId = useCallback(
+    (id: string | null) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (id) params.set("id", id);
+      else params.delete("id");
+      router.replace(`/prompts?${params.toString()}`, { scroll: false });
+    },
+    [router, searchParams]
+  );
 
   return (
     <>
-      <div data-accent="prompts" className="flex h-full -m-8">
-        <aside className="hidden xl:flex h-[100vh] w-56 mx-2 mt-2 shrink-0 flex-col border-r border-border/50 overflow-hidden">
+      <div data-accent="prompts" className="-m-5 lg:-m-6 h-[calc(100vh-var(--header-height,0px))] flex overflow-hidden">
+        <aside className="hidden xl:flex h-full w-56 shrink-0 flex-col border-r border-border/50">
           <div className="px-3 pt-3 pb-2 flex items-center justify-between border-b border-border/30">
             <span className="text-xs font-semibold text-section-foreground uppercase tracking-[0.1em]">Prompts</span>
             <button
@@ -48,6 +67,22 @@ export function PromptsContent({ initialItems, nextCursor, categories }: Prompts
             categories={categories}
           />
         </div>
+        {!selectedPrompt && (
+          <PromptContextPanel
+            favorites={initialItems.filter((p) => p.favorite).map((p) => ({ id: p.id, title: p.title }))}
+            recentPrompts={[...initialItems].sort((a, b) => (b.lastUsedAt?.getTime() || 0) - (a.lastUsedAt?.getTime() || 0)).slice(0, 5).map((p) => ({ id: p.id, title: p.title }))}
+          />
+        )}
+        <AnimatePresence>
+          {selectedPrompt && (
+            <PromptPreviewPanel
+              key={selectedPrompt.id}
+              prompt={selectedPrompt}
+              onClose={() => setSelectedId(null)}
+              onUpdate={() => {}}
+            />
+          )}
+        </AnimatePresence>
       </div>
       <PromptDialog open={dialogOpen} onOpenChange={setDialogOpen} />
     </>

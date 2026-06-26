@@ -89,7 +89,7 @@ export function RadarFeed({
                   viewport={{ once: true, margin: "-30px" }}
                 >
                   {section.repos.map((repo) => (
-                    <motion.div key={repo.id} variants={fadeInUp}>
+                    <motion.div key={repo.id} variants={fadeInUp} className="w-full">
                       <RepositoryCard
                         repo={repo}
                         selected={selectedId === repo.id}
@@ -110,7 +110,7 @@ export function RadarFeed({
 
 function Section({ label, count, children }: { label: string; count: number; children: React.ReactNode }) {
   return (
-    <section>
+    <section className="w-full">
       <div className="flex items-center gap-2 mb-4">
         <h2 className="text-xs font-semibold text-section-foreground uppercase tracking-[0.1em]">{label}</h2>
         <span className="text-xs text-muted-foreground px-1.5 py-0.5 rounded bg-muted">{count}</span>

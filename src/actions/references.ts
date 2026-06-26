@@ -129,7 +129,7 @@ export async function getReferences(itemType: ItemType, itemId: string): Promise
     types.map(async (t) => {
       const ids = grouped[t].map((i) => i.id);
       const items = await fetchItemsByType(t, ids);
-      const map = new Map(items.map((i: any) => [i.id, i.title]));
+      const map = new Map(items.map((i: { id: string; title: string }) => [i.id, i.title]));
       grouped[t] = grouped[t].map((i) => ({ ...i, title: map.get(i.id) || "Unknown" }));
     })
   );

@@ -1,18 +1,27 @@
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+import { getConfigValue } from "@/actions/config";
+
 const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || "meta-llama/llama-3.2-3b-instruct:free";
+const ENV_KEY = process.env.OPENROUTER_API_KEY;
 
 const API_URL = "https://openrouter.ai/api/v1/chat/completions";
 
+export async function getApiKey(): Promise<string | null> {
+  // ponytail: two-tier — env var wins, then DB config
+  if (ENV_KEY) return ENV_KEY;
+  try { return await getConfigValue("OPENROUTER_API_KEY"); } catch { return null; }
+}
+
 async function generateContent(prompt: string): Promise<string> {
-  if (!OPENROUTER_API_KEY) {
-    throw new Error("OPENROUTER_API_KEY not configured. Get a free key at https://openrouter.ai/keys");
+  const key = await getApiKey();
+  if (!key) {
+    throw new Error("OPENROUTER_API_KEY not configured. Set it in Settings → System or add it to your .env file.");
   }
 
   const res = await fetch(API_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${OPENROUTER_API_KEY}`,
+      Authorization: `Bearer ${key}`,
     },
     body: JSON.stringify({
       model: OPENROUTER_MODEL,

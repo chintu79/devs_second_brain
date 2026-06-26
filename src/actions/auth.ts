@@ -20,7 +20,7 @@ export async function register(formData: FormData) {
     });
 
     if (existingUser) {
-      return { error: "Email already exists" };
+      return { error: "Registration failed. Please try again." };
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);

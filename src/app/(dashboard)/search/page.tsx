@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { SearchWorkspace } from "@/components/search/search-workspace";
@@ -16,6 +17,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
   if (userId) {
     const raw = await prisma.project.findMany({
       where: { userId },
+      take: 500,
       ...includeTags,
     });
     projects = flattenListTags(raw).map((p) => ({ id: p.id, title: p.title, tags: p.tags }));
@@ -23,7 +25,9 @@ export default async function SearchPage({ searchParams }: PageProps) {
 
   return (
     <div data-accent="search" className="-m-5 lg:-m-6 h-[calc(100vh-var(--header-height,0px))] flex overflow-hidden">
-      <SearchWorkspace initialQuery={q} projects={projects} />
+      <Suspense fallback={<div className="flex-1" />}>
+        <SearchWorkspace initialQuery={q} projects={projects} />
+      </Suspense>
     </div>
   );
 }

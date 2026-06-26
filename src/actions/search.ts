@@ -4,21 +4,22 @@ import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 
 export async function globalSearch(query: string) {
-  const session = await auth();
-  const userId = session?.user?.id;
+  try {
+    const session = await auth();
+    const userId = session?.user?.id;
 
-  if (!query?.trim()) {
-    return { resources: [], prompts: [], notes: [], projects: [] };
-  }
+    if (!query?.trim()) {
+      return { resources: [], prompts: [], notes: [], projects: [] };
+    }
 
-  const q = query.trim();
+    const q = query.trim();
 
-  if (!userId) {
-    return { resources: [], prompts: [], notes: [], projects: [] };
-  }
+    if (!userId) {
+      return { resources: [], prompts: [], notes: [], projects: [] };
+    }
 
-  const [resources, prompts, notes, projects] = await Promise.all([
-    prisma.resource.findMany({
+    const [resources, prompts, notes, projects] = await Promise.all([
+      prisma.resource.findMany({
       where: {
         userId,
         OR: [
@@ -81,10 +82,13 @@ export async function globalSearch(query: string) {
     }));
   }
 
-  return {
-    resources: flattenTags(resources),
-    prompts: flattenTags(prompts),
-    notes: flattenTags(notes),
-    projects: flattenTags(projects),
-  };
+    return {
+      resources: flattenTags(resources),
+      prompts: flattenTags(prompts),
+      notes: flattenTags(notes),
+      projects: flattenTags(projects),
+    };
+  } catch {
+    return { resources: [], prompts: [], notes: [], projects: [] };
+  }
 }

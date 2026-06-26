@@ -44,7 +44,10 @@ export function CommandBar({ onOpenPalette, onOpenCapture }: CommandBarProps) {
       <div className="w-px h-6 bg-border/50 mx-1" />
 
       <div className="flex items-center gap-1">
-        <button className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 hover:scale-[1.1] transition-all duration-150">
+        <button
+          aria-label="Notifications"
+          className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 hover:scale-[1.1] transition-all duration-150"
+        >
           <Bell className="h-4 w-4" />
         </button>
         <div className="flex h-7 w-7 items-center justify-center rounded-full bg-muted text-[11px] font-medium text-foreground">

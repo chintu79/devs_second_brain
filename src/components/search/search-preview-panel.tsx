@@ -74,7 +74,7 @@ export function SearchPreviewPanel({ result, onClose }: SearchPreviewPanelProps)
       initial="initial"
       animate="animate"
       exit="exit"
-      className="flex-1 border-l border-border/50 bg-background overflow-hidden flex flex-col min-w-0"
+      className="panel-detail"
     >
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-3 border-b border-border/50 shrink-0">
@@ -84,6 +84,7 @@ export function SearchPreviewPanel({ result, onClose }: SearchPreviewPanelProps)
         </div>
         <button
           onClick={onClose}
+          aria-label="Close panel"
           className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground transition-colors"
         >
           <X className="h-4 w-4" />

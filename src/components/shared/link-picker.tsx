@@ -26,7 +26,8 @@ export function LinkPicker({ selected, onChange, excludeId, placeholder = "Searc
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!query.trim()) { setResults([]); return; }
+    if (!query.trim()) { // eslint-disable-next-line react-hooks/set-state-in-effect
+    setResults([]); return; }
     const timer = setTimeout(async () => {
       const items = await searchLinkItems(query);
       setResults(items.filter((i) => !(i.type === excludeId && i.id === excludeId)));
@@ -84,7 +85,7 @@ export function LinkPicker({ selected, onChange, excludeId, placeholder = "Searc
                 key={`${item.type}:${item.id}`}
                 className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs bg-muted border border-border"
               >
-                <Icon className="h-3 w-3" style={{ color: cfg.color }} />
+                <Icon className="h-3 w-3 accent-text" style={{ '--accent-c': cfg.color } as React.CSSProperties} />
                 <span className="truncate max-w-[120px]">{item.title}</span>
                 <button
                   type="button"
@@ -119,7 +120,7 @@ export function LinkPicker({ selected, onChange, excludeId, placeholder = "Searc
             const Icon = cfg.icon;
             return (
               <div key={type}>
-                <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground bg-muted/30" style={{ color: cfg.color }}>
+                <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground bg-muted/30 accent-text" style={{ '--accent-c': cfg.color } as React.CSSProperties}>
                   <div className="flex items-center gap-1.5">
                     <Icon className="h-3 w-3" />
                     {type}s
@@ -138,7 +139,7 @@ export function LinkPicker({ selected, onChange, excludeId, placeholder = "Searc
                           : "text-foreground/80 hover:bg-muted/50"
                       }`}
                     >
-                      <Icon className="h-3.5 w-3.5 shrink-0" style={{ color: cfg.color }} />
+                      <Icon className="h-3.5 w-3.5 shrink-0 accent-text" style={{ '--accent-c': cfg.color } as React.CSSProperties} />
                       <span className="truncate flex-1">{item.title}</span>
                       {isSelected && (
                         <span className="text-[10px] font-medium text-primary">Linked</span>

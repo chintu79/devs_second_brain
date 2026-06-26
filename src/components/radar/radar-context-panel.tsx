@@ -13,7 +13,7 @@ export function RadarContextPanel({
   recentlyViewed, bookmarkedRepos, trendingRepos,
 }: RadarContextPanelProps) {
   return (
-    <div className="w-64 shrink-0 border-l border-border/30 bg-muted/20 overflow-y-auto px-4 py-5 space-y-6">
+    <div className="w-[320px] shrink-0 border-l border-border/30 bg-muted/20 overflow-y-auto px-4 py-5 space-y-6">
       {/* Bookmarks */}
       {bookmarkedRepos.length > 0 && (
         <ContextSection icon={Bookmark} label="Bookmarks">
@@ -78,7 +78,7 @@ function ContextSection({
 
 function ContextItem({ label, subtitle }: { label: string; subtitle?: string }) {
   return (
-    <div className="rounded-md px-2 py-1.5 hover:bg-muted/60 hover:scale-[1.02] transition-all duration-150 cursor-pointer">
+    <div className="rounded-md px-2 py-1.5">
       <p className="text-sm font-medium text-foreground/90 truncate">{label}</p>
       {subtitle && <p className="text-xs text-muted-foreground truncate">{subtitle}</p>}
     </div>

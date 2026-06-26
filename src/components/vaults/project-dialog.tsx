@@ -77,7 +77,7 @@ export function ProjectDialog({ open, onOpenChange, project }: ProjectDialogProp
     if (result?.error) {
       setServerError(result.error);
     } else {
-      const newId = !isEdit && "id" in result ? (result as any).id as string : null;
+      const newId = !isEdit && "id" in result ? result.id as string : null;
       if (newId && links.length > 0) {
         await batchCreateReferences("project", newId, links);
       }
@@ -145,7 +145,7 @@ export function ProjectDialog({ open, onOpenChange, project }: ProjectDialogProp
             <div className="flex items-center justify-between">
               <Label>Tags</Label>
               <button
-                type="button"
+                type="button" disabled={aiLoading !== null}
                 onClick={async () => {
                   setServerError(null);
                   setAiLoading("tags");

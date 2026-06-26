@@ -36,7 +36,7 @@ export async function LinkedItems({ type, id }: LinkedItemsProps) {
           const Icon = cfg.icon;
           return (
             <div key={group.type}>
-              <div className="flex items-center gap-1.5 mb-1.5 text-[10px] font-semibold uppercase tracking-[0.1em]" style={{ color: cfg.color }}>
+              <div className="flex items-center gap-1.5 mb-1.5 text-[10px] font-semibold uppercase tracking-[0.1em] accent-text" style={{ '--accent-c': cfg.color } as React.CSSProperties}>
                 <Icon className="h-3 w-3" />
                 {group.type}s
               </div>
@@ -47,7 +47,7 @@ export async function LinkedItems({ type, id }: LinkedItemsProps) {
                     href={cfg.href(item.id)}
                     className="group flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-foreground/80 hover:text-foreground hover:bg-muted/40 hover:scale-[1.02] transition-all duration-150"
                   >
-                    <Icon className="h-3.5 w-3.5 shrink-0" style={{ color: cfg.color }} />
+                    <Icon className="h-3.5 w-3.5 shrink-0 accent-text" style={{ '--accent-c': cfg.color } as React.CSSProperties} />
                     <span className="truncate">{item.title}</span>
                   </Link>
                 ))}

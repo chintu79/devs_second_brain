@@ -14,17 +14,17 @@ const containerVariants = {
 };
 
 const childVariants = {
-  hidden: { opacity: 0, y: 24, filter: "blur(4px)" },
+  hidden: { opacity: 0, y: 24 },
   visible: {
-    opacity: 1, y: 0, filter: "blur(0px)",
+    opacity: 1, y: 0,
     transition: { duration: 0.5, ease: ease.decelerate },
   },
 };
 
 const mockupVariants = {
-  hidden: { opacity: 0, y: 32, scale: 0.98, filter: "blur(6px)" },
+  hidden: { opacity: 0, y: 32, scale: 0.98 },
   visible: {
-    opacity: 1, y: 0, scale: 1, filter: "blur(0px)",
+    opacity: 1, y: 0, scale: 1,
     transition: { duration: 0.6, delay: 0.5, ease: ease.decelerate },
   },
 };
@@ -40,7 +40,7 @@ export function HeroEntrance() {
       <motion.div variants={childVariants}>
         <div className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/40 px-4 py-1.5 text-xs font-medium text-muted-foreground/80 mb-10">
           <Sparkles className="h-3 w-3 text-primary animate-glow-pulse" />
-          Your second brain for development.
+          Your developer knowledge cache.
         </div>
       </motion.div>
 

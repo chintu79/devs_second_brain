@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import ReactMarkdown from "react-markdown";
+import { Markdown } from "@/components/shared/markdown";
 import {
   Search, Star, Pencil, Trash2, Archive, X, ExternalLink,
   ClipboardList, FileText, Sparkles, Clock, Link2,
@@ -254,13 +254,17 @@ function WorkspacePanel({
   const [planContent, setPlanContent] = useState(project.planMd);
   const [planSaving, setPlanSaving] = useState(false);
   const [isFav, setIsFav] = useState(project.favorite);
+  const [favPending, setFavPending] = useState(false);
 
   const meta = statusMeta[project.status] || statusMeta.idea;
   const StatusIcon = meta.icon;
 
   async function handleFavorite() {
+    if (favPending) return;
+    setFavPending(true);
     setIsFav(!isFav);
     await toggleProjectFavorite(project.id);
+    setFavPending(false);
   }
 
   async function handleDelete() {
@@ -270,8 +274,13 @@ function WorkspacePanel({
     }
   }
 
+  const [archiving, setArchiving] = useState(false);
+
   async function handleArchive() {
+    if (archiving) return;
+    setArchiving(true);
     await archiveProject(project.id);
+    setArchiving(false);
     onUpdate();
   }
 
@@ -303,7 +312,7 @@ function WorkspacePanel({
       initial="initial"
       animate="animate"
       exit="exit"
-      className="flex-1 min-w-0 border-l border-border/50 bg-background overflow-hidden flex flex-col outline-none"
+      className="panel-detail outline-none"
       tabIndex={-1}
     >
       {/* ── Header ── */}
@@ -328,17 +337,17 @@ function WorkspacePanel({
                   )}
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
-                  <button onClick={handleFavorite} className={`flex h-7 w-7 items-center justify-center rounded-md transition-colors ${isFav ? "text-amber-400" : "text-muted-foreground hover:text-amber-400"}`}>
+                  <button onClick={handleFavorite} disabled={favPending} aria-label={isFav ? "Unfavorite project" : "Favorite project"} className={`flex h-7 w-7 items-center justify-center rounded-md transition-colors ${isFav ? "text-amber-400" : "text-muted-foreground hover:text-amber-400"}`}>
                     <Star className={`h-3.5 w-3.5 ${isFav ? "fill-amber-400" : ""}`} />
                   </button>
-                  <button onClick={onEdit} className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground transition-colors">
+                  <button onClick={onEdit} aria-label="Edit project" className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground transition-colors">
                     <Pencil className="h-3.5 w-3.5" />
                   </button>
-                  <button onClick={handleArchive} className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground transition-colors">
+                  <button onClick={handleArchive} disabled={archiving} aria-label="Archive project" className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground transition-colors">
                     <Archive className="h-3.5 w-3.5" />
                   </button>
                   <div className="w-px h-4 bg-border/50 mx-1" />
-                  <button onClick={onClose} className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground transition-colors">
+                  <button onClick={onClose} aria-label="Close panel" className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground transition-colors">
                     <X className="h-4 w-4" />
                   </button>
                 </div>
@@ -406,8 +415,8 @@ function WorkspacePanel({
             <h3 className="text-[10px] font-semibold text-section-foreground uppercase tracking-[0.12em]">Context</h3>
 
             <ContextSection icon={Clock} label="Recent">
-              {timeline.slice(0, 3).map((e, i) => (
-                <p key={i} className="text-[10px] text-muted-foreground leading-relaxed">{e.label}</p>
+              {timeline.slice(0, 3).map((e) => (
+                <p key={e.label} className="text-[10px] text-muted-foreground leading-relaxed">{e.label}</p>
               ))}
             </ContextSection>
 
@@ -443,6 +452,7 @@ function WorkspacePanel({
 
 /* ── Tab Components ── */
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function OverviewTab({ project, connected, timeline }: { project: Project; connected: any; timeline: any[] }) {
   return (
     <div className="px-10 py-8 space-y-6 max-w-5xl">
@@ -468,8 +478,8 @@ function OverviewTab({ project, connected, timeline }: { project: Project; conne
         <div className="rounded-xl border border-border/60 bg-card p-6">
           <h2 className="text-sm font-semibold text-section-foreground uppercase tracking-[0.1em] mb-3">Recent Activity</h2>
           <div className="space-y-3">
-            {timeline.slice(0, 5).map((e, i) => (
-              <div key={i} className="flex items-start gap-3 text-sm">
+            {timeline.slice(0, 5).map((e) => (
+              <div key={e.label} className="flex items-start gap-3 text-sm">
                 <div className="w-1.5 h-1.5 rounded-full bg-primary/40 mt-2 shrink-0" />
                 <span className="text-muted-foreground">{e.label}</span>
                 <span className="text-muted-foreground/50 ml-auto shrink-0">{formatRel(e.date)}</span>
@@ -533,27 +543,25 @@ function PlanTab({ content, editing, saving, onEdit, onCancel, onSave, onChange 
       ) : (
         <div className="note-prose">
           {content ? (
-            <ReactMarkdown
-              components={{
-                code: ({ className, children, ...props }) => {
-                  const m = /language-(\w+)/.exec(className || "");
-                  if (!className || !m) return <code className="inline-code" {...props}>{children}</code>;
-                  return (
-                    <div className="code-block-wrapper">
-                      <div className="code-block-header"><span className="code-block-lang">{m[1]}</span></div>
-                      <pre className="code-block has-header"><code className={className} {...props}>{children}</code></pre>
-                    </div>
-                  );
-                },
-                blockquote: ({ children, ...props }) => <blockquote className="note-blockquote" {...props}>{children}</blockquote>,
-                a: ({ children, href, ...props }) => <a className="note-link" href={href} target="_blank" rel="noopener noreferrer" {...props}>{children}</a>,
-                ul: ({ children, ...props }) => <ul className="note-list" {...props}>{children}</ul>,
-                ol: ({ children, ...props }) => <ol className="note-list" {...props}>{children}</ol>,
-                table: ({ children, ...props }) => <div className="note-table-wrapper"><table className="note-table" {...props}>{children}</table></div>,
-              }}
-            >
+            <Markdown components={{
+              code: ({ className, children, ...props }) => {
+                const m = /language-(\w+)/.exec(className || "");
+                if (!className || !m) return <code className="inline-code" {...props}>{children}</code>;
+                return (
+                  <div className="code-block-wrapper">
+                    <div className="code-block-header"><span className="code-block-lang">{m[1]}</span></div>
+                    <pre className="code-block has-header"><code className={className} {...props}>{children}</code></pre>
+                  </div>
+                );
+              },
+              blockquote: ({ children, ...props }) => <blockquote className="note-blockquote" {...props}>{children}</blockquote>,
+              a: ({ children, href, ...props }) => <a className="note-link" href={href} target="_blank" rel="noopener noreferrer" {...props}>{children}</a>,
+              ul: ({ children, ...props }) => <ul className="note-list" {...props}>{children}</ul>,
+              ol: ({ children, ...props }) => <ol className="note-list" {...props}>{children}</ol>,
+              table: ({ children, ...props }) => <div className="note-table-wrapper"><table className="note-table" {...props}>{children}</table></div>,
+            }}>
               {content}
-            </ReactMarkdown>
+            </Markdown>
           ) : (
             <div className="text-center py-20 text-muted-foreground">
               <ClipboardList className="h-10 w-10 mx-auto mb-4" />
@@ -630,6 +638,7 @@ function PromptsTab({ prompts }: { prompts: PromptItem[] }) {
             </div>
             <button
               onClick={async () => { await navigator.clipboard.writeText(p.prompt); setCopiedId(p.id); setTimeout(() => setCopiedId(null), 1500); }}
+              aria-label="Copy prompt"
               className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:text-foreground transition-colors"
             >
               <Copy className="h-3.5 w-3.5" />
@@ -646,8 +655,8 @@ function TimelineTab({ events }: { events: { date: Date; label: string; icon: st
   return (
     <div className="px-10 py-8 max-w-5xl">
       <div className="relative pl-8 border-l-2 border-border/50 space-y-6">
-        {events.map((e, i) => (
-          <div key={i} className="relative">
+        {events.map((e) => (
+          <div key={e.label} className="relative">
             <div className="absolute -left-[33px] top-1 w-3.5 h-3.5 rounded-full bg-primary/20 border-[3px] border-primary/60" />
             <p className="text-sm text-foreground/90">{e.label}</p>
             <p className="text-xs text-muted-foreground mt-0.5">{formatRel(e.date)}</p>

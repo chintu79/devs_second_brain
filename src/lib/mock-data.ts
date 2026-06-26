@@ -401,7 +401,7 @@ export const sidebarCategories = [
   { id: "flutter", label: "Flutter", count: flutterRepos.length },
   { id: "linux", label: "Linux", count: linuxRepos.length },
   { id: "datascience", label: "Data Science", count: dataScienceRepos.length },
-  { id: "devtools", label: "Dev Tools", count: devToolsRepos.length },
+  { id: "devtools", label: "Developer Tools", count: devToolsRepos.length },
   { id: "infrastructure", label: "Infrastructure", count: infrastructureRepos.length } as const,
 ];
 

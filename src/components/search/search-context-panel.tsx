@@ -10,14 +10,14 @@ interface SearchContextPanelProps {
 
 export function SearchContextPanel({ recentSearches, recentlyViewed, onSearchClick }: SearchContextPanelProps) {
   return (
-    <div className="w-64 shrink-0 border-l border-border/30 bg-muted/20 overflow-y-auto px-4 py-5 space-y-6">
+    <div className="w-[320px] shrink-0 border-l border-border/30 bg-muted/20 overflow-y-auto px-4 py-5 space-y-6">
       {/* Recent Searches */}
       {recentSearches.length > 0 && (
         <ContextSection icon={Clock} label="Recent Searches">
           <div className="space-y-0.5">
-            {recentSearches.map((q, i) => (
+            {recentSearches.map((q) => (
               <button
-                key={i}
+                key={q}
                 onClick={() => onSearchClick(q)}
                 className="w-full rounded-md px-2 py-1.5 text-sm text-foreground/80 hover:bg-muted/60 hover:scale-[1.02] transition-all duration-150 text-left truncate"
               >
@@ -33,7 +33,7 @@ export function SearchContextPanel({ recentSearches, recentlyViewed, onSearchCli
         <ContextSection icon={Search} label="Recently Viewed">
           <div className="space-y-1">
             {recentlyViewed.slice(0, 5).map((item) => (
-              <div key={item.id} className="rounded-md px-2 py-1.5 hover:bg-muted/60 hover:scale-[1.02] transition-all duration-150 cursor-pointer">
+              <div key={item.id} className="rounded-md px-2 py-1.5">
                 <p className="text-sm font-medium text-foreground/90 truncate">{item.title}</p>
                 <p className="text-xs text-muted-foreground capitalize">{item.type}</p>
               </div>

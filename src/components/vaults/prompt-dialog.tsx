@@ -77,7 +77,7 @@ export function PromptDialog({ open, onOpenChange, prompt }: PromptDialogProps) 
     if (result?.error) {
       setServerError(result.error);
     } else {
-      const newId = !isEdit && "id" in result ? (result as any).id as string : null;
+      const newId = !isEdit && "id" in result ? result.id as string : null;
       if (newId && links.length > 0) {
         await batchCreateReferences("prompt", newId, links);
       }
@@ -116,7 +116,7 @@ export function PromptDialog({ open, onOpenChange, prompt }: PromptDialogProps) 
             <div className="flex items-center justify-between">
               <Label htmlFor="category">Category</Label>
               <button
-                type="button"
+                type="button" disabled={aiLoading !== null}
                 onClick={async () => {
                   setServerError(null);
                   setAiLoading("category");
@@ -126,7 +126,8 @@ export function PromptDialog({ open, onOpenChange, prompt }: PromptDialogProps) 
                     ["coding", "debugging", "architecture", "testing", "docs", "other"]
                   );
                   setAiLoading(null);
-                  if (res.category) form.setValue("category", res.category as any);
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    if (res.category) form.setValue("category", res.category as any);
                   else if (res.error) setServerError(res.error);
                 }}
                 className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
@@ -166,7 +167,7 @@ export function PromptDialog({ open, onOpenChange, prompt }: PromptDialogProps) 
             <div className="flex items-center justify-between">
               <Label>Tags</Label>
               <button
-                type="button"
+                type="button" disabled={aiLoading !== null}
                 onClick={async () => {
                   setServerError(null);
                   setAiLoading("tags");

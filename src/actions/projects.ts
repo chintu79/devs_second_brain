@@ -29,6 +29,7 @@ export async function createProject(formData: FormData) {
     });
     revalidatePath("/projects");
     if (tagNames.length > 0) revalidatePath("/tags");
+
     return { success: true, id: project.id };
   } catch {
     return { error: "Failed to create project" };
@@ -57,6 +58,7 @@ export async function editProject(id: string, formData: FormData) {
       data: { title, description: description || "", status, techStack, tags: buildTagCreate(tagNames, session.user.id) },
     });
     revalidatePath("/projects");
+
     return { success: true };
   } catch {
     return { error: "Failed to update project" };
@@ -70,6 +72,7 @@ export async function deleteProject(id: string) {
   try {
     await prisma.project.delete({ where: { id, userId: session.user.id } });
     revalidatePath("/projects");
+
     return { success: true };
   } catch {
     return { error: "Failed to delete project" };
@@ -85,6 +88,7 @@ export async function toggleProjectFavorite(id: string) {
     if (!p || p.userId !== session.user.id) return { error: "Unauthorized" };
     await prisma.project.update({ where: { id }, data: { favorite: !p.favorite } });
     revalidatePath("/projects");
+
     return { success: true };
   } catch {
     return { error: "Failed to toggle favorite" };
@@ -98,6 +102,7 @@ export async function saveProjectPlan(id: string, planMd: string) {
   try {
     await prisma.project.update({ where: { id, userId: session.user.id }, data: { planMd } });
     revalidatePath("/projects");
+
     return { success: true };
   } catch {
     return { error: "Failed to save plan" };
@@ -122,6 +127,7 @@ export async function archiveProject(id: string) {
     const newStatus = existing.status === "archived" ? "planning" : "archived";
     await prisma.project.update({ where: { id }, data: { status: newStatus } });
     revalidatePath("/projects");
+
     return { success: true };
   } catch {
     return { error: "Failed to archive project" };

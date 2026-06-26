@@ -69,7 +69,7 @@ export function PromptCard({ prompt: p, selected, onSelect }: PromptCardProps) {
     <>
       <motion.div
         whileHover={cardHover}
-        className={`group relative rounded-xl border bg-card cursor-pointer ${
+        className={`group relative rounded-xl border bg-card cursor-pointer w-full ${
           selected
             ? "border-primary/40 shadow-[var(--shadow-elevated)]"
             : "border-border hover:border-[var(--border-hover)] hover:shadow-[var(--shadow-elevated)]"

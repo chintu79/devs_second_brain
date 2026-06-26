@@ -21,7 +21,9 @@ import {
   Clock,
   ChevronDown,
   Search,
+  GitBranch,
 } from "lucide-react";
+import { GithubImport } from "@/components/resources/github-import";
 
 interface RadarSidebarProps {
   categories: { id: string; label: string; count?: number }[];
@@ -55,6 +57,7 @@ export function RadarSidebar({
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({
     explore: false,
   });
+  const [githubImportOpen, setGithubImportOpen] = useState(false);
 
   const toggle = (key: string) => setCollapsed((p) => ({ ...p, [key]: !p[key] }));
 
@@ -67,6 +70,13 @@ export function RadarSidebar({
     <div className="w-56 shrink-0 border-r border-border/50 bg-sidebar flex flex-col overflow-y-auto">
       <div className="px-3 pt-3 pb-2 flex items-center justify-between border-b border-border/30">
         <span className="text-xs font-semibold text-section-foreground uppercase tracking-[0.1em]">Radar</span>
+        <button
+          onClick={() => setGithubImportOpen(true)}
+          aria-label="Import from GitHub"
+          className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground/60 hover:text-foreground hover:bg-muted/60 hover:scale-[1.1] transition-all duration-150"
+        >
+          <GitBranch className="h-4 w-4" />
+        </button>
       </div>
 
       <div className="flex-1 overflow-y-auto py-2 px-2 space-y-0.5">
@@ -112,6 +122,7 @@ export function RadarSidebar({
           })}
         </CollapsibleSection>
       </div>
+      {githubImportOpen && <GithubImport onClose={() => setGithubImportOpen(false)} />}
     </div>
   );
 }

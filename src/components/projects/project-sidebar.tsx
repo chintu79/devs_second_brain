@@ -60,7 +60,7 @@ export function ProjectSidebar({
     <div className="h-[100vh] w-56 shrink-0 border-r border-border/50 bg-sidebar flex flex-col overflow-y-auto">
       <div className="px-3 pt-3 pb-2 flex items-center justify-between border-b border-border/30">
         <span className="text-xs font-semibold text-section-foreground uppercase tracking-[0.1em]">Projects</span>
-        <button onClick={onCreate} className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 hover:scale-[1.1] transition-all duration-150">
+        <button onClick={onCreate} aria-label="Create new project" className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 hover:scale-[1.1] transition-all duration-150">
           <Plus className="h-4 w-4" />
         </button>
       </div>

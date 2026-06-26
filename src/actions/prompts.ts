@@ -25,6 +25,7 @@ export async function createPrompt(formData: FormData) {
     });
     revalidatePath("/prompts");
     if (tagNames.length > 0) revalidatePath("/tags");
+
     return { success: true, id: created.id };
   } catch {
     return { error: "Failed to create prompt" };
@@ -52,6 +53,7 @@ export async function editPrompt(id: string, formData: FormData) {
       data: { title, prompt, category, useCase: useCase || "", tags: buildTagCreate(tagNames, session.user.id) },
     });
     revalidatePath("/prompts");
+
     return { success: true };
   } catch {
     return { error: "Failed to update prompt" };
@@ -65,6 +67,7 @@ export async function deletePrompt(id: string) {
   try {
     await prisma.prompt.delete({ where: { id, userId: session.user.id } });
     revalidatePath("/prompts");
+
     return { success: true };
   } catch {
     return { error: "Failed to delete prompt" };
@@ -80,6 +83,7 @@ export async function toggleFavorite(id: string) {
     if (!existing || existing.userId !== session.user.id) return { error: "Unauthorized" };
     await prisma.prompt.update({ where: { id }, data: { favorite: !existing.favorite } });
     revalidatePath("/prompts");
+
     return { success: true };
   } catch {
     return { error: "Failed to toggle favorite" };
@@ -96,6 +100,7 @@ export async function recordPromptUsage(id: string) {
       data: { useCount: { increment: 1 }, lastUsedAt: new Date() },
     });
     revalidatePath("/prompts");
+
     return { success: true };
   } catch {
     return { error: "Failed to record usage" };

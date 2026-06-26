@@ -11,7 +11,7 @@ export default function ProjectDetailError({ error, reset }: { error: Error & { 
   return (
     <div className="max-w-3xl space-y-6">
       <div className="flex items-center gap-3">
-        <Link href="/projects">
+        <Link href="/projects" aria-label="Back to projects">
           <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
             <ArrowLeft className="h-4 w-4" />
           </Button>

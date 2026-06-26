@@ -38,6 +38,7 @@ export function QuickCaptureDialog({ open, onOpenChange }: QuickCaptureDialogPro
 
   useEffect(() => {
     if (open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTitle("");
       setUrl("");
       setContent("");
@@ -80,6 +81,7 @@ export function QuickCaptureDialog({ open, onOpenChange }: QuickCaptureDialogPro
       toast.success(`${typeMeta[type].label} saved`);
       router.refresh();
       onOpenChange(false);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       toast.error(err.message || "Failed to save");
     } finally {
@@ -121,10 +123,10 @@ export function QuickCaptureDialog({ open, onOpenChange }: QuickCaptureDialogPro
                 onClick={() => setType(key)}
                 className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 text-xs font-medium transition-all ${
                   type === key
-                    ? "bg-primary/5 text-foreground border-b-2"
+                    ? "bg-primary/5 accent-text border-b-2"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted/30 border-b-2 border-transparent"
                 }`}
-                style={type === key ? { borderBottomColor: "var(--accent, #6366f1)" } : undefined}
+                style={type === key ? { '--accent-c': 'var(--accent, #6366f1)', borderBottomColor: 'var(--accent-c)' } as React.CSSProperties : undefined}
               >
                 <meta.icon className={`h-3.5 w-3.5 ${type === key ? meta.color : ""}`} />
                 {meta.label}

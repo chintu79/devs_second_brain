@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect, useTransition } from "react";
 import { AnimatePresence } from "framer-motion";
 import { useSearchParams, useRouter } from "next/navigation";
+import { toggleBookmark, getBookmarkedRepoIds } from "@/actions/radar-bookmark";
 import { RadarSidebar } from "./radar-sidebar";
 import { RadarFeed } from "./radar-feed";
 import { RepositoryDetailPanel } from "./repository-detail-panel";
@@ -19,11 +20,16 @@ export function RadarWorkspace({ repos, sections, categories }: RadarWorkspacePr
   const router = useRouter();
   const searchParams = useSearchParams();
   const selectedId = searchParams.get("id");
+  const [, startTransition] = useTransition();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [activeSection, setActiveSection] = useState("all");
   const [bookmarked, setBookmarked] = useState<Set<string>>(new Set());
   const [recentlyViewed, setRecentlyViewed] = useState<string[]>([]);
+
+  useEffect(() => {
+    getBookmarkedRepoIds().then(setBookmarked);
+  }, []);
 
   const setSelectedId = useCallback(
     (id: string | null) => {
@@ -50,54 +56,62 @@ export function RadarWorkspace({ repos, sections, categories }: RadarWorkspacePr
   }
 
   function handleBookmark(id: string) {
+    const repo = repos.find((r) => r.id === id);
+    if (!repo) return;
+    const repoData = JSON.stringify(repo);
+    // optimistically toggle
     setBookmarked((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
       return next;
     });
+    startTransition(() => {
+      toggleBookmark(id, repoData).catch(() => {
+        // revert on error
+        setBookmarked((prev) => {
+          const next = new Set(prev);
+          if (next.has(id)) next.delete(id);
+          else next.add(id);
+          return next;
+        });
+      });
+    });
   }
 
-  // Filter repos by active section
-  const filteredRepos = useMemo(() => {
-    if (activeSection === "all") return repos;
-    if (activeSection === "bookmarked") return repos.filter((r) => bookmarked.has(r.id));
-    if (activeSection === "saved") return [];
-    if (activeSection === "viewed") return recentlyViewed.map((id) => repos.find((r) => r.id === id)).filter(Boolean) as Repository[];
-    return repos.filter((r) => {
-      const catMatch = r.category.toLowerCase().replace(/\s+/g, "") === activeSection;
-      const idMatch = activeSection === "hidden" ? r.savedBy === "Few Developers" : false;
-      const recentMatch = activeSection === "recent" ? r.growthIndicator === "new" : false;
-      return catMatch || idMatch || recentMatch;
-    });
-  }, [repos, activeSection, bookmarked, recentlyViewed]);
-
-  // Build feed sections from filtered repos
-  const feedSections = useMemo(() => {
-    if (activeSection !== "all") {
-      return [{ id: "filtered", label: getSectionLabel(activeSection), repos: filteredRepos }];
-    }
-    return sections;
-  }, [sections, filteredRepos, activeSection]);
-
-  // Enrich repos with bookmark state
+  // Enrich all repos once with bookmark state — all other derived data uses this
   const enrichedRepos = useMemo(
     () => repos.map((r) => ({ ...r, bookmarked: bookmarked.has(r.id) })),
     [repos, bookmarked]
   );
 
-  const enrichedFiltered = useMemo(
-    () => filteredRepos.map((r) => ({ ...r, bookmarked: bookmarked.has(r.id) })),
-    [filteredRepos, bookmarked]
-  );
+  // Filter enriched repos by active section
+  const filteredRepos = useMemo(() => {
+    if (activeSection === "all") return enrichedRepos;
+    if (activeSection === "bookmarked") return enrichedRepos.filter((r) => r.bookmarked);
+    if (activeSection === "saved") return [];
+    if (activeSection === "viewed") return recentlyViewed.map((id) => enrichedRepos.find((r) => r.id === id)).filter(Boolean) as Repository[];
+    return enrichedRepos.filter((r) => {
+      const catSlug = r.category.toLowerCase().replace(/\s+/g, "");
+      const catMatch = catSlug === activeSection;
+      const catEntry = categories.find((c) => c.id === activeSection);
+      const catLabelMatch = catEntry && catSlug === catEntry.label.toLowerCase().replace(/\s+/g, "");
+      const idMatch = activeSection === "hidden" ? r.savedBy === "Few Developers" : false;
+      const recentMatch = activeSection === "recent" ? r.growthIndicator === "new" : false;
+      return catMatch || catLabelMatch || idMatch || recentMatch;
+    });
+  }, [enrichedRepos, activeSection, recentlyViewed]);
 
-  const enrichedSections = useMemo(
-    () => feedSections.map((s) => ({
+  // Build feed sections from filtered repos (already enriched)
+  const feedSections = useMemo(() => {
+    if (activeSection !== "all") {
+      return [{ id: activeSection, label: getSectionLabel(activeSection), repos: filteredRepos }];
+    }
+    return sections.map((s) => ({
       ...s,
       repos: s.repos.map((r) => ({ ...r, bookmarked: bookmarked.has(r.id) })),
-    })),
-    [feedSections, bookmarked]
-  );
+    }));
+  }, [sections, filteredRepos, activeSection, bookmarked]);
 
   const selectedRepo = useMemo(() => {
     if (!selectedId) return null;
@@ -127,10 +141,10 @@ export function RadarWorkspace({ repos, sections, categories }: RadarWorkspacePr
       />
 
       {/* Feed */}
-      <div className={`flex flex-col ${selectedId ? "w-[45%]" : "flex-1"} shrink-0 border-r border-border/50 transition-all duration-200`}>
+      <div className="flex flex-col flex-1 shrink-0 border-r border-border/50 transition-all duration-200">
         <RadarFeed
-          repos={enrichedFiltered}
-          sections={enrichedSections}
+          repos={filteredRepos}
+          sections={feedSections}
           selectedId={selectedId}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}

@@ -72,12 +72,13 @@ export function RepositoryDetailPanel({ repo, onClose, onBookmark }: RepositoryD
       initial="initial"
       animate="animate"
       exit="exit"
-      className="flex-1 border-l border-border/50 bg-background overflow-hidden flex flex-col min-w-0"
+      className="panel-detail"
     >
       <div className="flex items-center justify-between px-5 py-3 border-b border-border/50 shrink-0">
         <span className="text-xs text-section-foreground uppercase tracking-[0.1em] font-semibold">Repository</span>
         <button
           onClick={onClose}
+          aria-label="Close panel"
           className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground transition-colors"
         >
           <X className="h-4 w-4" />
@@ -97,6 +98,7 @@ export function RepositoryDetailPanel({ repo, onClose, onBookmark }: RepositoryD
                   <h2 className="text-xl font-semibold text-foreground">{repo.name}</h2>
                   <a
                     href={repo.url} target="_blank" rel="noopener noreferrer"
+                    aria-label="Open repository"
                     className="shrink-0 text-muted-foreground hover:text-foreground transition-colors"
                   >
                     <ExternalLink className="h-4 w-4" />
@@ -137,8 +139,8 @@ export function RepositoryDetailPanel({ repo, onClose, onBookmark }: RepositoryD
                 Use Cases
               </h3>
               <div className="grid grid-cols-2 gap-2">
-                {repo.useCases.map((uc, i) => (
-                  <div key={i} className="flex items-start gap-2 rounded-lg border border-border/60 bg-muted/30 p-3">
+                {repo.useCases.map((uc) => (
+                  <div key={uc} className="flex items-start gap-2 rounded-lg border border-border/60 bg-muted/30 p-3">
                     <CheckCircle2 className="h-4 w-4 text-primary/60 mt-0.5 shrink-0" />
                     <span className="text-sm text-foreground/80">{uc}</span>
                   </div>
@@ -154,8 +156,8 @@ export function RepositoryDetailPanel({ repo, onClose, onBookmark }: RepositoryD
                 Key Features
               </h3>
               <div className="grid grid-cols-2 gap-2">
-                {repo.keyFeatures.map((kf, i) => (
-                  <div key={i} className="flex items-start gap-2 rounded-lg border border-border/60 bg-muted/30 p-3">
+                {repo.keyFeatures.map((kf) => (
+                  <div key={kf} className="flex items-start gap-2 rounded-lg border border-border/60 bg-muted/30 p-3">
                     <span className="text-sm text-foreground/80">{kf}</span>
                   </div>
                 ))}
@@ -171,8 +173,8 @@ export function RepositoryDetailPanel({ repo, onClose, onBookmark }: RepositoryD
               Related Repositories
             </h3>
             <div className="space-y-2">
-              {relatedRepos.map((r, i) => (
-                <div key={i} className="flex items-center gap-3 rounded-lg border border-border/60 bg-card p-3 hover:border-primary/20 transition-colors cursor-pointer">
+              {relatedRepos.map((r) => (
+                <div key={`${r.owner}/${r.name}`} className="flex items-center gap-3 rounded-lg border border-border/60 bg-card p-3 hover:border-primary/20 transition-colors cursor-pointer">
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted">
                     <span className="text-xs font-bold text-foreground/60">{r.owner[0].toUpperCase()}</span>
                   </div>

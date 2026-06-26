@@ -54,6 +54,7 @@ export function SearchWorkspace({ initialQuery, projects }: SearchWorkspaceProps
   const searchRef = useRef<HTMLInputElement>(null);
 
   const [query, setQuery] = useState(initialQuery || "");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [results, setResults] = useState<{ projects: any[]; resources: any[]; prompts: any[]; notes: any[] }>({
     projects: [], resources: [], prompts: [], notes: [],
   });
@@ -79,18 +80,21 @@ export function SearchWorkspace({ initialQuery, projects }: SearchWorkspaceProps
     [router, searchParams]
   );
 
-  // Debounced search
+  // Debounced search with stale-request guard
   useEffect(() => {
     if (!query.trim()) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setResults({ projects: [], resources: [], prompts: [], notes: [] });
       setSearched(false);
       return;
     }
 
+    let cancelled = false;
     const timer = setTimeout(async () => {
       setLoading(true);
       try {
         const data = await globalSearch(query.trim());
+        if (cancelled) return;
         setResults(data);
         setSearched(true);
         setRecentSearches((prev) => {
@@ -98,19 +102,23 @@ export function SearchWorkspace({ initialQuery, projects }: SearchWorkspaceProps
           return next.slice(0, 5);
         });
       } catch {
-        // silently fail
+        if (cancelled) return;
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     }, 250);
 
-    return () => clearTimeout(timer);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, [query]);
 
   // Flatten results into sections
   const sections = useMemo(() => {
     const s: { key: ResultType; label: string; items: SearchResult[] }[] = [];
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mappedProj: SearchResult[] = (results.projects || []).map((p: any) => ({
       id: p.id, title: p.title, type: "project" as ResultType,
       description: p.description, category: p.status, tags: p.tags,
@@ -120,6 +128,7 @@ export function SearchWorkspace({ initialQuery, projects }: SearchWorkspaceProps
     }));
     if (mappedProj.length > 0) s.push({ key: "project", label: "Projects", items: mappedProj });
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mappedRes: SearchResult[] = (results.resources || []).map((r: any) => {
       const matchedTag = r.tags?.find((t: string) => projectLookup.has(t.toLowerCase()));
       return {
@@ -132,6 +141,7 @@ export function SearchWorkspace({ initialQuery, projects }: SearchWorkspaceProps
     });
     if (mappedRes.length > 0) s.push({ key: "resource", label: "Resources", items: mappedRes });
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mappedPrompt: SearchResult[] = (results.prompts || []).map((p: any) => {
       const matchedTag = p.tags?.find((t: string) => projectLookup.has(t.toLowerCase()));
       return {
@@ -139,12 +149,13 @@ export function SearchWorkspace({ initialQuery, projects }: SearchWorkspaceProps
         content: p.prompt, category: p.category, tags: p.tags,
         useCase: p.useCase, favorite: p.favorite, useCount: p.useCount,
         projectName: matchedTag ? projectLookup.get(matchedTag.toLowerCase()) : undefined,
-        createdAt: p.createdAt?.toISOString?.() || p.createdAt,
+        createdAt: p.createdAt?.toISOString?.() || p.createdAt?.toISOString?.(),
         updatedAt: p.lastUsedAt?.toISOString?.() || p.createdAt?.toISOString?.(),
       };
     });
     if (mappedPrompt.length > 0) s.push({ key: "prompt", label: "Prompts", items: mappedPrompt });
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mappedNote: SearchResult[] = (results.notes || []).map((n: any) => {
       const matchedTag = n.tags?.find((t: string) => projectLookup.has(t.toLowerCase()));
       return {
@@ -195,7 +206,7 @@ export function SearchWorkspace({ initialQuery, projects }: SearchWorkspaceProps
   return (
     <div className="flex h-full">
       {/* Results area */}
-      <div className={`flex flex-col ${selectedResult ? "w-[45%]" : "flex-1"} shrink-0 border-r border-border/50 transition-all duration-200`}>
+      <div className="flex flex-col flex-1 shrink-0 border-r border-border/50 transition-all duration-200">
         {/* Search header */}
         <div className="px-6 pt-6 pb-4 border-b border-border/30">
           <div className="relative">

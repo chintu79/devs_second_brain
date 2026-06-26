@@ -43,17 +43,17 @@ export function Navbar({ onOpenQuickAdd, onOpenPalette }: NavbarProps) {
 
         <div className="flex items-center gap-1.5">
           {/* Quick add */}
-          <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground" onClick={onOpenQuickAdd}>
+          <Button variant="ghost" size="icon" aria-label="Quick add" className="h-9 w-9 text-muted-foreground hover:text-foreground" onClick={onOpenQuickAdd}>
             <Plus className="h-4 w-4" />
           </Button>
 
           {/* Notifications */}
-          <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground">
+          <Button variant="ghost" size="icon" aria-label="Notifications" className="h-9 w-9 text-muted-foreground hover:text-foreground">
             <Bell className="h-4 w-4" />
           </Button>
 
           {/* Profile */}
-          <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground">
+          <Button variant="ghost" size="icon" aria-label="Profile" className="h-9 w-9 text-muted-foreground hover:text-foreground">
             <User className="h-4 w-4" />
           </Button>
         </div>
