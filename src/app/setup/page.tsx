@@ -12,7 +12,16 @@ export default function SetupPage() {
         </Link>
 
         <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-2">Run it yourself</h1>
-        <p className="text-muted-foreground/70 text-base mb-12">Self-host DevCache in 5 minutes. Local or cloud.</p>
+        <p className="text-muted-foreground/70 text-base mb-8">Self-host DevCache in 5 minutes. Local or cloud.</p>
+
+        {/* Docker quick start */}
+        <div className="mb-10 p-4 rounded-xl border border-primary/20 bg-primary/5">
+          <p className="text-sm font-medium text-foreground mb-2">Quick start with Docker</p>
+          <pre className="text-sm text-[#D4D4D8] bg-muted/50 rounded-lg p-3 font-mono overflow-x-auto">{`git clone https://github.com/chintu79/devs_second_brain.git
+cd devs_second_brain
+docker compose up`}</pre>
+          <p className="text-xs text-muted-foreground/60 mt-2">Requires <a href="https://docs.docker.com/get-docker" className="text-primary underline underline-offset-2 hover:opacity-80">Docker</a>. Open <a href="http://localhost:3000" className="text-primary underline underline-offset-2 hover:opacity-80">http://localhost:3000</a> once it's ready.</p>
+        </div>
 
         <div className="space-y-12">
           {/* Prerequisites */}

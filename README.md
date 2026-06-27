@@ -55,13 +55,24 @@ Install these before starting:
 |----------|----------|
 | **Node.js 22+** | [nodejs.org](https://nodejs.org) (includes npm) |
 | **Git** | [git-scm.com/downloads](https://git-scm.com/downloads) |
-| **PostgreSQL 16+** | [postgresql.org/download](https://www.postgresql.org/download/) — or use [Neon](https://neon.tech), [Supabase](https://supabase.com), or [Docker](https://docs.docker.com/get-docker/) for quick setup |
+| **PostgreSQL 16+** | [postgresql.org/download](https://www.postgresql.org/download/) — or use [Neon](https://neon.tech), [Supabase](https://supabase.com) |
+| **Docker** (optional) | [docs.docker.com/get-docker](https://docs.docker.com/get-docker/) |
 
-### Setup
+### Quick start (Docker)
 
 ```bash
-git clone <repo-url>
-cd dev-second-brain
+git clone https://github.com/chintu79/devs_second_brain.git
+cd devs_second_brain
+docker compose up
+```
+
+Open http://localhost:3000. Register an account and you're in.
+
+### Manual setup
+
+```bash
+git clone https://github.com/chintu79/devs_second_brain.git
+cd devs_second_brain
 npm install
 cp .env.example .env
 # fill in DATABASE_URL, NEXTAUTH_SECRET, NEXTAUTH_URL
@@ -69,6 +80,8 @@ npx prisma generate
 npx prisma db push
 npm run dev
 ```
+
+Open http://localhost:3000, register an account, and explore.
 
 Open http://localhost:3000, register an account, and explore.
 
