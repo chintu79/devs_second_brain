@@ -15,8 +15,39 @@ export default function SetupPage() {
         <p className="text-muted-foreground/70 text-base mb-12">Self-host DevCache in 5 minutes. Local or cloud.</p>
 
         <div className="space-y-12">
-          {/* Step 1 */}
+          {/* Prerequisites */}
           <ScrollReveal delay={0}>
+          <div className="flex gap-6">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary text-sm font-bold">0</div>
+            <div className="min-w-0 space-y-3">
+              <h2 className="text-lg font-semibold">Install prerequisites</h2>
+              <p className="text-sm text-muted-foreground/70 leading-relaxed">
+                Make sure you have these installed before starting:
+              </p>
+              <ul className="space-y-1.5 text-sm text-muted-foreground/70">
+                <li className="flex items-start gap-2">
+                  <span className="mt-[7px] h-1 w-1 shrink-0 rounded-full bg-primary/60" />
+                  <span><strong className="text-foreground/80">Node.js 22+</strong> — <a href="https://nodejs.org" className="text-primary underline underline-offset-2 hover:opacity-80">nodejs.org</a> (includes npm)</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="mt-[7px] h-1 w-1 shrink-0 rounded-full bg-primary/60" />
+                  <span><strong className="text-foreground/80">Git</strong> — <a href="https://git-scm.com/downloads" className="text-primary underline underline-offset-2 hover:opacity-80">git-scm.com</a></span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="mt-[7px] h-1 w-1 shrink-0 rounded-full bg-primary/60" />
+                  <span><strong className="text-foreground/80">PostgreSQL 16+</strong> — <a href="https://www.postgresql.org/download" className="text-primary underline underline-offset-2 hover:opacity-80">postgresql.org/download</a> (or use Docker, Neon, Supabase)</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="mt-[7px] h-1 w-1 shrink-0 rounded-full bg-primary/60" />
+                  <span><strong className="text-foreground/80">Docker</strong> (optional) — <a href="https://docs.docker.com/get-docker" className="text-primary underline underline-offset-2 hover:opacity-80">docs.docker.com/get-docker</a> (for quick Postgres)</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+          </ScrollReveal>
+
+          {/* Step 1 */}
+          <ScrollReveal delay={100}>
           <div className="flex gap-6">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary text-sm font-bold">1</div>
             <div className="min-w-0 space-y-3">
@@ -29,7 +60,7 @@ npm install`}</pre>
           </ScrollReveal>
 
           {/* Step 2 */}
-          <ScrollReveal delay={100}>
+          <ScrollReveal delay={200}>
           <div className="flex gap-6">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary text-sm font-bold">2</div>
             <div className="min-w-0 space-y-3">
@@ -50,7 +81,7 @@ npm install`}</pre>
           </ScrollReveal>
 
           {/* Step 3 */}
-          <ScrollReveal delay={200}>
+          <ScrollReveal delay={300}>
           <div className="flex gap-6">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary text-sm font-bold">3</div>
             <div className="min-w-0 space-y-3">
@@ -66,7 +97,7 @@ npm install`}</pre>
           </ScrollReveal>
 
           {/* Step 4 */}
-          <ScrollReveal delay={300}>
+          <ScrollReveal delay={400}>
           <div className="flex gap-6">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary text-sm font-bold">4</div>
             <div className="min-w-0 space-y-3">
@@ -77,7 +108,7 @@ npm install`}</pre>
           </ScrollReveal>
 
           {/* Step 5 */}
-          <ScrollReveal delay={400}>
+          <ScrollReveal delay={500}>
           <div className="flex gap-6">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary text-sm font-bold">5</div>
             <div className="min-w-0 space-y-3">
@@ -89,7 +120,7 @@ npm install`}</pre>
           </ScrollReveal>
 
           {/* API Key */}
-          <ScrollReveal delay={500}>
+          <ScrollReveal delay={600}>
           <div className="flex gap-6">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary text-sm font-bold">6</div>
             <div className="min-w-0 space-y-3">

@@ -47,6 +47,16 @@ A developer-focused knowledge OS. Save, organize, search, and rediscover resourc
 | Auth | NextAuth v5 (Credentials provider, JWT sessions) |
 | Animation | Framer Motion (centralized variants in `src/lib/motion.ts`) |
 
+### Prerequisites
+
+Install these before starting:
+
+| Software | Download |
+|----------|----------|
+| **Node.js 22+** | [nodejs.org](https://nodejs.org) (includes npm) |
+| **Git** | [git-scm.com/downloads](https://git-scm.com/downloads) |
+| **PostgreSQL 16+** | [postgresql.org/download](https://www.postgresql.org/download/) — or use [Neon](https://neon.tech), [Supabase](https://supabase.com), or [Docker](https://docs.docker.com/get-docker/) for quick setup |
+
 ### Setup
 
 ```bash
