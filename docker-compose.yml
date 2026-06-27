@@ -6,7 +6,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: dev_second_brain
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -23,6 +23,8 @@ services:
       DATABASE_URL: "postgresql://postgres:postgres@db:5432/dev_second_brain"
       NEXTAUTH_SECRET: "change-me-in-production"
       NEXTAUTH_URL: "http://localhost:3000"
+      OPENROUTER_API_KEY: ""
+      OPENROUTER_MODEL: "meta-llama/llama-3.2-3b-instruct:free"
     depends_on:
       db:
         condition: service_healthy
