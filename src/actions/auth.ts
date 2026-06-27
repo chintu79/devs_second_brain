@@ -36,7 +36,7 @@ export async function register(formData: FormData) {
     return { success: "User registered successfully! You can now log in." };
   } catch (error) {
     console.error("Registration error:", error);
-    return { error: "Something went wrong during registration" };
+    return { error: `Registration failed: ${error instanceof Error ? error.message : "Unknown error"}` };
   }
 }
 
