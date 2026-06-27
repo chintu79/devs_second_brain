@@ -238,11 +238,9 @@ function MessageContent({ content }: { content: string }) {
   );
 }
 
-  const contextSuggestions = contextFrom && CONTEXT_SUGGESTIONS[contextFrom]
+  const suggestions = contextFrom && CONTEXT_SUGGESTIONS[contextFrom]
     ? CONTEXT_SUGGESTIONS[contextFrom].actions
     : DEFAULT_SUGGESTIONS;
-
-  const suggestions = contextSuggestions;
 
   return (
     <div className="flex flex-col h-full">

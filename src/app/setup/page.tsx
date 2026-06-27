@@ -16,6 +16,7 @@ export default function SetupPage() {
 
         <div className="space-y-12">
           {/* Step 1 */}
+          <ScrollReveal delay={0}>
           <div className="flex gap-6">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary text-sm font-bold">1</div>
             <div className="min-w-0 space-y-3">
@@ -25,8 +26,10 @@ cd devs_second_brain
 npm install`}</pre>
             </div>
           </div>
+          </ScrollReveal>
 
           {/* Step 2 */}
+          <ScrollReveal delay={100}>
           <div className="flex gap-6">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary text-sm font-bold">2</div>
             <div className="min-w-0 space-y-3">
@@ -44,8 +47,10 @@ npm install`}</pre>
               </p>
             </div>
           </div>
+          </ScrollReveal>
 
           {/* Step 3 */}
+          <ScrollReveal delay={200}>
           <div className="flex gap-6">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary text-sm font-bold">3</div>
             <div className="min-w-0 space-y-3">
@@ -58,8 +63,10 @@ npm install`}</pre>
 #   NEXTAUTH_URL=http://localhost:3000`}</pre>
             </div>
           </div>
+          </ScrollReveal>
 
           {/* Step 4 */}
+          <ScrollReveal delay={300}>
           <div className="flex gap-6">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary text-sm font-bold">4</div>
             <div className="min-w-0 space-y-3">
@@ -67,8 +74,10 @@ npm install`}</pre>
               <pre className="text-sm text-[#D4D4D8] bg-muted/50 rounded-lg p-4 font-mono overflow-x-auto">{`npx prisma db push`}</pre>
             </div>
           </div>
+          </ScrollReveal>
 
           {/* Step 5 */}
+          <ScrollReveal delay={400}>
           <div className="flex gap-6">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary text-sm font-bold">5</div>
             <div className="min-w-0 space-y-3">
@@ -77,8 +86,10 @@ npm install`}</pre>
               <p className="text-sm text-muted-foreground/70 leading-relaxed">Open <a href="http://localhost:3000" className="text-primary underline underline-offset-2 hover:opacity-80">http://localhost:3000</a>. Create an account and you&apos;re in.</p>
             </div>
           </div>
+          </ScrollReveal>
 
           {/* API Key */}
+          <ScrollReveal delay={500}>
           <div className="flex gap-6">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary text-sm font-bold">6</div>
             <div className="min-w-0 space-y-3">
@@ -88,12 +99,15 @@ npm install`}</pre>
   -H "Authorization: Bearer YOUR_API_KEY"`}</pre>
             </div>
           </div>
+          </ScrollReveal>
         </div>
 
+        <ScrollReveal delay={600}>
         <div className="mt-16 pt-8 border-t border-border text-center text-sm text-muted-foreground/60">
           Questions?{" "}
           <a href="https://github.com/chintu79/devs_second_brain/issues" className="text-primary underline underline-offset-2 hover:opacity-80">Open an issue</a>
         </div>
+        </ScrollReveal>
       </div>
     </div>
   );

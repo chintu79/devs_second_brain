@@ -29,18 +29,24 @@ interface ResourceListProps {
   allTags: string[];
   selectedId?: string | null;
   onSelect?: (id: string | null) => void;
+  selectedCategory?: string | null;
+  selectedTag?: string | null;
+  sortBy?: "newest" | "oldest";
+  onCategoryChange?: (cat: string | null) => void;
+  onTagChange?: (tag: string | null) => void;
+  onSortChange?: (sort: "newest" | "oldest") => void;
+  onItemsUpdate?: (items: Resource[]) => void;
 }
 
-type SortBy = "newest" | "oldest" | "recently-opened";
-
-export function ResourceList({ initialItems, nextCursor: initialCursor, allCategories, allTags, selectedId, onSelect }: ResourceListProps) {
+export function ResourceList({ initialItems, nextCursor: initialCursor, allCategories, allTags, selectedId, onSelect, selectedCategory = null, selectedTag = null, sortBy = "newest", onCategoryChange, onTagChange, onSortChange, onItemsUpdate }: ResourceListProps) {
   const [items, setItems] = useState<Resource[]>(initialItems);
   const [cursor, setCursor] = useState<string | null>(initialCursor);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [selectedTag, setSelectedTag] = useState<string | null>(null);
-  const [sortBy, setSortBy] = useState<SortBy>("newest");
+
+  const setCategory = onCategoryChange || ((cat: string | null) => {});
+  const setTag = onTagChange || ((tag: string | null) => {});
+  const changeSort = onSortChange || ((sort: "newest" | "oldest") => {});
   const [dialogOpen, setDialogOpen] = useState(false);
 
   async function loadMore() {
@@ -48,7 +54,9 @@ export function ResourceList({ initialItems, nextCursor: initialCursor, allCateg
     setLoading(true);
     const result = await fetchMoreResources(cursor, 20);
     if (result) {
-      setItems((prev) => [...prev, ...result.items]);
+      const updated = [...items, ...result.items];
+      setItems(updated);
+      onItemsUpdate?.(updated);
       setCursor(result.nextCursor);
     }
     setLoading(false);
@@ -126,9 +134,9 @@ export function ResourceList({ initialItems, nextCursor: initialCursor, allCateg
             selectedCategory={selectedCategory}
             selectedTag={selectedTag}
             sortBy={sortBy}
-            onCategoryChange={setSelectedCategory}
-            onTagChange={setSelectedTag}
-            onSortChange={setSortBy}
+            onCategoryChange={setCategory}
+            onTagChange={setTag}
+            onSortChange={changeSort}
           />
 
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
@@ -138,7 +146,7 @@ export function ResourceList({ initialItems, nextCursor: initialCursor, allCateg
             {sections.favorites.length > 0 && (
               <>
                 <span className="text-border">&middot;</span>
-                <span className="text-red-400">{sections.favorites.length} favorites</span>
+                <span className="text-amber-400">{sections.favorites.length} favorites</span>
               </>
             )}
           </div>

@@ -64,7 +64,7 @@ export function NoteSidebar({
   ];
 
   return (
-    <div className="h-[100vh] w-56 shrink-0 border-r border-border/50 bg-sidebar flex flex-col overflow-y-auto">
+    <div className="h-full w-56 shrink-0 border-r border-border/50 bg-sidebar flex flex-col overflow-y-auto">
       <div className="px-3 pt-3 pb-2 flex items-center justify-between border-b border-border/30">
         <span className="text-xs font-semibold text-section-foreground uppercase tracking-[0.1em]">Notes</span>
         <button

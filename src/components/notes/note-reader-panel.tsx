@@ -180,7 +180,7 @@ export function NoteReaderPanel({
     .filter((p) => p.tags.some((t) => note.tags.includes(t)))
     .slice(0, 3);
 
-  const backlinks = allNotes.filter((n) => n.id !== note.id && n.content.includes(note.title)).slice(0, 3);
+  const backlinks = allNotes.filter((n) => n.id !== note.id && new RegExp(`\\b${note.title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(n.content)).slice(0, 3);
 
   const readingTime = Math.max(1, Math.ceil(note.content.split(/\s+/).filter(Boolean).length / 200));
 

@@ -8,8 +8,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
       <Sidebar />
       <div className="flex flex-1 flex-col min-w-0">
         <DashboardShell>
-          <main className="flex-1 overflow-y-auto overflow-x-hidden">
-            <div className="h-full p-5 lg:p-6 pb-20 overflow-y-auto">
+          <main className="flex-1 overflow-x-hidden">
+            <div className="h-full p-5 lg:p-6 overflow-y-auto">
               {children}
             </div>
           </main>

@@ -141,7 +141,7 @@ export function RadarWorkspace({ repos, sections, categories }: RadarWorkspacePr
       />
 
       {/* Feed */}
-      <div className="flex flex-col flex-1 shrink-0 border-r border-border/50 transition-all duration-200">
+      <div className="flex flex-col w-[474px] shrink-0 border-r border-border/50 transition-all duration-200">
         <RadarFeed
           repos={filteredRepos}
           sections={feedSections}

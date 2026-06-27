@@ -7,10 +7,10 @@ interface ResourceFiltersProps {
   allTags: string[];
   selectedCategory: string | null;
   selectedTag: string | null;
-  sortBy: "newest" | "oldest" | "recently-opened";
+  sortBy: "newest" | "oldest";
   onCategoryChange: (cat: string | null) => void;
   onTagChange: (tag: string | null) => void;
-  onSortChange: (sort: "newest" | "oldest" | "recently-opened") => void;
+  onSortChange: (sort: "newest" | "oldest") => void;
 }
 
 export function ResourceFilters({

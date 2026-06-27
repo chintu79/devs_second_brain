@@ -59,8 +59,10 @@ export const ProjectList = forwardRef<HTMLDivElement, ProjectListProps>(
         {projects.map((project) => {
           const isSelected = selectedId === project.id;
           const meta = statusMeta[project.status] || { label: project.status, color: "text-muted-foreground" };
-          const totalMilestones = 4;
-          const completedMilestones = project.planMd ? (project.planMd.match(/- \[x\]/gi) || []).length : 0;
+          const todoCount = project.planMd ? (project.planMd.match(/- \[ \]/g) || []).length : 0;
+          const doneCount = project.planMd ? (project.planMd.match(/- \[x\]/gi) || []).length : 0;
+          const totalMilestones = Math.max(1, todoCount + doneCount);
+          const completedMilestones = doneCount;
 
           return (
             <motion.div key={project.id} variants={fadeInUp}>

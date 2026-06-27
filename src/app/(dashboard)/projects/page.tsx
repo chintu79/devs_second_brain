@@ -25,7 +25,7 @@ export default async function ProjectsPage() {
   ]);
 
   return (
-    <div data-accent="projects" className="flex h-full -m-5 lg:-m-6">
+    <div data-accent="projects" className="-m-5 lg:-m-6 h-[calc(100vh-var(--header-height,0px))] flex overflow-hidden">
       <Suspense fallback={<div className="flex-1" />}>
         <ProjectWorkspace
           projects={flattenListTags(projects)}

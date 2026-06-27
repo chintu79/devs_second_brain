@@ -7,6 +7,7 @@ import "./globals.css";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import { AccentProvider } from "@/components/theme/accent-provider";
+import { AgentationWrapper } from "@/components/agentation";
 
 export const metadata: Metadata = {
   title: "Dev Second Brain",
@@ -38,6 +39,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <AccentProvider>
             {children}
             <Toaster position="bottom-right" richColors closeButton />
+            <AgentationWrapper />
           </AccentProvider>
         </ThemeProvider>
       </body>

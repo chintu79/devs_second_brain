@@ -76,7 +76,7 @@ export function PromptCard({ prompt: p, selected, onSelect }: PromptCardProps) {
         }`}
         onClick={() => onSelect?.(p.id)}
       >
-        <div className="px-5 py-4">
+        <div className="px-5 py-4 min-h-[168px]">
           <div className="flex items-start gap-4">
             <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${isFav ? "bg-amber-500/10" : "bg-muted"} transition-colors`}>
               <Sparkles className={`h-4 w-4 ${isFav ? "text-amber-400" : "text-secondary-foreground"} transition-colors`} />

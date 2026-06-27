@@ -42,7 +42,7 @@ export function DashboardVaultBlocks({ resources, prompts, notes, projects }: Da
   const data: Record<string, VaultBlockData & { items: VaultItem[] }> = { resources, prompts, notes, projects };
 
   return (
-    <div className="grid grid-cols-4 gap-4 z-10">
+    <div className="grid grid-cols-4 gap-4 z-20">
       {vaultConfig.map((config) => {
         const block = data[config.key];
         const Icon = config.icon;

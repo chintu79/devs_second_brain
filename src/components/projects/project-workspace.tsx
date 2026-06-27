@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback, useRef } from "react";
+import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Markdown } from "@/components/shared/markdown";
 import {
@@ -8,16 +8,18 @@ import {
   ClipboardList, FileText, Sparkles, Clock, Link2,
   CircleDot, Layers, FlaskConical, Hammer, CheckCircle2,
   ChevronRight, ChevronDown, Copy, FolderKanban, Plus, Loader2,
-  Columns3, List,
+  Columns3, List, Save,
 } from "lucide-react";
 import { slideInRight } from "@/lib/motion";
 import { ProjectSidebar } from "./project-sidebar";
 import { ProjectList } from "./project-list";
 import { KanbanBoard } from "./kanban-board";
-import { toggleProjectFavorite, deleteProject, saveProjectPlan, archiveProject } from "@/actions/projects";
+import { toggleProjectFavorite, deleteProject, saveProjectPlan, archiveProject, editProject } from "@/actions/projects";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ProjectDialog } from "@/components/vaults/project-dialog";
 
 /* ── Types ── */
@@ -53,8 +55,8 @@ export function ProjectWorkspace({ projects, resources, prompts, notes }: Projec
   const [activeSection, setActiveSection] = useState("all");
   const [activeTag, setActiveTag] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
-  const [editDialog, setEditDialog] = useState(false);
   const [viewMode, setViewMode] = useState<"list" | "kanban">("list");
+  const [createOpen, setCreateOpen] = useState(false);
   const PAGE_SIZE = 20;
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -148,11 +150,11 @@ export function ProjectWorkspace({ projects, resources, prompts, notes }: Projec
         researchCount={counts.research} buildingCount={counts.building}
         completedCount={counts.completed} archivedCount={counts.archived} favCount={counts.fav}
         allTags={allTags} activeSection={activeSection} onSectionChange={setActiveSection}
-        activeTag={activeTag} onTagChange={setActiveTag} onCreate={() => setEditDialog(true)}
+        activeTag={activeTag} onTagChange={setActiveTag} onCreate={() => setCreateOpen(true)}
       />
 
       {/* ── List / Kanban column ── */}
-      <div className={`${selectedId && viewMode === "list" ? "w-80" : "flex-1"} shrink-0 border-r border-border/50 flex flex-col ${viewMode === "kanban" ? "px-0" : "px-2"}`}>
+      <div className={`w-[474px] shrink-0 border-r border-border/50 flex flex-col ${viewMode === "kanban" ? "px-0" : "px-2"}`}>
         <div className="px-4 pt-3 pb-2 pr-8 border-b border-border/30 flex items-center gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
@@ -231,30 +233,48 @@ export function ProjectWorkspace({ projects, resources, prompts, notes }: Projec
             onTabChange={setActiveTab}
             onClose={close}
             onUpdate={() => router.refresh()}
-            onEdit={() => setEditDialog(true)}
           />
         )}
       </AnimatePresence>
 
-      <ProjectDialog project={selectedProject || undefined} open={editDialog} onOpenChange={setEditDialog} />
+      <ProjectDialog open={createOpen} onOpenChange={setCreateOpen} />
     </div>
   );
 }
 
 /* ── Workspace Panel ── */
 function WorkspacePanel({
-  project, connected, allNotes, allResources, allPrompts, allProjects, tabs,
-  activeTab, onTabChange, onClose, onUpdate, onEdit,
+  project: initialProject, connected, allNotes, allResources, allPrompts, allProjects, tabs,
+  activeTab, onTabChange, onClose, onUpdate,
 }: {
   project: Project; connected: { notes: Note[]; resources: Resource[]; prompts: PromptItem[] };
   allNotes: Note[]; allResources: Resource[]; allPrompts: PromptItem[]; allProjects: Project[];
-  tabs: string[]; activeTab: string; onTabChange: (t: string) => void; onClose: () => void; onUpdate: () => void; onEdit: () => void;
+  tabs: string[]; activeTab: string; onTabChange: (t: string) => void; onClose: () => void; onUpdate: () => void;
 }) {
+  const [project, setProject] = useState(initialProject);
   const [planEditing, setPlanEditing] = useState(false);
-  const [planContent, setPlanContent] = useState(project.planMd);
+  const [planContent, setPlanContent] = useState(initialProject.planMd);
   const [planSaving, setPlanSaving] = useState(false);
-  const [isFav, setIsFav] = useState(project.favorite);
+  const [isFav, setIsFav] = useState(initialProject.favorite);
   const [favPending, setFavPending] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [editTitle, setEditTitle] = useState(initialProject.title);
+  const [editDesc, setEditDesc] = useState(initialProject.description);
+  const [editStatus, setEditStatus] = useState(initialProject.status);
+  const [editStack, setEditStack] = useState(initialProject.techStack.join(", "));
+  const [editTags, setEditTags] = useState(initialProject.tags.join(", "));
+
+  useEffect(() => {
+    setProject(initialProject);
+    setPlanContent(initialProject.planMd);
+    setIsFav(initialProject.favorite);
+    setEditTitle(initialProject.title);
+    setEditDesc(initialProject.description);
+    setEditStatus(initialProject.status);
+    setEditStack(initialProject.techStack.join(", "));
+    setEditTags(initialProject.tags.join(", "));
+  }, [initialProject]);
 
   const meta = statusMeta[project.status] || statusMeta.idea;
   const StatusIcon = meta.icon;
@@ -290,6 +310,23 @@ function WorkspacePanel({
     setPlanSaving(false);
     setPlanEditing(false);
     onUpdate();
+  }
+
+  async function handleEdit() {
+    setSaving(true);
+    const formData = new FormData();
+    formData.set("title", editTitle);
+    formData.set("description", editDesc);
+    formData.set("status", editStatus);
+    formData.set("techStack", editStack);
+    formData.set("tags", editTags);
+    const result = await editProject(project.id, formData);
+    setSaving(false);
+    if (result?.success) {
+      setEditing(false);
+      setProject((prev) => ({ ...prev, title: editTitle, description: editDesc, status: editStatus }));
+      onUpdate();
+    }
   }
 
   /* ── Timeline ── */
@@ -337,16 +374,22 @@ function WorkspacePanel({
                   )}
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
+                  {!editing && (
+                    <>
+                      <button onClick={() => setEditing(true)} aria-label="Edit project" className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all">
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
+                      <button onClick={handleDelete} aria-label="Delete project" className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-destructive transition-all">
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                      <button onClick={handleArchive} disabled={archiving} aria-label={archiving ? "Archiving..." : "Archive project"} className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground transition-all">
+                        <Archive className="h-3.5 w-3.5" />
+                      </button>
+                    </>
+                  )}
                   <button onClick={handleFavorite} disabled={favPending} aria-label={isFav ? "Unfavorite project" : "Favorite project"} className={`flex h-7 w-7 items-center justify-center rounded-md transition-colors ${isFav ? "text-amber-400" : "text-muted-foreground hover:text-amber-400"}`}>
                     <Star className={`h-3.5 w-3.5 ${isFav ? "fill-amber-400" : ""}`} />
                   </button>
-                  <button onClick={onEdit} aria-label="Edit project" className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground transition-colors">
-                    <Pencil className="h-3.5 w-3.5" />
-                  </button>
-                  <button onClick={handleArchive} disabled={archiving} aria-label="Archive project" className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground transition-colors">
-                    <Archive className="h-3.5 w-3.5" />
-                  </button>
-                  <div className="w-px h-4 bg-border/50 mx-1" />
                   <button onClick={onClose} aria-label="Close panel" className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground transition-colors">
                     <X className="h-4 w-4" />
                   </button>
@@ -374,77 +417,129 @@ function WorkspacePanel({
         </div>
 
         {/* ── Tabs ── */}
-        <div className="flex gap-0 px-4">
-          {tabs.map((tab) => (
-            <button
-              key={tab}
-              onClick={() => onTabChange(tab.toLowerCase())}
-              className={`px-4 py-2.5 text-xs font-medium border-b-2 transition-all duration-150 ${activeTab === tab.toLowerCase()
-                ? "border-primary text-foreground"
-                : "border-transparent text-muted-foreground hover:text-foreground hover:scale-[1.02]"
-                }`}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
+        {!editing && (
+          <div className="flex gap-0 px-4">
+            {tabs.map((tab) => (
+              <button
+                key={tab}
+                onClick={() => onTabChange(tab.toLowerCase())}
+                className={`px-4 py-2.5 text-xs font-medium border-b-2 transition-all duration-150 ${activeTab === tab.toLowerCase()
+                  ? "border-primary text-foreground"
+                  : "border-transparent text-muted-foreground hover:text-foreground hover:scale-[1.02]"
+                  }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* ── Tab Content ── */}
+      {/* ── Content ── */}
       <div className="flex-1 overflow-y-auto">
-        <div className="flex h-full">
-          <div className="flex-1 min-w-0">
-            {activeTab === "overview" && <OverviewTab project={project} connected={connected} timeline={timeline} />}
-            {activeTab === "plan.md" && (
-              <PlanTab
-                content={planContent} editing={planEditing} saving={planSaving}
-                onEdit={() => setPlanEditing(true)}
-                onCancel={() => { setPlanEditing(false); setPlanContent(project.planMd); }}
-                onSave={handleSavePlan}
-                onChange={setPlanContent}
-              />
-            )}
-            {activeTab === "resources" && <ResourcesTab resources={connected.resources} />}
-            {activeTab === "notes" && <NotesTab notes={connected.notes} />}
-            {activeTab === "prompts" && <PromptsTab prompts={connected.prompts} />}
-            {activeTab === "timeline" && <TimelineTab events={timeline} />}
+        {editing ? (
+          <div className="px-10 py-8 space-y-4 max-w-5xl">
+            <h2 className="text-base font-semibold text-foreground mb-6">Edit Project</h2>
+            <div className="space-y-2">
+              <label className="text-xs text-section-foreground uppercase tracking-[0.1em] font-semibold">Title</label>
+              <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} className="h-9 text-sm" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs text-section-foreground uppercase tracking-[0.1em] font-semibold">Description</label>
+              <Textarea value={editDesc} onChange={(e) => setEditDesc(e.target.value)} rows={3} className="text-sm" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-xs text-section-foreground uppercase tracking-[0.1em] font-semibold">Status</label>
+                <Select value={editStatus} onValueChange={(v) => v && setEditStatus(v)}>
+                  <SelectTrigger className="h-9 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(statusMeta).map(([k, v]) => (
+                      <SelectItem key={k} value={k}>{v.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs text-section-foreground uppercase tracking-[0.1em] font-semibold">Tech Stack</label>
+                <Input value={editStack} onChange={(e) => setEditStack(e.target.value)} placeholder="React, Node, Postgres" className="h-9 text-sm" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs text-section-foreground uppercase tracking-[0.1em] font-semibold">Tags</label>
+              <Input value={editTags} onChange={(e) => setEditTags(e.target.value)} placeholder="react, typescript" className="h-9 text-sm" />
+            </div>
+            <div className="flex gap-2 pt-2">
+              <Button onClick={handleEdit} disabled={saving} size="sm" className="h-9 text-sm gap-1">
+                <Save className="h-4 w-4" />{saving ? "Saving..." : "Save"}
+              </Button>
+              <Button onClick={() => {
+                setEditing(false);
+                setEditTitle(project.title);
+                setEditDesc(project.description);
+                setEditStatus(project.status);
+                setEditStack(project.techStack.join(", "));
+                setEditTags(project.tags.join(", "));
+              }} variant="outline" size="sm" className="h-9 text-sm">Cancel</Button>
+            </div>
           </div>
+        ) : (
+          <div className="flex h-full">
+            <div className="flex-1 min-w-0">
+              {activeTab === "overview" && <OverviewTab project={project} connected={connected} timeline={timeline} />}
+              {activeTab === "plan.md" && (
+                <PlanTab
+                  content={planContent} editing={planEditing} saving={planSaving}
+                  onEdit={() => setPlanEditing(true)}
+                  onCancel={() => { setPlanEditing(false); setPlanContent(project.planMd); }}
+                  onSave={handleSavePlan}
+                  onChange={setPlanContent}
+                />
+              )}
+              {activeTab === "resources" && <ResourcesTab resources={connected.resources} />}
+              {activeTab === "notes" && <NotesTab notes={connected.notes} />}
+              {activeTab === "prompts" && <PromptsTab prompts={connected.prompts} />}
+              {activeTab === "timeline" && <TimelineTab events={timeline} />}
+            </div>
 
-          {/* ── Context Panel ── */}
-          <div className="w-56 shrink-0 border-l border-border/30 bg-muted/20 overflow-y-auto px-4 py-5 space-y-5">
-            <h3 className="text-[10px] font-semibold text-section-foreground uppercase tracking-[0.12em]">Context</h3>
+            {/* ── Context Panel ── */}
+            <div className="w-56 shrink-0 border-l border-border/30 bg-muted/20 overflow-y-auto px-4 py-5 space-y-5">
+              <h3 className="text-[10px] font-semibold text-section-foreground uppercase tracking-[0.12em]">Context</h3>
 
-            <ContextSection icon={Clock} label="Recent">
-              {timeline.slice(0, 3).map((e) => (
-                <p key={e.label} className="text-[10px] text-muted-foreground leading-relaxed">{e.label}</p>
-              ))}
-            </ContextSection>
-
-            {allProjects.filter((p) => p.id !== project.id && p.tags.some((t) => project.tags.includes(t))).slice(0, 3).length > 0 && (
-              <ContextSection icon={FolderKanban} label="Related Projects">
-                {allProjects.filter((p) => p.id !== project.id && p.tags.some((t) => project.tags.includes(t))).slice(0, 3).map((p) => (
-                  <div key={p.id} className="text-[10px] text-muted-foreground leading-relaxed">{p.title}</div>
+              <ContextSection icon={Clock} label="Recent">
+                {timeline.slice(0, 3).map((e) => (
+                  <p key={e.label} className="text-[10px] text-muted-foreground leading-relaxed">{e.label}</p>
                 ))}
               </ContextSection>
-            )}
 
-            {connected.notes.length > 0 && (
-              <ContextSection icon={FileText} label="Notes ({connected.notes.length})">
-                {connected.notes.slice(0, 3).map((n) => (
-                  <div key={n.id} className="text-[10px] text-muted-foreground truncate">{n.title}</div>
-                ))}
-              </ContextSection>
-            )}
+              {allProjects.filter((p) => p.id !== project.id && p.tags.some((t) => project.tags.includes(t))).slice(0, 3).length > 0 && (
+                <ContextSection icon={FolderKanban} label="Related Projects">
+                  {allProjects.filter((p) => p.id !== project.id && p.tags.some((t) => project.tags.includes(t))).slice(0, 3).map((p) => (
+                    <div key={p.id} className="text-[10px] text-muted-foreground leading-relaxed">{p.title}</div>
+                  ))}
+                </ContextSection>
+              )}
 
-            {connected.resources.length > 0 && (
-              <ContextSection icon={Link2} label="Resources ({connected.resources.length})">
-                {connected.resources.slice(0, 3).map((r) => (
-                  <div key={r.id} className="text-[10px] text-muted-foreground truncate">{r.title}</div>
-                ))}
-              </ContextSection>
-            )}
+              {connected.notes.length > 0 && (
+                <ContextSection icon={FileText} label="Notes ({connected.notes.length})">
+                  {connected.notes.slice(0, 3).map((n) => (
+                    <div key={n.id} className="text-[10px] text-muted-foreground truncate">{n.title}</div>
+                  ))}
+                </ContextSection>
+              )}
+
+              {connected.resources.length > 0 && (
+                <ContextSection icon={Link2} label="Resources ({connected.resources.length})">
+                  {connected.resources.slice(0, 3).map((r) => (
+                    <div key={r.id} className="text-[10px] text-muted-foreground truncate">{r.title}</div>
+                  ))}
+                </ContextSection>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </motion.div>
   );

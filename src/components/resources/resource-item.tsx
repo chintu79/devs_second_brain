@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { ExternalLink, Heart, Archive, MoreHorizontal, Pencil, Trash2, Bookmark } from "lucide-react";
+import { motion } from "framer-motion";
+import { ExternalLink, Heart, MoreHorizontal, Pencil, Trash2, Bookmark } from "lucide-react";
+import { cardHover } from "@/lib/motion";
 import { deleteResource, toggleFavorite } from "@/actions/resources";
 import { ResourceDialog } from "@/components/vaults/resource-dialog";
 
@@ -66,7 +68,9 @@ export function ResourceItem({ resource, isSelected, onSelect }: ResourceItemPro
 
   return (
     <>
-      <div className={`group relative rounded-xl border bg-card w-full transition-all duration-200 hover:border-[var(--border-hover)] hover:shadow-[var(--shadow-elevated)] ${isSelected ? "border-primary/40 bg-primary/[0.02]" : "border-border"}`}>
+      <motion.div
+        whileHover={cardHover}
+        className={`group relative rounded-xl border bg-card w-full transition-all duration-200 hover:border-[var(--border-hover)] hover:shadow-[var(--shadow-elevated)] ${isSelected ? "border-primary/40 shadow-[var(--shadow-elevated)]" : "border-border"}`}>
         <div className="px-5 py-4">
           <div className="flex items-start gap-4">
             {/* Icon */}
@@ -125,7 +129,7 @@ export function ResourceItem({ resource, isSelected, onSelect }: ResourceItemPro
                 disabled={favPending}
                 aria-label={isFav ? "Unfavorite" : "Favorite"}
                 className={`flex h-7 w-7 items-center justify-center rounded-md transition-all ${
-                  isFav ? "text-red-400 hover:text-red-300" : "text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100"
+                  isFav ? "text-amber-400 hover:text-amber-300" : "text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100"
                 }`}
               >
                 <Heart className={`h-3.5 w-3.5 ${isFav ? "fill-current" : ""}`} />
@@ -173,7 +177,7 @@ export function ResourceItem({ resource, isSelected, onSelect }: ResourceItemPro
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
       <ResourceDialog resource={resource} open={open} onOpenChange={setOpen} />
     </>
   );

@@ -226,8 +226,7 @@ export function NoteWorkspace({ notes, resources, prompts, projects }: NoteWorks
 
       {/* Notes list */}
       <div
-        className={`w-96 shrink-0 border-r border-border/50 flex flex-col px-2 ${selectedId ? "" : "flex-1"
-          }`}
+        className="w-[474px] shrink-0 border-r border-border/50 flex flex-col px-2"
       >
         {/* Search */}
         <div className="px-4 pt-3 pb-2 border-b border-border/30">

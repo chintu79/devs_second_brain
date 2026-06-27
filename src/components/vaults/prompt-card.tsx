@@ -1,9 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Star, Pencil, Trash2, Sparkles } from "lucide-react";
+import { Star, Pencil, Trash2, Sparkles, Copy, Check } from "lucide-react";
 import { deletePrompt, toggleFavorite } from "@/actions/prompts";
-import { CopyButton } from "@/components/shared/copy-button";
 import { PromptDialog } from "./prompt-dialog";
 
 interface Prompt {
@@ -24,6 +23,13 @@ interface PromptCardProps {
 export function PromptCard({ prompt: p }: PromptCardProps) {
   const [open, setOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  async function handleCopy() {
+    await navigator.clipboard.writeText(p.prompt);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
 
   async function handleDelete() {
     if (confirm("Delete this prompt?")) {
@@ -53,7 +59,9 @@ export function PromptCard({ prompt: p }: PromptCardProps) {
                       <Star className={`h-3 w-3 ${p.favorite ? "fill-amber-400" : ""}`} />
                     </button>
                   </form>
-                  <CopyButton text={p.prompt} />
+                  <button onClick={handleCopy} aria-label={copied ? "Copied" : "Copy to clipboard"} className="flex h-7 w-7 items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-150 hover:scale-[1.1]">
+                    {copied ? <Check className="h-3 w-3 text-success" /> : <Copy className="h-3 w-3" />}
+                  </button>
                 </div>
               </div>
               {p.useCase && (

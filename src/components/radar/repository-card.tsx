@@ -52,11 +52,11 @@ export function RepositoryCard({ repo, selected, onSelect, onBookmark }: Reposit
   return (
     <motion.div
       whileHover={cardHover}
-      className={`group relative rounded-xl border bg-card cursor-pointer w-[480px] shrink-0 ${
-        selected
-          ? "border-primary/40 shadow-sm"
-          : "border-border hover:border-primary/20 hover:shadow-sm"
-      }`}
+      className={`group relative rounded-xl border bg-card cursor-pointer w-full ${
+          selected
+            ? "border-primary/40 shadow-sm"
+            : "border-border hover:border-primary/20 hover:shadow-sm"
+        }`}
       onClick={() => onSelect(repo.id)}
     >
       <div className="px-5 py-4">

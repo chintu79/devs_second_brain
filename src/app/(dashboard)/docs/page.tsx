@@ -1,5 +1,7 @@
 import { ReadingProgress } from "@/components/docs/reading-progress";
 import { DocsTOC } from "@/components/docs/docs-toc";
+import { ScrollReveal } from "@/components/shared/scroll-reveal";
+import { Fragment } from "react";
 import { Book, Link2, MessageSquare, StickyNote, FolderKanban, Radio, Search, Bot, Tags, Command, LayoutDashboard, Zap, Workflow, Palette, Sparkles, Server } from "lucide-react";
 
 const useCases = [
@@ -415,7 +417,7 @@ const tocSections = useCases.map((s) => ({ id: s.id, title: s.title, color: s.co
 
 export default function DocsPage() {
   return (
-    <>
+    <Fragment>
       <ReadingProgress />
       <div className="max-w-6xl mx-auto flex gap-8 h-full" data-accent="settings">
         {/* TOC sidebar */}
@@ -455,12 +457,12 @@ export default function DocsPage() {
 
           {/* Content */}
           <div className="space-y-8 mb-12">
-            {useCases.map((section) => (
-              <section
-                key={section.id}
-                id={section.id}
-                className="scroll-mt-20 rounded-xl border border-border/20 bg-card overflow-hidden hover:border-border/40 transition-colors"
-              >
+            {useCases.map((section, idx) => (
+              <ScrollReveal key={section.id} delay={idx * 80}>
+                <section
+                  id={section.id}
+                  className="scroll-mt-20 rounded-xl border border-border/20 bg-card overflow-hidden hover:border-border/40 transition-colors"
+                >
                 <div className="px-6 py-4 border-b border-border/20 bg-muted/30 flex items-center gap-3">
                   <div
                     className="flex h-8 w-8 items-center justify-center rounded-lg accent-bg-15"
@@ -510,10 +512,12 @@ export default function DocsPage() {
 
                 </div>
               </section>
+              </ScrollReveal>
             ))}
           </div>
 
           {/* Keyboard Shortcuts */}
+          <ScrollReveal delay={160}>
           <div className="mb-12">
             <h2 className="text-sm font-semibold text-[#F4F4F5] mb-4">Keyboard Shortcuts</h2>
             <div className="rounded-xl border border-border/20 overflow-hidden">
@@ -532,8 +536,9 @@ export default function DocsPage() {
               ))}
             </div>
           </div>
+          </ScrollReveal>
         </div>
       </div>
-    </>
+    </Fragment>
   );
 }

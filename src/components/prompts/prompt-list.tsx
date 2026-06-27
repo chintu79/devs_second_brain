@@ -5,10 +5,10 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Search, Loader2, ChevronDown } from "lucide-react";
 import { PromptCard } from "./prompt-card";
+import { PromptContextPanel } from "./prompt-context-panel";
 import { PromptPreviewPanel } from "./prompt-preview-panel";
 import { PromptFilters } from "./prompt-filters";
 import { PromptEmpty } from "./prompt-empty";
-import { PromptDialog } from "@/components/vaults/prompt-dialog";
 import { fetchMorePrompts } from "@/actions/prompts";
 import { stagger, fadeInUp } from "@/lib/motion";
 
@@ -29,9 +29,12 @@ interface PromptListProps {
   initialItems: Prompt[];
   nextCursor: string | null;
   categories: string[];
+  sortMode?: string;
+  selectedCategory?: string | null;
+  onCategoryChange?: (cat: string | null) => void;
 }
 
-export function PromptList({ initialItems, nextCursor: initialCursor, categories }: PromptListProps) {
+export function PromptList({ initialItems, nextCursor: initialCursor, categories, sortMode, selectedCategory, onCategoryChange }: PromptListProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const selectedId = searchParams.get("id");
@@ -40,7 +43,6 @@ export function PromptList({ initialItems, nextCursor: initialCursor, categories
   const [cursor, setCursor] = useState<string | null>(initialCursor);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [keyboardMode, setKeyboardMode] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
@@ -76,8 +78,18 @@ export function PromptList({ initialItems, nextCursor: initialCursor, categories
       result = result.filter((p) => p.category === selectedCategory);
     }
 
+    if (sortMode === "name") {
+      result.sort((a, b) => a.title.localeCompare(b.title));
+    } else if (sortMode === "popular") {
+      result.sort((a, b) => b.useCount - a.useCount);
+    } else if (sortMode === "oldest") {
+      result.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+    } else {
+      result.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    }
+
     return result;
-  }, [items, searchQuery, selectedCategory]);
+  }, [items, searchQuery, selectedCategory, sortMode]);
 
   const sections = useMemo(() => {
     return {
@@ -160,7 +172,7 @@ export function PromptList({ initialItems, nextCursor: initialCursor, categories
 
   return (
     <div className="flex h-full gap-0" onKeyDown={handleKeyDown}>
-      <div className={`flex-1 min-w-0 ${selectedId ? "border-r border-border/50" : ""} transition-all duration-200`} ref={listRef} tabIndex={-1}>
+      <div className="w-[474px] shrink-0 transition-all duration-200" ref={listRef} tabIndex={-1}>
         <div className="space-y-5 pr-5">
           <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -176,8 +188,8 @@ export function PromptList({ initialItems, nextCursor: initialCursor, categories
 
           <PromptFilters
             categories={categories}
-            selectedCategory={selectedCategory}
-            onCategoryChange={setSelectedCategory}
+            selectedCategory={selectedCategory ?? null}
+            onCategoryChange={onCategoryChange || ((cat: string | null) => {})}
           />
 
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
@@ -263,6 +275,13 @@ export function PromptList({ initialItems, nextCursor: initialCursor, categories
         </div>
       </div>
 
+      {!selectedPrompt && (
+        <PromptContextPanel
+          favorites={initialItems.filter((p) => p.favorite).map((p) => ({ id: p.id, title: p.title }))}
+          recentPrompts={[...initialItems].sort((a, b) => (b.lastUsedAt?.getTime() || 0) - (a.lastUsedAt?.getTime() || 0)).slice(0, 5).map((p) => ({ id: p.id, title: p.title }))}
+        />
+      )}
+
       <AnimatePresence mode="wait">
         {selectedPrompt && (
           <PromptPreviewPanel
@@ -273,8 +292,6 @@ export function PromptList({ initialItems, nextCursor: initialCursor, categories
           />
         )}
       </AnimatePresence>
-
-      <PromptDialog open={dialogOpen} onOpenChange={setDialogOpen} />
     </div>
   );
 }
