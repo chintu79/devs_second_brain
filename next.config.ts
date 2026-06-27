@@ -2,7 +2,6 @@ import type { NextConfig } from "next";
 
 // ponytail: skipped full CSP — breaks easily, skipHtml covers XSS already
 const nextConfig: NextConfig = {
-  output: "standalone",
   async headers() {
     return [
       {
