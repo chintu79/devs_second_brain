@@ -49,41 +49,76 @@ A developer-focused knowledge OS. Save, organize, search, and rediscover resourc
 
 ### Prerequisites
 
-Install these before starting:
+Make sure these are installed on your machine:
 
-| Software | Download |
-|----------|----------|
-| **Node.js 22+** | [nodejs.org](https://nodejs.org) (includes npm) |
-| **Git** | [git-scm.com/downloads](https://git-scm.com/downloads) |
-| **PostgreSQL 16+** | [postgresql.org/download](https://www.postgresql.org/download/) — or use [Neon](https://neon.tech), [Supabase](https://supabase.com) |
-| **Docker** (optional) | [docs.docker.com/get-docker](https://docs.docker.com/get-docker/) |
+| Software | Why you need it | Download |
+|----------|----------------|----------|
+| **Git** | To clone the repository | [git-scm.com/downloads](https://git-scm.com/downloads) |
+| **Docker** | To run the app and database in containers (easiest option) | [docs.docker.com/get-docker](https://docs.docker.com/get-docker/) |
+| **Node.js 22+** | Only needed for manual setup (not needed for Docker) | [nodejs.org](https://nodejs.org) |
+| **PostgreSQL 16+** | Only needed for manual setup (Docker includes it) | [postgresql.org/download](https://www.postgresql.org/download/) |
 
-### Quick start (Docker)
+---
+
+### Option 1 — Docker (recommended)
+
+This runs both the app and PostgreSQL in containers. No need to install Node.js, PostgreSQL, or configure anything manually.
 
 ```bash
+# 1. Clone the repository
 git clone https://github.com/chintu79/devs_second_brain.git
+
+# 2. Go into the project folder
 cd devs_second_brain
-docker compose up
+
+# 3. Build and start
+docker compose up --build
 ```
 
-Open http://localhost:3000. Register an account and you're in.
+Wait for the build to finish (it may take a few minutes the first time). Once you see the app running, open **http://localhost:3000** in your browser, create an account, and you're in.
 
-### Manual setup
+> **Important**: If you previously ran `npm run dev` on this project, open an incognito/private browser window — the old login cookie won't work with the Docker version.
+
+---
+
+### Option 2 — Manual setup (no Docker)
+
+Requires Node.js 22+ and a running PostgreSQL database.
 
 ```bash
+# 1. Clone the repository
 git clone https://github.com/chintu79/devs_second_brain.git
+
+# 2. Go into the project folder
 cd devs_second_brain
+
+# 3. Install dependencies
 npm install
+
+# 4. Create your environment config
 cp .env.example .env
-# fill in DATABASE_URL, NEXTAUTH_SECRET, NEXTAUTH_URL
+```
+
+**5. Edit `.env`** with your database credentials:
+
+| Variable | What to put |
+|----------|-------------|
+| `DATABASE_URL` | Your PostgreSQL connection string (e.g. `postgresql://user:password@localhost:5432/dev_second_brain`) |
+| `NEXTAUTH_SECRET` | Run `openssl rand -base64 32` and paste the output |
+| `NEXTAUTH_URL` | `http://localhost:3000` (for local development) |
+
+```bash
+# 6. Generate the Prisma client
 npx prisma generate
+
+# 7. Create database tables
 npx prisma db push
+
+# 8. Start the dev server
 npm run dev
 ```
 
-Open http://localhost:3000, register an account, and explore.
-
-Open http://localhost:3000, register an account, and explore.
+Open **http://localhost:3000**, register an account, and start using it.
 
 ### Environment variables
 
