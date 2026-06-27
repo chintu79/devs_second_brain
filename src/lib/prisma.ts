@@ -2,19 +2,12 @@ import { PrismaClient } from "@/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import pg from "pg";
 
-const dbUrl = new URL(process.env.DATABASE_URL!);
-const poolConfig: pg.PoolConfig = {
-  user: dbUrl.username,
-  password: dbUrl.password,
-  database: dbUrl.pathname.slice(1),
-  port: parseInt(dbUrl.port || "5432"),
-};
+const dbUrl = process.env.DATABASE_URL!;
+const isLocal = dbUrl.includes("localhost") || dbUrl.includes("127.0.0.1");
 
-if (dbUrl.hostname === "localhost" || dbUrl.hostname === "127.0.0.1") {
-  poolConfig.host = "/var/run/postgresql";
-} else {
-  poolConfig.host = dbUrl.hostname;
-}
+const poolConfig: pg.PoolConfig = isLocal
+  ? { connectionString: dbUrl }
+  : { connectionString: dbUrl, ssl: { rejectUnauthorized: false } };
 
 const pool = new pg.Pool(poolConfig);
 
