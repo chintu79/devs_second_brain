@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { createPrompt, editPrompt } from "@/actions/prompts";
 import { batchCreateReferences, type LinkItem } from "@/actions/references";
+import { toast } from "sonner";
 import { LinkPicker } from "@/components/shared/link-picker";
 import { TagInput } from "@/components/shared/tag-input";
 import { aiSuggestCategory, aiSuggestTags } from "@/actions/ai";
@@ -81,6 +82,7 @@ export function PromptDialog({ open, onOpenChange, prompt }: PromptDialogProps) 
       if (newId && links.length > 0) {
         await batchCreateReferences("prompt", newId, links);
       }
+      toast.success(isEdit ? "Prompt updated" : "Prompt saved");
       router.refresh();
       onOpenChange(false);
     }
@@ -117,6 +119,7 @@ export function PromptDialog({ open, onOpenChange, prompt }: PromptDialogProps) 
               <Label htmlFor="category">Category</Label>
               <button
                 type="button" disabled={aiLoading !== null}
+                title="AI suggests a category based on title and content"
                 onClick={async () => {
                   setServerError(null);
                   setAiLoading("category");
@@ -168,6 +171,7 @@ export function PromptDialog({ open, onOpenChange, prompt }: PromptDialogProps) 
               <Label>Tags</Label>
               <button
                 type="button" disabled={aiLoading !== null}
+                title="AI suggests tags based on title and content"
                 onClick={async () => {
                   setServerError(null);
                   setAiLoading("tags");

@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { createProject, editProject } from "@/actions/projects";
 import { batchCreateReferences, type LinkItem } from "@/actions/references";
+import { toast } from "sonner";
 import { LinkPicker } from "@/components/shared/link-picker";
 import { TagInput } from "@/components/shared/tag-input";
 import { projectSchema } from "@/lib/schemas";
@@ -81,6 +82,7 @@ export function ProjectDialog({ open, onOpenChange, project }: ProjectDialogProp
       if (newId && links.length > 0) {
         await batchCreateReferences("project", newId, links);
       }
+      toast.success(isEdit ? "Project updated" : "Project created");
       router.refresh();
       onOpenChange(false);
     }
@@ -146,6 +148,7 @@ export function ProjectDialog({ open, onOpenChange, project }: ProjectDialogProp
               <Label>Tags</Label>
               <button
                 type="button" disabled={aiLoading !== null}
+                title="AI suggests tags based on title and description"
                 onClick={async () => {
                   setServerError(null);
                   setAiLoading("tags");

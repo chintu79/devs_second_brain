@@ -12,7 +12,6 @@ export interface Repository {
   growthIndicator: "trending" | "hot" | "rising" | "stable" | "new";
   useCases: string[];
   keyFeatures: string[];
-  savedBy?: string;
   highlight?: string;
   saved: boolean;
   bookmarked: boolean;
@@ -177,7 +176,7 @@ const repos: Repository[] = [
     growthIndicator: "rising",
     useCases: ["Code review workflows", "Git diff visualization", "CLI output enhancement", "Team code standards"],
     keyFeatures: ["Syntax-highlighted diffs", "Side-by-side view", "Git integration", "Custom themes"],
-    savedBy: "Few Developers", highlight: "High utility, low visibility. Essential tool for anyone who reads diffs daily.",
+    highlight: "High utility, low visibility. Essential tool for anyone who reads diffs daily.",
     saved: false, bookmarked: false,
     createdAt: new Date("2020-08-01"), updatedAt: new Date("2026-06-15"),
   },
@@ -191,7 +190,7 @@ const repos: Repository[] = [
     growthIndicator: "rising",
     useCases: ["Code review accuracy", "Refactoring verification", "Merge conflict resolution", "Language-agnostic diffing"],
     keyFeatures: ["AST-aware comparison", "Multi-language support", "Side-by-side display", "Git integration"],
-    savedBy: "Few Developers", highlight: "Hidden gem: AST-level diffing catches semantic changes line-based tools miss.",
+    highlight: "AST-level diffing catches semantic changes line-based tools miss.",
     saved: false, bookmarked: false,
     createdAt: new Date("2021-03-01"), updatedAt: new Date("2026-06-14"),
   },
@@ -218,7 +217,7 @@ const repos: Repository[] = [
     growthIndicator: "rising",
     useCases: ["Server log analysis", "Debugging production issues", "Log pattern detection", "Real-time log monitoring"],
     keyFeatures: ["SQL query on logs", "Auto-format parsing", "Timeline visualization", "Multi-file merge"],
-    savedBy: "Few Developers", highlight: "Hidden gem: Turn unstructured logs into queryable data. Indispensable for debugging.",
+    highlight: "Turn unstructured logs into queryable data. Indispensable for debugging.",
     saved: false, bookmarked: false,
     createdAt: new Date("2013-01-01"), updatedAt: new Date("2026-06-10"),
   },
@@ -344,48 +343,19 @@ const repos: Repository[] = [
 
 export const allRepos = repos;
 
-export const trendingToday = repos.filter((r) => r.growthIndicator === "trending");
-export const trendingThisWeek = repos.filter((r) => r.growthIndicator === "hot" || r.growthIndicator === "trending");
-export const aiRepos = repos.filter((r) => r.category === "AI");
-export const agentRepos = repos.filter((r) => r.category === "Agents");
-export const frontendRepos = repos.filter((r) => r.category === "Frontend");
-export const backendRepos = repos.filter((r) => r.category === "Backend");
-export const devopsRepos = repos.filter((r) => r.category === "DevOps");
-export const flutterRepos = repos.filter((r) => r.category === "Flutter");
-export const linuxRepos = repos.filter((r) => r.category === "Linux");
-export const dataScienceRepos = repos.filter((r) => r.category === "Data Science");
-export const devToolsRepos = repos.filter((r) => r.category === "Developer Tools");
-export const infrastructureRepos = repos.filter((r) => r.category === "Infrastructure");
-export const hiddenGems = repos.filter((r) => r.savedBy === "Few Developers");
-export const recentlyReleased = repos.filter((r) => r.growthIndicator === "new");
-
-export function searchRepos(query: string): Repository[] {
-  const q = query.toLowerCase();
-  return repos.filter(
-    (r) =>
-      r.name.toLowerCase().includes(q) ||
-      r.owner.toLowerCase().includes(q) ||
-      r.description.toLowerCase().includes(q) ||
-      r.category.toLowerCase().includes(q) ||
-      r.language.toLowerCase().includes(q) ||
-      r.topics.some((t) => t.toLowerCase().includes(q)),
-  );
-}
-
-export const categoryMap: Record<string, Repository[]> = {
+const categoryMap: Record<string, Repository[]> = {
   all: repos,
-  ai: aiRepos,
-  agents: agentRepos,
-  frontend: frontendRepos,
-  backend: backendRepos,
-  devops: devopsRepos,
-  flutter: flutterRepos,
-  linux: linuxRepos,
-  datascience: dataScienceRepos,
-  devtools: devToolsRepos,
-  infrastructure: infrastructureRepos,
-  hidden: hiddenGems,
-  recent: recentlyReleased,
+  ai: repos.filter((r) => r.category === "AI"),
+  agents: repos.filter((r) => r.category === "Agents"),
+  frontend: repos.filter((r) => r.category === "Frontend"),
+  backend: repos.filter((r) => r.category === "Backend"),
+  devops: repos.filter((r) => r.category === "DevOps"),
+  flutter: repos.filter((r) => r.category === "Flutter"),
+  linux: repos.filter((r) => r.category === "Linux"),
+  datascience: repos.filter((r) => r.category === "Data Science"),
+  devtools: repos.filter((r) => r.category === "Developer Tools"),
+  infrastructure: repos.filter((r) => r.category === "Infrastructure"),
+  recent: repos.filter((r) => r.growthIndicator === "new"),
   bookmarked: [],
   saved: [],
   viewed: [],
@@ -393,21 +363,20 @@ export const categoryMap: Record<string, Repository[]> = {
 
 export const sidebarCategories = [
   { id: "all", label: "All Trends", count: repos.length },
-  { id: "ai", label: "AI", count: aiRepos.length },
-  { id: "agents", label: "Agents", count: agentRepos.length },
-  { id: "frontend", label: "Frontend", count: frontendRepos.length },
-  { id: "backend", label: "Backend", count: backendRepos.length },
-  { id: "devops", label: "DevOps", count: devopsRepos.length },
-  { id: "flutter", label: "Flutter", count: flutterRepos.length },
-  { id: "linux", label: "Linux", count: linuxRepos.length },
-  { id: "datascience", label: "Data Science", count: dataScienceRepos.length },
-  { id: "devtools", label: "Developer Tools", count: devToolsRepos.length },
-  { id: "infrastructure", label: "Infrastructure", count: infrastructureRepos.length } as const,
+  { id: "ai", label: "AI", count: categoryMap.ai.length },
+  { id: "agents", label: "Agents", count: categoryMap.agents.length },
+  { id: "frontend", label: "Frontend", count: categoryMap.frontend.length },
+  { id: "backend", label: "Backend", count: categoryMap.backend.length },
+  { id: "devops", label: "DevOps", count: categoryMap.devops.length },
+  { id: "flutter", label: "Flutter", count: categoryMap.flutter.length },
+  { id: "linux", label: "Linux", count: categoryMap.linux.length },
+  { id: "datascience", label: "Data Science", count: categoryMap.datascience.length },
+  { id: "devtools", label: "Developer Tools", count: categoryMap.devtools.length },
+  { id: "infrastructure", label: "Infrastructure", count: categoryMap.infrastructure.length } as const,
 ];
 
 export const discoverySections = [
-  { id: "trending", label: "Trending Today", repos: trendingToday },
-  { id: "week", label: "Trending This Week", repos: trendingThisWeek.slice(0, 5) },
-  { id: "hidden", label: "Hidden Gems", repos: hiddenGems },
-  { id: "recent", label: "Recently Released", repos: recentlyReleased },
+  { id: "trending", label: "Trending Today", repos: repos.filter((r) => r.growthIndicator === "trending") },
+  { id: "week", label: "Trending This Week", repos: repos.filter((r) => r.growthIndicator === "hot" || r.growthIndicator === "trending").slice(0, 5) },
+  { id: "recent", label: "Recently Released", repos: categoryMap.recent },
 ];

@@ -1,60 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { Sparkles, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ease } from "@/lib/motion";
-
-const phrases = [
-  "resource.", "repository.", "prompt.", "note.", "project idea.", "insight.",
-];
-
-const TYPING_SPEED = 60;
-const DELETING_SPEED = 35;
-const PAUSE_AFTER_TYPING = 2000;
-const PAUSE_AFTER_DELETING = 400;
-
-function TypewriterText() {
-  const [display, setDisplay] = useState("");
-  const [phraseIndex, setPhraseIndex] = useState(0);
-  const [charIndex, setCharIndex] = useState(0);
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  const tick = useCallback(() => {
-    const currentPhrase = phrases[phraseIndex];
-    if (!isDeleting) {
-      setDisplay(currentPhrase.slice(0, charIndex + 1));
-      setCharIndex((c) => c + 1);
-      if (charIndex + 1 === currentPhrase.length) {
-        setTimeout(() => setIsDeleting(true), PAUSE_AFTER_TYPING);
-        return;
-      }
-    } else {
-      setDisplay(currentPhrase.slice(0, charIndex - 1));
-      setCharIndex((c) => c - 1);
-      if (charIndex - 1 === 0) {
-        setIsDeleting(false);
-        setPhraseIndex((i) => (i + 1) % phrases.length);
-        return;
-      }
-    }
-  }, [phraseIndex, charIndex, isDeleting]);
-
-  useEffect(() => {
-    const speed = isDeleting ? DELETING_SPEED : TYPING_SPEED;
-    const timer = setTimeout(tick, speed);
-    return () => clearTimeout(timer);
-  }, [tick, isDeleting]);
-
-  return (
-    <span className="text-primary">
-      {display}
-      <span className="inline-block w-[2px] h-[0.85em] bg-primary ml-0.5 align-middle animate-pulse" />
-    </span>
-  );
-}
 
 function Mockup() {
   return (
@@ -78,7 +28,7 @@ function Mockup() {
                 "bookmark": <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /></svg>,
                 "sparkles": <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l1.5 5.5L19 10l-5.5 1.5L12 17l-1.5-5.5L5 10l5.5-1.5z" /><path d="M18 14l1 2.5 2.5 1-2.5 1L18 21l-1-2.5L14.5 17l2.5-1z" /></svg>,
                 "sticky-note": <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /></svg>,
-                "folder-kanban": <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2z" /></svg>,
+                "folder-kanban": <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c1.1 0 2 .9 2 2z" /></svg>,
                 "radio": <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="2" /><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14" /></svg>,
               };
               return (
@@ -184,44 +134,43 @@ export function HeroEntrance() {
       animate="visible"
     >
       <motion.div variants={childVariants}>
-        <div className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/40 px-4 py-1.5 text-xs font-medium text-muted-foreground/80 mb-10">
-          <Sparkles className="h-3 w-3 text-primary animate-glow-pulse" />
+        <div className="inline-flex items-center rounded-full border border-border bg-muted/40 px-4 py-1.5 text-xs font-medium text-muted-foreground/80 mb-10">
           Your developer knowledge cache.
         </div>
       </motion.div>
 
       <motion.div variants={childVariants}>
         <h1 className="text-[clamp(2.8rem,7vw,5.5rem)] font-bold tracking-[-0.03em] leading-[1.04] mb-6 max-w-4xl mx-auto">
-          Never lose a useful<br />
-          <TypewriterText />
+          Your brain can only<br />
+          <span className="text-primary">hold so much.</span>
         </h1>
       </motion.div>
 
       <motion.div variants={childVariants}>
-        <p className="text-muted-foreground/80 text-[17px] md:text-lg max-w-lg mx-auto mb-10 leading-relaxed">
-          Save resources, prompts, notes, repositories, and project plans in one place. Search everything instantly. Rediscover what matters when you need it.
+        <p className="text-muted-foreground/80 text-[17px] md:text-lg max-w-2xl mx-auto mb-10 leading-relaxed">
+          DevCache remembers the rest. Every resource, prompt, note, and project you save stays findable — forever.
+          Press <kbd className="rounded border border-border px-1.5 py-0.5 text-[13px] font-mono text-foreground/60 mx-1">⌘K</kbd> from anywhere and jump back in seconds.
         </p>
       </motion.div>
 
       <motion.div variants={childVariants}>
         <div className="flex items-center justify-center gap-4">
           <Link href="/register">
-            <Button size="lg" className="h-12 px-7 text-sm gap-2 bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-200">
+            <Button size="lg" className="h-12 px-7 text-sm gap-2 bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-200 hover:scale-[1.03]">
               Get Started
               <ArrowRight className="h-4 w-4" />
             </Button>
           </Link>
           <Link href="#features">
-            <Button variant="outline" size="lg" className="h-12 px-7 text-sm border-border/60 text-muted-foreground/80 hover:text-foreground hover:border-border transition-all duration-200">
-              View Demo
+            <Button variant="outline" size="lg" className="h-12 px-7 text-sm border-border/60 text-muted-foreground/80 hover:text-foreground hover:border-border transition-all duration-200 hover:scale-[1.03]">
+              See how it works
             </Button>
           </Link>
         </div>
       </motion.div>
 
-      {/* Mockup */}
       <motion.div variants={mockupVariants} className="mt-16 md:mt-20">
-        <div className="animate-float mx-auto max-w-6xl px-6">
+        <div className="mx-auto max-w-6xl px-6">
           <Mockup />
         </div>
       </motion.div>

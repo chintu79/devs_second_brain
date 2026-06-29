@@ -1,6 +1,5 @@
 import { ReadingProgress } from "@/components/docs/reading-progress";
 import { DocsTOC } from "@/components/docs/docs-toc";
-import { ScrollReveal } from "@/components/shared/scroll-reveal";
 import { Fragment } from "react";
 import { Book, Link2, MessageSquare, StickyNote, FolderKanban, Radio, Search, Bot, Tags, Command, LayoutDashboard, Zap, Workflow, Palette, Sparkles, Server } from "lucide-react";
 
@@ -458,7 +457,7 @@ export default function DocsPage() {
           {/* Content */}
           <div className="space-y-8 mb-12">
             {useCases.map((section, idx) => (
-              <ScrollReveal key={section.id} delay={idx * 80}>
+              <div key={section.id}>
                 <section
                   id={section.id}
                   className="scroll-mt-20 rounded-xl border border-border/20 bg-card overflow-hidden hover:border-border/40 transition-colors"
@@ -512,12 +511,12 @@ export default function DocsPage() {
 
                 </div>
               </section>
-              </ScrollReveal>
+              </div>
             ))}
           </div>
 
           {/* Keyboard Shortcuts */}
-          <ScrollReveal delay={160}>
+          <div>
           <div className="mb-12">
             <h2 className="text-sm font-semibold text-[#F4F4F5] mb-4">Keyboard Shortcuts</h2>
             <div className="rounded-xl border border-border/20 overflow-hidden">
@@ -536,7 +535,7 @@ export default function DocsPage() {
               ))}
             </div>
           </div>
-          </ScrollReveal>
+          </div>
         </div>
       </div>
     </Fragment>

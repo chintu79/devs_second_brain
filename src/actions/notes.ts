@@ -14,18 +14,17 @@ export async function createNote(formData: FormData) {
   const category = formData.get("category") as string;
   const tagsString = formData.get("tags") as string;
 
-  if (!title || !category) return { error: "Title and category are required" };
-
   const tagNames = parseTagNames(tagsString || "");
 
   try {
     const note = await prisma.note.create({
       data: {
-        title, content: content || "", category, userId: session.user.id,
+        title: title || "", content: content || "", category: category || "", userId: session.user.id,
         tags: buildTagCreate(tagNames, session.user.id),
       },
     });
     revalidatePath("/notes");
+    revalidatePath("/");
     if (tagNames.length > 0) revalidatePath("/tags");
 
     return { success: true, id: note.id };
@@ -88,22 +87,6 @@ export async function toggleNoteFavorite(id: string) {
     return { success: true };
   } catch {
     return { error: "Failed to toggle favorite" };
-  }
-}
-
-export async function archiveNote(id: string) {
-  const session = await auth();
-  if (!session?.user?.id) return { error: "Not authenticated" };
-
-  try {
-    const note = await prisma.note.findUnique({ where: { id }, select: { archived: true, userId: true } });
-    if (!note || note.userId !== session.user.id) return { error: "Unauthorized" };
-    await prisma.note.update({ where: { id }, data: { archived: !note.archived } });
-    revalidatePath("/notes");
-
-    return { success: true };
-  } catch {
-    return { error: "Failed to archive note" };
   }
 }
 

@@ -1,14 +1,12 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Search, Loader2, ChevronDown } from "lucide-react";
+import { Search, Loader2, ChevronDown, X, Bookmark } from "lucide-react";
 import { ResourceItem } from "./resource-item";
-import { ResourceFilters } from "./resource-filters";
-import { ResourceEmpty } from "./resource-empty";
-import { ResourceDialog } from "@/components/vaults/resource-dialog";
-import { fetchMoreResources } from "@/actions/resources";
-import { stagger, fadeInUp } from "@/lib/motion";
+import { EmptyState } from "@/components/shared/empty-state";
+import { fetchMoreResources, createResource } from "@/actions/resources";
+import { fadeInUp, stagger } from "@/lib/motion";
 
 interface Resource {
   id: string;
@@ -36,9 +34,10 @@ interface ResourceListProps {
   onTagChange?: (tag: string | null) => void;
   onSortChange?: (sort: "newest" | "oldest") => void;
   onItemsUpdate?: (items: Resource[]) => void;
+  favoritesOnly?: boolean;
 }
 
-export function ResourceList({ initialItems, nextCursor: initialCursor, allCategories, allTags, selectedId, onSelect, selectedCategory = null, selectedTag = null, sortBy = "newest", onCategoryChange, onTagChange, onSortChange, onItemsUpdate }: ResourceListProps) {
+export function ResourceList({ initialItems, nextCursor: initialCursor, selectedId, onSelect, selectedCategory = null, selectedTag = null, sortBy = "newest", onCategoryChange, onTagChange, onItemsUpdate, favoritesOnly }: ResourceListProps) {
   const [items, setItems] = useState<Resource[]>(initialItems);
   const [cursor, setCursor] = useState<string | null>(initialCursor);
   const [loading, setLoading] = useState(false);
@@ -46,8 +45,7 @@ export function ResourceList({ initialItems, nextCursor: initialCursor, allCateg
 
   const setCategory = onCategoryChange || ((cat: string | null) => {});
   const setTag = onTagChange || ((tag: string | null) => {});
-  const changeSort = onSortChange || ((sort: "newest" | "oldest") => {});
-  const [dialogOpen, setDialogOpen] = useState(false);
+
 
   async function loadMore() {
     if (loading || !cursor) return;
@@ -86,6 +84,10 @@ export function ResourceList({ initialItems, nextCursor: initialCursor, allCateg
       result = result.filter((r) => r.tags.includes(selectedTag));
     }
 
+    if (favoritesOnly) {
+      result = result.filter((r) => r.favorite);
+    }
+
     result.sort((a, b) => {
       if (sortBy === "newest") return b.createdAt.getTime() - a.createdAt.getTime();
       return a.createdAt.getTime() - b.createdAt.getTime();
@@ -94,185 +96,141 @@ export function ResourceList({ initialItems, nextCursor: initialCursor, allCateg
     return result;
   }, [items, searchQuery, selectedCategory, selectedTag, sortBy]);
 
-  const sections = useMemo(() => {
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const thisWeek = new Date(today);
-    thisWeek.setDate(thisWeek.getDate() - thisWeek.getDay());
-    const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-
-    return {
-      favorites: filtered.filter((r) => r.favorite),
-      today: filtered.filter((r) => !r.favorite && r.createdAt >= today),
-      thisWeek: filtered.filter((r) => !r.favorite && r.createdAt < today && r.createdAt >= thisWeek),
-      thisMonth: filtered.filter((r) => !r.favorite && r.createdAt < thisWeek && r.createdAt >= thisMonth),
-      earlier: filtered.filter((r) => !r.favorite && r.createdAt < thisMonth),
-    };
-  }, [filtered]);
-
   const hasSearch = searchQuery.trim().length > 0;
+  const hasFilters = selectedCategory || selectedTag;
+  const listRef = useRef<HTMLDivElement>(null);
+  const cardRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (!onSelect || filtered.length === 0) return;
+      const currentIndex = selectedId ? filtered.findIndex((r) => r.id === selectedId) : -1;
+
+      if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+        e.preventDefault();
+        const direction = e.key === "ArrowDown" ? 1 : -1;
+        let nextIndex = currentIndex + direction;
+        if (nextIndex < 0) nextIndex = filtered.length - 1;
+        if (nextIndex >= filtered.length) nextIndex = 0;
+        const nextId = filtered[nextIndex].id;
+        onSelect(nextId);
+        cardRefs.current.get(nextId)?.scrollIntoView({ block: "nearest" });
+      }
+
+      if (e.key === "Escape" && selectedId) {
+        e.preventDefault();
+        onSelect(null);
+      }
+    },
+    [selectedId, filtered, onSelect]
+  );
+
+  function setCardRef(id: string, el: HTMLDivElement | null) {
+    if (el) cardRefs.current.set(id, el);
+    else cardRefs.current.delete(id);
+  }
 
   return (
-    <>
-      <div className="space-y-5">
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            <input
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search resources, repositories, articles..."
-              className="flex h-12 w-full rounded-xl border border-border bg-card pl-12 pr-4 text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all"
-            />
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 items-center gap-2 hidden sm:flex">
-              <kbd className="text-[10px] text-muted-foreground border border-border rounded px-1.5 py-0.5 bg-muted">⌘K</kbd>
-            </div>
-          </div>
-
-          <ResourceFilters
-            allCategories={allCategories}
-            allTags={allTags}
-            selectedCategory={selectedCategory}
-            selectedTag={selectedTag}
-            sortBy={sortBy}
-            onCategoryChange={setCategory}
-            onTagChange={setTag}
-            onSortChange={changeSort}
+    <div ref={listRef} tabIndex={-1} onKeyDown={handleKeyDown} className="outline-none">
+      <div className="space-y-4">
+        <div className="relative">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search resources, repositories, articles..."
+            className="flex h-10 w-full rounded-lg border border-border bg-card pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/20 transition-all"
           />
-
-          <div className="flex items-center gap-4 text-xs text-muted-foreground">
-            <span>{items.length} resources</span>
-            <span className="text-border">&middot;</span>
-            <span>{filtered.length} shown</span>
-            {sections.favorites.length > 0 && (
-              <>
-                <span className="text-border">&middot;</span>
-                <span className="text-amber-400">{sections.favorites.length} favorites</span>
-              </>
-            )}
+          <div className="absolute right-2 top-1/2 -translate-y-1/2 items-center gap-2 hidden sm:flex">
+            <kbd className="text-[10px] text-muted-foreground border border-border rounded px-1.5 py-0.5 bg-muted">⌘K</kbd>
           </div>
-
-          {filtered.length === 0 ? (
-            <ResourceEmpty hasSearch={hasSearch} searchQuery={searchQuery} onCreate={() => setDialogOpen(true)} />
-          ) : (
-            <div className="space-y-10">
-              {sections.favorites.length > 0 && (
-                <Section label="Favorites" count={sections.favorites.length}>
-                  <motion.div
-                    variants={stagger.container}
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true, margin: "-30px" }}
-                  >
-                    {sections.favorites.map((r) => (
-                      <motion.div key={r.id} variants={fadeInUp}>
-                        <ResourceItem resource={r} isSelected={selectedId === r.id} onSelect={onSelect} />
-                      </motion.div>
-                    ))}
-                  </motion.div>
-                </Section>
-              )}
-
-              {sections.today.length > 0 && (
-                <Section label="Today" count={sections.today.length}>
-                  <motion.div
-                    variants={stagger.container}
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true, margin: "-30px" }}
-                  >
-                    {sections.today.map((r) => (
-                      <motion.div key={r.id} variants={fadeInUp}>
-                        <ResourceItem resource={r} isSelected={selectedId === r.id} onSelect={onSelect} />
-                      </motion.div>
-                    ))}
-                  </motion.div>
-                </Section>
-              )}
-
-              {sections.thisWeek.length > 0 && (
-                <Section label="This Week" count={sections.thisWeek.length}>
-                  <motion.div
-                    variants={stagger.container}
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true, margin: "-30px" }}
-                  >
-                    {sections.thisWeek.map((r) => (
-                      <motion.div key={r.id} variants={fadeInUp}>
-                        <ResourceItem resource={r} isSelected={selectedId === r.id} onSelect={onSelect} />
-                      </motion.div>
-                    ))}
-                  </motion.div>
-                </Section>
-              )}
-
-              {sections.thisMonth.length > 0 && (
-                <Section label="This Month" count={sections.thisMonth.length}>
-                  <motion.div
-                    variants={stagger.container}
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true, margin: "-30px" }}
-                  >
-                    {sections.thisMonth.map((r) => (
-                      <motion.div key={r.id} variants={fadeInUp}>
-                        <ResourceItem resource={r} isSelected={selectedId === r.id} onSelect={onSelect} />
-                      </motion.div>
-                    ))}
-                  </motion.div>
-                </Section>
-              )}
-
-              {sections.earlier.length > 0 && (
-                <Section label="Earlier" count={sections.earlier.length}>
-                  <motion.div
-                    variants={stagger.container}
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true, margin: "-30px" }}
-                  >
-                    {sections.earlier.map((r) => (
-                      <motion.div key={r.id} variants={fadeInUp}>
-                        <ResourceItem resource={r} isSelected={selectedId === r.id} onSelect={onSelect} />
-                      </motion.div>
-                    ))}
-                  </motion.div>
-                </Section>
-              )}
-
-              {cursor && (
-                <div className="flex justify-center pt-2 pb-8">
-                  <button
-                    onClick={loadMore}
-                    disabled={loading}
-                    className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-6 py-2.5 text-sm font-medium text-foreground hover:bg-muted hover:scale-[1.02] transition-all duration-150 disabled:opacity-50"
-                  >
-                    {loading ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <ChevronDown className="h-4 w-4" />
-                    )}
-                    {loading ? "Loading..." : "Load more"}
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
         </div>
 
-      <ResourceDialog open={dialogOpen} onOpenChange={setDialogOpen} />
-    </>
-  );
-}
+        {/* Active filter chips */}
+        {hasFilters && (
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {selectedCategory && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-muted/50 text-muted-foreground hover:bg-muted/80 hover:scale-[1.03] transition-all">
+                {selectedCategory}
+                <button onClick={() => setCategory(null)} className="flex h-4 w-4 items-center justify-center rounded-full hover:bg-muted/60 transition-all">
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            )}
+            {selectedTag && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-muted/50 text-muted-foreground hover:bg-muted/80 hover:scale-[1.03] transition-all">
+                {selectedTag}
+                <button onClick={() => setTag(null)} className="flex h-4 w-4 items-center justify-center rounded-full hover:bg-muted/60 transition-all">
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            )}
+            <button
+              onClick={() => { setCategory(null); setTag(null); }}
+              className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Clear
+            </button>
+          </div>
+        )}
 
-function Section({ label, count, children }: { label: string; count: number; children: React.ReactNode }) {
-  return (
-    <section>
-      <div className="flex items-center gap-2 mb-4">
-        <h2 className="text-xs font-semibold text-section-foreground uppercase tracking-[0.1em]">{label}</h2>
-        <span className="text-[11px] text-muted-foreground px-1.5 py-0.5 rounded bg-muted">{count}</span>
+        {/* Count */}
+        <div className="text-xs text-muted-foreground">
+          {filtered.length} {filtered.length === 1 ? "resource" : "resources"}
+        </div>
+
+        {filtered.length === 0 ? (
+          <EmptyState
+            icon={Bookmark}
+            hasSearch={hasSearch}
+            searchQuery={searchQuery}
+            searchLabel="resources"
+            emptyTitle="Nothing saved yet"
+            emptyDescription="Paste your first repository, article, video, or documentation. Every resource you save becomes part of your developer knowledge."
+            actionLabel="Add Resource"
+            onCreate={async () => {
+              const formData = new FormData();
+              formData.set("title", "");
+              formData.set("url", "");
+              formData.set("category", "frontend");
+              formData.set("notes", "");
+              formData.set("reason", "");
+              formData.set("tags", "");
+              const result = await createResource(formData);
+              if (result.success && result.id) {
+                window.location.href = `/resources?id=${result.id}&new=true`;
+              }
+            }}
+          />
+        ) : (
+          <div className="space-y-2">
+            <motion.div variants={stagger.container} initial="hidden" animate="visible" className="divide-y divide-border/20">
+              {filtered.map((r) => (
+                <motion.div key={r.id} variants={fadeInUp} ref={(el) => setCardRef(r.id, el as HTMLDivElement | null)}>
+                  <ResourceItem resource={r} isSelected={r.id === selectedId} onSelect={onSelect} />
+                </motion.div>
+              ))}
+            </motion.div>
+
+            {cursor && (
+              <div className="pt-4 pb-8">
+                <button
+                  onClick={loadMore}
+                  disabled={loading}
+                  className="w-full py-2 text-center text-xs text-muted-foreground hover:text-foreground hover:bg-muted/30 rounded-lg transition-all cursor-pointer disabled:opacity-50"
+                >
+                  {loading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4" />
+                  )}
+                  {loading ? "Loading..." : "Load more"}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
-      {children}
-    </section>
+    </div>
   );
 }

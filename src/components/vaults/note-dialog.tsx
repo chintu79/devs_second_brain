@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { createNote, editNote } from "@/actions/notes";
 import { batchCreateReferences, type LinkItem } from "@/actions/references";
+import { toast } from "sonner";
 import { LinkPicker } from "@/components/shared/link-picker";
 import { TagInput } from "@/components/shared/tag-input";
 import { noteSchema } from "@/lib/schemas";
@@ -80,6 +81,7 @@ export function NoteDialog({ open, onOpenChange, note }: NoteDialogProps) {
       if (newId && links.length > 0) {
         await batchCreateReferences("note", newId, links);
       }
+      toast.success(isEdit ? "Note updated" : "Note created");
       router.refresh();
       onOpenChange(false);
     }
@@ -132,6 +134,7 @@ export function NoteDialog({ open, onOpenChange, note }: NoteDialogProps) {
                 <Label htmlFor="category">Category</Label>
                 <button
                   type="button" disabled={aiLoading !== null}
+                  title="AI suggests a category based on title and content"
                   onClick={async () => {
                     setServerError(null);
                     setAiLoading("category");
@@ -177,6 +180,7 @@ export function NoteDialog({ open, onOpenChange, note }: NoteDialogProps) {
                 <Label>Tags</Label>
                 <button
                   type="button" disabled={aiLoading !== null}
+                  title="AI suggests tags based on title and content"
                   onClick={async () => {
                     setServerError(null);
                     setAiLoading("tags");

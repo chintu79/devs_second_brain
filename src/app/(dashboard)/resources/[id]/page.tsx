@@ -6,20 +6,11 @@ import prisma from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
 import { LinkedItems } from "@/components/shared/linked-items";
 import { includeTags, flattenItemTags } from "@/lib/tags";
+import { RESOURCE_CATEGORY_COLORS } from "@/lib/constants";
 
 interface PageProps {
   params: Promise<{ id: string }>;
 }
-
-const categoryColors: Record<string, string> = {
-  frontend: "bg-sky-500/10 text-sky-400",
-  backend: "bg-emerald-500/10 text-emerald-400",
-  devops: "bg-purple-500/10 text-purple-400",
-  database: "bg-amber-500/10 text-amber-400",
-  mobile: "bg-rose-500/10 text-rose-400",
-  ai: "bg-violet-500/10 text-violet-400",
-  design: "bg-pink-500/10 text-pink-400",
-};
 
 export default async function ResourceDetailPage({ params }: PageProps) {
   const session = await auth();
@@ -30,7 +21,7 @@ export default async function ResourceDetailPage({ params }: PageProps) {
   if (!resource || (userId && resource.userId !== userId)) notFound();
 
   const item = flattenItemTags(resource);
-  const catColor = categoryColors[item.category] || "bg-muted text-muted-foreground";
+  const catColor = RESOURCE_CATEGORY_COLORS[item.category] || "bg-muted text-muted-foreground";
 
   let domain = item.url;
   try {
@@ -38,7 +29,7 @@ export default async function ResourceDetailPage({ params }: PageProps) {
   } catch {}
 
   return (
-    <div className="max-w-3xl">
+    <div className="max-w-3xl min-h-full">
       {/* Back */}
       <Link href="/resources">
         <Button variant="ghost" size="sm" className="h-8 gap-1.5 text-sm text-muted-foreground mb-4 -ml-2">

@@ -1,8 +1,8 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { FolderKanban, Link2, Sparkles, FileText, Clock, Star, Tag } from "lucide-react";
-import { cardHover } from "@/lib/motion";
+import { formatRelative } from "@/lib/utils";
+import { TYPE_CONFIG } from "@/lib/constants";
 
 type ResultType = "project" | "resource" | "prompt" | "note";
 
@@ -22,45 +22,34 @@ interface BaseResult {
 
 interface SearchResultCardProps {
   result: BaseResult;
+  matchReason?: string;
   selected?: boolean;
   onSelect: (id: string) => void;
 }
 
 const typeConfig: Record<ResultType, { icon: React.ComponentType<{ className?: string }>; label: string; color: string; border: string }> = {
-  project: { icon: FolderKanban, label: "Project", color: "text-blue-400", border: "border-l-blue-400/40" },
-  resource: { icon: Link2, label: "Resource", color: "text-amber-400", border: "border-l-amber-400/40" },
-  prompt: { icon: Sparkles, label: "Prompt", color: "text-purple-400", border: "border-l-purple-400/40" },
-  note: { icon: FileText, label: "Note", color: "text-emerald-400", border: "border-l-emerald-400/40" },
+  ...TYPE_CONFIG,
+  project: { ...TYPE_CONFIG.project, color: "text-blue-400", border: "border-l-blue-400/40" },
+  resource: { ...TYPE_CONFIG.resource, color: "text-amber-400", border: "border-l-amber-400/40" },
+  prompt: { ...TYPE_CONFIG.prompt, color: "text-purple-400", border: "border-l-purple-400/40" },
+  note: { ...TYPE_CONFIG.note, color: "text-emerald-400", border: "border-l-emerald-400/40" },
 };
 
-function formatTimeAgo(dateStr?: string): string {
-  if (!dateStr) return "";
-  const date = new Date(dateStr);
-  const diff = Date.now() - date.getTime();
-  const mins = Math.floor(diff / 60000);
-  const hrs = Math.floor(diff / 3600000);
-  const days = Math.floor(diff / 86400000);
-  if (mins < 1) return "now";
-  if (mins < 60) return `${mins}m ago`;
-  if (hrs < 24) return `${hrs}h ago`;
-  if (days < 7) return `${days}d ago`;
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-}
+
 
 function truncate(str: string, len: number): string {
   if (str.length <= len) return str;
   return str.slice(0, len).trimEnd() + "…";
 }
 
-export function SearchResultCard({ result, selected, onSelect }: SearchResultCardProps) {
+export function SearchResultCard({ result, matchReason, selected, onSelect }: SearchResultCardProps) {
   const config = typeConfig[result.type];
   const Icon = config.icon;
   const preview = result.description || result.content || "";
 
   return (
-    <motion.div
-      whileHover={cardHover}
-      className={`group relative rounded-xl border bg-card cursor-pointer border-l-2 w-full ${
+    <div
+      className={`group relative rounded-xl border bg-card cursor-pointer border-l-2 w-full transition-all duration-150 hover:scale-[1.01] ${
         selected ? "border-primary/40 border-l-primary shadow-sm" : `border-border ${config.border} hover:border-primary/20 hover:shadow-sm`
       }`}
       onClick={() => onSelect(result.id)}
@@ -86,6 +75,10 @@ export function SearchResultCard({ result, selected, onSelect }: SearchResultCar
               </p>
             )}
 
+            {matchReason && (
+              <p className="text-[11px] text-primary/60 mt-1.5 italic">Matches because {matchReason}</p>
+            )}
+
             <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mt-2 text-[11px] text-muted-foreground">
               {result.category && (
                 <span className="bg-muted/70 px-1.5 py-0.5 rounded capitalize">{result.category}</span>
@@ -99,7 +92,7 @@ export function SearchResultCard({ result, selected, onSelect }: SearchResultCar
               {result.updatedAt && (
                 <span className="flex items-center gap-1">
                   <Clock className="h-3 w-3" />
-                  {formatTimeAgo(result.updatedAt)}
+                  {formatRelative(result.updatedAt)}
                 </span>
               )}
               {result.tags && result.tags.length > 0 && (
@@ -112,6 +105,6 @@ export function SearchResultCard({ result, selected, onSelect }: SearchResultCar
           </div>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }

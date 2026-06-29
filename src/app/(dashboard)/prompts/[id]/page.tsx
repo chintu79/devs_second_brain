@@ -6,19 +6,11 @@ import prisma from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
 import { LinkedItems } from "@/components/shared/linked-items";
 import { includeTags, flattenItemTags, flattenListTags } from "@/lib/tags";
+import { PROMPT_CATEGORY_COLORS } from "@/lib/constants";
 
 interface PageProps {
   params: Promise<{ id: string }>;
 }
-
-const categoryColors: Record<string, string> = {
-  coding: "bg-sky-500/10 text-sky-400",
-  debugging: "bg-rose-500/10 text-rose-400",
-  architecture: "bg-purple-500/10 text-purple-400",
-  testing: "bg-emerald-500/10 text-emerald-400",
-  docs: "bg-amber-500/10 text-amber-400",
-  writing: "bg-pink-500/10 text-pink-400",
-};
 
 export default async function PromptDetailPage({ params }: PageProps) {
   const session = await auth();
@@ -29,7 +21,7 @@ export default async function PromptDetailPage({ params }: PageProps) {
   if (!prompt || (userId && prompt.userId !== userId)) notFound();
 
   const item = flattenItemTags(prompt);
-  const catColor = categoryColors[item.category] || "bg-muted text-muted-foreground";
+  const catColor = PROMPT_CATEGORY_COLORS[item.category] || "bg-muted text-muted-foreground";
 
   // Find related prompts (same category, excluding current)
   const rawRelated = userId
@@ -43,7 +35,7 @@ export default async function PromptDetailPage({ params }: PageProps) {
   const relatedPrompts = flattenListTags(rawRelated);
 
   return (
-    <div className="max-w-3xl">
+    <div className="max-w-3xl min-h-full">
       {/* Back */}
       <Link href="/prompts">
         <Button variant="ghost" size="sm" className="h-8 gap-1.5 text-sm text-muted-foreground mb-4 -ml-2">

@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
-import { ExternalLink, Heart, MoreHorizontal, Pencil, Trash2, Bookmark } from "lucide-react";
-import { cardHover } from "@/lib/motion";
+import { ExternalLink, Heart, Trash2 } from "lucide-react";
+import { formatRelative } from "@/lib/utils";
 import { deleteResource, toggleFavorite } from "@/actions/resources";
-import { ResourceDialog } from "@/components/vaults/resource-dialog";
+import { toast } from "sonner";
+import { RESOURCE_CATEGORY_COLORS } from "@/lib/constants";
 
 interface Resource {
   id: string;
@@ -25,37 +25,31 @@ interface ResourceItemProps {
   onSelect?: (id: string | null) => void;
 }
 
-const categoryColors: Record<string, string> = {
-  frontend: "bg-sky-500/10 text-sky-400",
-  backend: "bg-emerald-500/10 text-emerald-400",
-  devops: "bg-purple-500/10 text-purple-400",
-  database: "bg-amber-500/10 text-amber-400",
-  mobile: "bg-rose-500/10 text-rose-400",
-  ai: "bg-violet-500/10 text-violet-400",
-  design: "bg-pink-500/10 text-pink-400",
-};
-
 export function ResourceItem({ resource, isSelected, onSelect }: ResourceItemProps) {
-  const [open, setOpen] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
   const [isFav, setIsFav] = useState(resource.favorite);
   const [favPending, setFavPending] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  async function handleDelete() {
+  async function handleDelete(e: React.MouseEvent) {
+    e.stopPropagation();
     if (deleting) return;
-    if (confirm("Delete this resource?")) {
-      setDeleting(true);
-      await deleteResource(resource.id);
-      setDeleting(false);
-    }
+    setDeleting(true);
+    await deleteResource(resource.id);
+    setDeleting(false);
+    toast.success("Resource deleted");
   }
 
-  async function handleFavorite() {
+  async function handleFavorite(e: React.MouseEvent) {
+    e.stopPropagation();
     if (favPending) return;
     setFavPending(true);
     setIsFav(!isFav);
-    await toggleFavorite(resource.id, resource.favorite);
+    try {
+      await toggleFavorite(resource.id, resource.favorite);
+    } catch {
+      setIsFav(isFav);
+      toast.error("Failed to toggle favorite");
+    }
     setFavPending(false);
   }
 
@@ -64,137 +58,74 @@ export function ResourceItem({ resource, isSelected, onSelect }: ResourceItemPro
     domain = new URL(resource.url).hostname.replace("www.", "");
   } catch {}
 
-  const catColor = categoryColors[resource.category] || "bg-muted text-muted-foreground";
+  const catColor = RESOURCE_CATEGORY_COLORS[resource.category] || "bg-muted text-muted-foreground";
 
   return (
-    <>
-      <motion.div
-        whileHover={cardHover}
-        className={`group relative rounded-xl border bg-card w-full transition-all duration-200 hover:border-[var(--border-hover)] hover:shadow-[var(--shadow-elevated)] ${isSelected ? "border-primary/40 shadow-[var(--shadow-elevated)]" : "border-border"}`}>
-        <div className="px-5 py-4">
-          <div className="flex items-start gap-4">
-            {/* Icon */}
-            <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${isFav ? "bg-primary/10" : "bg-muted"} transition-colors`}>
-              <Bookmark className={`h-4 w-4 ${isFav ? "text-primary" : "text-secondary-foreground"} transition-colors`} />
-            </div>
-
-            {/* Content */}
-            <div className="flex-1 min-w-0">
-              {/* Title + Domain */}
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <button onClick={() => onSelect?.(resource.id)} className="text-left group/title">
-                    <h3 className="text-base font-semibold text-foreground group-hover/title:text-primary transition-colors truncate">
-                      {resource.title}
-                    </h3>
-                  </button>
-                  <div className="flex items-center gap-2.5 mt-1">
-                    <span className={`text-[11px] font-medium px-1.5 py-0.5 rounded ${catColor}`}>{resource.category}</span>
-                    <a href={resource.url} target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1">
-                      {domain}
-                      <ExternalLink className="h-3 w-3" />
-                    </a>
-                  </div>
-                </div>
-              </div>
-
-              {/* Reason - context first */}
-              {resource.reason && (
-                <div className="mt-2.5 flex items-start gap-2 rounded-lg bg-muted/50 px-3 py-2">
-                  <span className="text-xs font-medium text-secondary-foreground shrink-0">Saved for:</span>
-                  <span className="text-xs text-foreground/80 leading-relaxed">{resource.reason}</span>
-                </div>
-              )}
-
-              {/* Tags + Date */}
-              <div className="flex items-center gap-3 mt-2.5">
-                {resource.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
-                    {resource.tags.slice(0, 4).map((tag) => (
-                      <span key={tag} className="text-[11px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">{tag}</span>
-                    ))}
-                    {resource.tags.length > 4 && (
-                      <span className="text-[11px] text-muted-foreground">+{resource.tags.length - 4}</span>
-                    )}
-                  </div>
-                )}
-                <span className="text-xs text-muted-foreground ml-auto">{formatDate(resource.createdAt)}</span>
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex items-center gap-0.5 shrink-0">
+    <div className={`border-b border-border last:border-b-0 transition-colors ${isSelected ? "bg-primary/[0.04]" : "hover:bg-muted/60"}`}>
+      <button
+        onClick={() => onSelect?.(resource.id)}
+        className={`w-full text-left px-3 py-2.5 rounded-lg transition-all duration-150 hover:scale-[1.02] ${
+          isSelected ? "border-l-2 border-primary" : "border-l-2 border-transparent hover:border-l-2 hover:border-border/30"
+        }`}
+      >
+        <div className="flex items-start gap-2.5">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <span className={`text-sm font-medium truncate flex-1 ${isSelected ? "text-foreground" : "text-foreground/85"}`}>
+                {resource.title}
+              </span>
               <button
                 onClick={handleFavorite}
                 disabled={favPending}
                 aria-label={isFav ? "Unfavorite" : "Favorite"}
-                className={`flex h-7 w-7 items-center justify-center rounded-md transition-all ${
-                  isFav ? "text-amber-400 hover:text-amber-300" : "text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100"
-                }`}
+                className={`flex h-7 w-7 items-center justify-center rounded-md transition-colors ${isFav ? "text-amber-400" : "text-muted-foreground hover:text-amber-400"}`}
               >
-                <Heart className={`h-3.5 w-3.5 ${isFav ? "fill-current" : ""}`} />
+                <Heart className={`h-3 w-3 ${isFav ? "fill-amber-400" : ""}`} />
               </button>
-              <a
-                href={resource.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Open in new tab"
-                className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-all"
-              >
-                <ExternalLink className="h-3.5 w-3.5" />
-              </a>
-              <div className="relative">
-                <button
-                  onClick={() => setMenuOpen(!menuOpen)}
-                  aria-label="More options"
-                  className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-all"
-                >
-                  <MoreHorizontal className="h-3.5 w-3.5" />
-                </button>
-                {menuOpen && (
-                  <>
-                    <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
-                    <div className="absolute right-0 top-full mt-1 z-50 w-36 rounded-lg border border-border bg-card shadow-lg py-1">
-                      <button
-                        onClick={() => { setOpen(true); setMenuOpen(false); }}
-                        className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-foreground hover:bg-muted transition-colors"
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => { handleDelete(); setMenuOpen(false); }}
-                        disabled={deleting}
-                        className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-destructive hover:bg-destructive/10 transition-colors"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                        Delete
-                      </button>
-                    </div>
-                  </>
+            </div>
+            <div className="flex items-center gap-2 mt-1 text-[11px] text-muted-foreground/50">
+              <span className={`text-[11px] font-medium px-1.5 py-0.5 rounded ${catColor}`}>{resource.category}</span>
+              <span>{domain}</span>
+              <span>{formatRelative(resource.createdAt)}</span>
+            </div>
+            {resource.reason && (
+              <p className="text-xs text-muted-foreground/60 mt-0.5 truncate">{resource.reason}</p>
+            )}
+            {resource.tags.length > 0 && (
+              <div className="flex items-center gap-1.5 mt-1.5">
+                {resource.tags.slice(0, 3).map((tag) => (
+                  <span key={tag} className="text-[11px] text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded">{tag}</span>
+                ))}
+                {resource.tags.length > 3 && (
+                  <span className="text-[11px] text-muted-foreground/50">+{resource.tags.length - 3}</span>
                 )}
               </div>
-            </div>
+            )}
+          </div>
+          <div className="flex items-center gap-0.5 shrink-0">
+            <a
+              href={resource.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              aria-label="Open in new tab"
+              className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all"
+            >
+              <ExternalLink className="h-3 w-3" />
+            </a>
+            <button
+              onClick={handleDelete}
+              disabled={deleting}
+              className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all disabled:opacity-50"
+              aria-label="Delete resource"
+            >
+              <Trash2 className="h-3 w-3" />
+            </button>
           </div>
         </div>
-      </motion.div>
-      <ResourceDialog resource={resource} open={open} onOpenChange={setOpen} />
-    </>
+      </button>
+    </div>
   );
 }
 
-function formatDate(date: Date): string {
-  const now = Date.now();
-  const diff = now - date.getTime();
-  const minutes = Math.floor(diff / 60000);
-  const hours = Math.floor(diff / 3600000);
-  const days = Math.floor(diff / 86400000);
 
-  if (minutes < 1) return "Just now";
-  if (minutes < 60) return `${minutes}m ago`;
-  if (hours < 24) return `${hours}h ago`;
-  if (days < 7) return `${days}d ago`;
-  if (days < 30) return `${Math.floor(days / 7)}w ago`;
-  if (days < 365) return `${Math.floor(days / 30)}mo ago`;
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-}

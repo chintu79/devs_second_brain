@@ -15,8 +15,6 @@ export async function createPrompt(formData: FormData) {
   const useCase = formData.get("useCase") as string;
   const tagsString = formData.get("tags") as string;
 
-  if (!title || !prompt || !category) return { error: "Title, prompt, and category are required" };
-
   const tagNames = parseTagNames(tagsString || "");
 
   try {
@@ -24,6 +22,7 @@ export async function createPrompt(formData: FormData) {
       data: { title, prompt, category, useCase: useCase || "", userId: session.user.id, tags: buildTagCreate(tagNames, session.user.id) },
     });
     revalidatePath("/prompts");
+    revalidatePath("/");
     if (tagNames.length > 0) revalidatePath("/tags");
 
     return { success: true, id: created.id };

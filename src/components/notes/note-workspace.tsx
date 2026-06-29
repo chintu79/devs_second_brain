@@ -2,13 +2,16 @@
 
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Search, Plus, Loader2, ChevronDown } from "lucide-react";
+import { Search, Plus, ChevronDown, X } from "lucide-react";
 import { NoteSidebar } from "./note-sidebar";
 import { NoteList } from "./note-list";
 import { NoteReaderPanel } from "./note-reader-panel";
-import { NoteDialog } from "@/components/vaults/note-dialog";
-import { deleteNote } from "@/actions/notes";
+
+import { createNote, deleteNote, toggleNoteFavorite } from "@/actions/notes";
+
+const NOTE_TEMPLATE = "## Ideas\n\n\n## References\n\n\n## Questions\n\n\n## Summary\n";
 import { useSearchParams, useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 interface Note {
   id: string;
@@ -61,7 +64,6 @@ export function NoteWorkspace({ notes, resources, prompts, projects }: NoteWorks
   const [activeSection, setActiveSection] = useState("all");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [activeTag, setActiveTag] = useState<string | null>(null);
-  const [createOpen, setCreateOpen] = useState(false);
   const PAGE_SIZE = 20;
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -163,6 +165,7 @@ export function NoteWorkspace({ notes, resources, prompts, projects }: NoteWorks
     [router, searchParams]
   );
 
+
   function handleSelect(id: string) {
     setSelectedId(id === selectedId ? null : id);
   }
@@ -199,7 +202,20 @@ export function NoteWorkspace({ notes, resources, prompts, projects }: NoteWorks
   );
 
   function handleCreate() {
-    setCreateOpen(true);
+    const formData = new FormData();
+    formData.set("title", "");
+    formData.set("content", NOTE_TEMPLATE);
+    formData.set("category", "personal");
+    formData.set("tags", "");
+    createNote(formData).then((result) => {
+      if (result.success && result.id) {
+        window.location.href = `/notes?id=${result.id}&new=true`;
+      }
+    });
+  }
+
+  function handleTagClick(tag: string) {
+    setActiveTag(tag);
   }
 
   const favCount = notes.filter((n) => n.favorite).length;
@@ -231,17 +247,17 @@ export function NoteWorkspace({ notes, resources, prompts, projects }: NoteWorks
         {/* Search */}
         <div className="px-4 pt-3 pb-2 border-b border-border/30">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input
               ref={searchInputRef}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search notes..."
-              className="flex h-9 w-full rounded-md border border-border bg-card pl-9 pr-14 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/20 transition-all"
+              className="flex h-10 w-full rounded-lg border border-border bg-card pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/20 transition-all"
             />
             <div className="absolute right-1.5 top-1/2 -translate-y-1/2">
               <button
-                onClick={() => setCreateOpen(true)}
+                onClick={handleCreate}
                 className="flex items-center gap-1 px-2 py-1 rounded-md bg-primary text-primary-foreground text-[11px] font-medium hover:bg-primary/90 hover:scale-[1.03] transition-all duration-150"
               >
                 <Plus className="h-3 w-3" />
@@ -251,36 +267,55 @@ export function NoteWorkspace({ notes, resources, prompts, projects }: NoteWorks
           </div>
         </div>
 
-        {/* Results count */}
-        <div className="px-4 py-2 border-b border-border/20">
+        {/* Results count + filter chips */}
+        <div className="px-4 py-2 border-b border-border/20 space-y-2">
           <span className="text-xs text-muted-foreground">
             {filtered.length} note{filtered.length !== 1 ? "s" : ""}
             {searchQuery.trim() && <> &middot; searching &ldquo;{searchQuery}&rdquo;</>}
           </span>
+          {(activeCategory || activeTag) && (
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {activeCategory && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-muted/50 text-muted-foreground hover:bg-muted/80 hover:scale-[1.03] transition-all">
+                  {activeCategory}
+                  <button onClick={() => setActiveCategory(null)} className="flex h-4 w-4 items-center justify-center rounded-full hover:bg-muted/60 transition-all" aria-label="Clear category filter">
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              )}
+              {activeTag && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-muted/50 text-muted-foreground hover:bg-muted/80 hover:scale-[1.03] transition-all">
+                  #{activeTag}
+                  <button onClick={() => setActiveTag(null)} className="flex h-4 w-4 items-center justify-center rounded-full hover:bg-muted/60 transition-all" aria-label="Clear tag filter">
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
-            <NoteList
-              ref={listRef}
-              notes={displayedNotes}
-              projects={projects}
-              selectedId={selectedId}
-              onSelect={setSelectedId}
-              onDelete={(id) => {
-                deleteNote(id).then(() => {
-                  if (selectedIdRef.current === id) {
-                    router.replace("/notes");
-                  } else {
-                    router.refresh();
-                  }
-                });
-              }}
-              onFavorite={() => { }}
-            />
+        <NoteList
+          ref={listRef}
+          notes={displayedNotes}
+          selectedId={selectedId}
+          onSelect={setSelectedId}
+          onDelete={(id) => {
+            deleteNote(id).then(() => {
+              if (selectedIdRef.current === id) {
+                router.replace("/notes");
+              } else {
+                router.refresh();
+              }
+            });
+          }}
+          onFavorite={(id) => { toggleNoteFavorite(id).catch(() => toast.error("Failed to toggle favorite")); }}
+        />
 
         {hasMore && (
           <motion.button
             onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
-            className="flex items-center justify-center gap-2 w-full py-3 text-xs text-muted-foreground hover:text-foreground transition-colors border-t border-border/20 mt-1"
+            className="w-full py-2 text-center text-xs text-muted-foreground hover:text-foreground hover:bg-muted/30 rounded-lg transition-all cursor-pointer"
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.98 }}
           >
@@ -302,11 +337,11 @@ export function NoteWorkspace({ notes, resources, prompts, projects }: NoteWorks
             allProjects={projects}
             onClose={handleClose}
             onUpdate={() => router.refresh()}
+            onTagClick={handleTagClick}
+            autoEdit={searchParams.get("new") === "true"}
           />
         )}
       </AnimatePresence>
-
-      <NoteDialog open={createOpen} onOpenChange={setCreateOpen} />
     </div>
   );
 }

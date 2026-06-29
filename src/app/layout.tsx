@@ -7,28 +7,17 @@ import "./globals.css";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import { AccentProvider } from "@/components/theme/accent-provider";
-import { AgentationWrapper } from "@/components/agentation";
+import { Agentation } from "agentation";
 
 export const metadata: Metadata = {
   title: "Dev Second Brain",
   description: "Your developer knowledge management platform.",
 };
 
-const themeScript = `
-  (function() {
-    var theme = localStorage.getItem('theme');
-    var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    if (theme === 'dark' || (!theme && prefersDark)) {
-      document.documentElement.classList.add('dark');
-    }
-  })();
-`;
-
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="h-full" data-scroll-behavior="smooth" suppressHydrationWarning>
+    <html lang="en" className="h-full dark" data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <meta name="theme-color" content="#6366f1" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -39,7 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <AccentProvider>
             {children}
             <Toaster position="bottom-right" richColors closeButton />
-            <AgentationWrapper />
+            <Agentation />
           </AccentProvider>
         </ThemeProvider>
       </body>

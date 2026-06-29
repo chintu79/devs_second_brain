@@ -17,42 +17,6 @@ export interface ReferenceGroup {
   items: LinkItem[];
 }
 
-export async function createReference(fromType: ItemType, fromId: string, toType: ItemType, toId: string) {
-  const session = await auth();
-  if (!session?.user?.id) return { error: "Not authenticated" };
-
-  if (fromType === toType && fromId === toId) {
-    return { error: "Cannot reference itself" };
-  }
-
-  try {
-    await prisma.reference.create({
-      data: { fromType, fromId, toType, toId, userId: session.user.id },
-    });
-    revalidatePath(`/${fromType}s/${fromId}`);
-    revalidatePath(`/${toType}s/${toId}`);
-    return { success: true };
-  } catch {
-    return { error: "Reference already exists" };
-  }
-}
-
-export async function removeReference(fromType: ItemType, fromId: string, toType: ItemType, toId: string) {
-  const session = await auth();
-  if (!session?.user?.id) return { error: "Not authenticated" };
-
-  try {
-    await prisma.reference.deleteMany({
-      where: { fromType, fromId, toType, toId, userId: session.user.id },
-    });
-    revalidatePath(`/${fromType}s/${fromId}`);
-    revalidatePath(`/${toType}s/${toId}`);
-    return { success: true };
-  } catch {
-    return { error: "Failed to remove reference" };
-  }
-}
-
 export async function batchCreateReferences(
   fromType: ItemType,
   fromId: string,

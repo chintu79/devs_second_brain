@@ -3,7 +3,6 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { motion } from "framer-motion"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Eye, EyeOff, LogIn } from "lucide-react"
@@ -11,7 +10,6 @@ import { login } from "@/actions/auth"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { stagger, fadeInUp } from "@/lib/motion"
 import { loginSchema } from "@/lib/schemas"
 
 type LoginFormValues = {
@@ -45,13 +43,8 @@ export default function LoginPage() {
   }
 
   return (
-    <motion.div
-      className="w-full max-w-sm"
-      variants={stagger.container}
-      initial="hidden"
-      animate="visible"
-    >
-      <motion.div variants={fadeInUp} className="mb-8">
+    <div className="w-full max-w-sm">
+      <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
           <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[var(--color-dashboard)]/10 md:hidden">
             <LogIn className="h-5 w-5 text-[var(--color-dashboard)]" />
@@ -61,21 +54,16 @@ export default function LoginPage() {
         <p className="text-sm text-[var(--text-muted)]">
           Sign in to your account
         </p>
-      </motion.div>
+      </div>
 
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
         {serverError && (
-          <motion.div
-            variants={fadeInUp}
-            initial="hidden"
-            animate="visible"
-            className="rounded-xl border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive"
-          >
+          <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">
             {serverError}
-          </motion.div>
+          </div>
         )}
 
-        <motion.div variants={fadeInUp} className="space-y-2">
+        <div className="space-y-2">
           <Label htmlFor="email" className="text-sm text-[var(--text-secondary)]">
             Email
           </Label>
@@ -89,9 +77,9 @@ export default function LoginPage() {
           {errors.email && (
             <p className="text-xs text-destructive">{errors.email.message}</p>
           )}
-        </motion.div>
+        </div>
 
-        <motion.div variants={fadeInUp} className="space-y-2">
+        <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label htmlFor="password" className="text-sm text-[var(--text-secondary)]">
               Password
@@ -123,9 +111,9 @@ export default function LoginPage() {
           {errors.password && (
             <p className="text-xs text-destructive">{errors.password.message}</p>
           )}
-        </motion.div>
+        </div>
 
-        <motion.div variants={fadeInUp}>
+        <div>
           <Button
             type="submit"
             className="w-full h-11 rounded-xl text-sm font-medium"
@@ -133,9 +121,9 @@ export default function LoginPage() {
           >
             {isSubmitting ? "Signing in..." : "Sign in"}
           </Button>
-        </motion.div>
+        </div>
 
-        <motion.div variants={fadeInUp} className="text-center">
+        <div className="text-center">
           <p className="text-sm text-[var(--text-muted)]">
             Don&apos;t have an account?{" "}
             <Link
@@ -145,8 +133,8 @@ export default function LoginPage() {
               Register
             </Link>
           </p>
-        </motion.div>
+        </div>
       </form>
-    </motion.div>
+    </div>
   )
 }

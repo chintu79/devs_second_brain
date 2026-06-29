@@ -1,16 +1,14 @@
 "use client";
 
-import { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { useState, useMemo, useCallback, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Search, Loader2, ChevronDown } from "lucide-react";
+import { Search, Loader2, ChevronDown, X, Sparkles } from "lucide-react";
 import { PromptCard } from "./prompt-card";
-import { PromptContextPanel } from "./prompt-context-panel";
 import { PromptPreviewPanel } from "./prompt-preview-panel";
-import { PromptFilters } from "./prompt-filters";
-import { PromptEmpty } from "./prompt-empty";
-import { fetchMorePrompts } from "@/actions/prompts";
-import { stagger, fadeInUp } from "@/lib/motion";
+import { EmptyState } from "@/components/shared/empty-state";
+import { fetchMorePrompts, createPrompt } from "@/actions/prompts";
+import { fadeInUp, stagger } from "@/lib/motion";
 
 interface Prompt {
   id: string;
@@ -32,9 +30,11 @@ interface PromptListProps {
   sortMode?: string;
   selectedCategory?: string | null;
   onCategoryChange?: (cat: string | null) => void;
+  onTagClick?: (tag: string) => void;
+  favoritesOnly?: boolean;
 }
 
-export function PromptList({ initialItems, nextCursor: initialCursor, categories, sortMode, selectedCategory, onCategoryChange }: PromptListProps) {
+export function PromptList({ initialItems, nextCursor: initialCursor, categories, sortMode, selectedCategory, onCategoryChange, onTagClick, favoritesOnly }: PromptListProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const selectedId = searchParams.get("id");
@@ -43,10 +43,11 @@ export function PromptList({ initialItems, nextCursor: initialCursor, categories
   const [cursor, setCursor] = useState<string | null>(initialCursor);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [dialogOpen, setDialogOpen] = useState(false);
   const [keyboardMode, setKeyboardMode] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+
+  const setCategory = onCategoryChange || ((cat: string | null) => {});
 
   async function loadMore() {
     if (loading || !cursor) return;
@@ -78,6 +79,10 @@ export function PromptList({ initialItems, nextCursor: initialCursor, categories
       result = result.filter((p) => p.category === selectedCategory);
     }
 
+    if (favoritesOnly) {
+      result = result.filter((p) => p.favorite);
+    }
+
     if (sortMode === "name") {
       result.sort((a, b) => a.title.localeCompare(b.title));
     } else if (sortMode === "popular") {
@@ -91,17 +96,7 @@ export function PromptList({ initialItems, nextCursor: initialCursor, categories
     return result;
   }, [items, searchQuery, selectedCategory, sortMode]);
 
-  const sections = useMemo(() => {
-    return {
-      favorites: filtered.filter((p) => p.favorite),
-      recent: filtered.filter((p) => !p.favorite && p.lastUsedAt).sort((a, b) => (b.lastUsedAt?.getTime() || 0) - (a.lastUsedAt?.getTime() || 0)),
-      all: filtered.filter((p) => !p.favorite && !p.lastUsedAt),
-    };
-  }, [filtered]);
-
-  const flatList = useMemo(() => {
-    return [...sections.favorites, ...sections.recent, ...sections.all];
-  }, [sections]);
+  const flatList = filtered;
 
   const selectedPrompt = useMemo(() => {
     if (!selectedId) return null;
@@ -122,6 +117,7 @@ export function PromptList({ initialItems, nextCursor: initialCursor, categories
     },
     [router, searchParams]
   );
+
 
   function handleSelect(id: string) {
     setKeyboardMode(false);
@@ -169,97 +165,85 @@ export function PromptList({ initialItems, nextCursor: initialCursor, categories
   }
 
   const hasSearch = searchQuery.trim().length > 0;
+  const hasFilters = !!selectedCategory;
 
   return (
     <div className="flex h-full gap-0" onKeyDown={handleKeyDown}>
       <div className="w-[474px] shrink-0 transition-all duration-200" ref={listRef} tabIndex={-1}>
-        <div className="space-y-5 pr-5">
+        <div className="space-y-4 pr-5">
           <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search prompts, workflows, agents..."
-              className="flex h-12 w-full rounded-xl border border-border bg-card pl-12 pr-4 text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all"
+              className="flex h-10 w-full rounded-lg border border-border bg-card pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/20 transition-all"
             />
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 items-center gap-2 hidden sm:flex">
-            </div>
           </div>
 
-          <PromptFilters
-            categories={categories}
-            selectedCategory={selectedCategory ?? null}
-            onCategoryChange={onCategoryChange || ((cat: string | null) => {})}
-          />
+          {hasFilters && (
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-muted/50 text-muted-foreground hover:bg-muted/80 hover:scale-[1.03] transition-all">
+                {selectedCategory}
+                <button onClick={() => setCategory(null)} className="flex h-4 w-4 items-center justify-center rounded-full hover:bg-muted/60 transition-all">
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+              <button
+                onClick={() => setCategory(null)}
+                className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Clear
+              </button>
+            </div>
+          )}
 
-          <div className="flex items-center gap-4 text-xs text-muted-foreground">
-            <span>{items.length} prompt{items.length !== 1 ? "s" : ""}</span>
-            {sections.favorites.length > 0 && (
-              <>
-                <span className="text-border">&middot;</span>
-                <span className="text-amber-400">{sections.favorites.length} favorite{sections.favorites.length !== 1 ? "s" : ""}</span>
-              </>
-            )}
-            {sections.recent.length > 0 && (
-              <>
-                <span className="text-border">&middot;</span>
-                <span>{sections.recent.length} recently used</span>
-              </>
-            )}
+          <div className="text-xs text-muted-foreground">
+            {flatList.length} {flatList.length === 1 ? "prompt" : "prompts"}
           </div>
 
           {filtered.length === 0 ? (
-            <PromptEmpty hasSearch={hasSearch} searchQuery={searchQuery} onCreate={() => setDialogOpen(true)} />
+            <EmptyState
+              icon={Sparkles}
+              hasSearch={hasSearch}
+              searchQuery={searchQuery}
+              searchLabel="prompts"
+              emptyTitle="Create your first reusable workflow"
+              emptyDescription="A prompt is not text. It's reusable knowledge. Start with a template and build your personal toolkit of AI workflows, agents, and system instructions."
+              actionLabel="Create your first prompt"
+              onCreate={async () => {
+              const formData = new FormData();
+              formData.set("title", "");
+              formData.set("prompt", "");
+              formData.set("category", "coding");
+              formData.set("useCase", "");
+              formData.set("tags", "");
+              const result = await createPrompt(formData);
+              if (result.success && result.id) {
+                window.location.href = `/prompts?id=${result.id}&new=true`;
+              }
+            }}
+            />
           ) : (
-            <div className="space-y-8">
-              {sections.favorites.length > 0 && (
-                <Section label="Pinned" count={sections.favorites.length}>
-                  {sections.favorites.map((p) => (
-                    <motion.div key={p.id} variants={fadeInUp}>
-                      <PromptCard
-                        prompt={p}
-                        selected={selectedId === p.id}
-                        onSelect={handleSelect}
-                      />
-                    </motion.div>
-                  ))}
-                </Section>
-              )}
-
-              {sections.recent.length > 0 && (
-                <Section label="Recently Used" count={sections.recent.length}>
-                  {sections.recent.map((p) => (
-                    <motion.div key={p.id} variants={fadeInUp}>
-                      <PromptCard
-                        prompt={p}
-                        selected={selectedId === p.id}
-                        onSelect={handleSelect}
-                      />
-                    </motion.div>
-                  ))}
-                </Section>
-              )}
-
-              {sections.all.length > 0 && (
-                <Section label="All Prompts" count={sections.all.length}>
-                  {sections.all.map((p) => (
-                    <motion.div key={p.id} variants={fadeInUp}>
-                      <PromptCard
-                        prompt={p}
-                        selected={selectedId === p.id}
-                        onSelect={handleSelect}
-                      />
-                    </motion.div>
-                  ))}
-                </Section>
-              )}
+            <div className="space-y-2">
+              <motion.div variants={stagger.container} initial="hidden" animate="visible">
+                {flatList.map((p) => (
+                  <motion.div key={p.id} variants={fadeInUp}>
+                    <PromptCard
+                      prompt={p}
+                      selected={selectedId === p.id}
+                      onSelect={handleSelect}
+                    />
+                  </motion.div>
+                ))}
+              </motion.div>
 
               {cursor && (
-                <div className="flex justify-center pt-2 pb-8">
+                <div className="pt-4 pb-8">
                   <button
                     onClick={loadMore}
                     disabled={loading}
-                    className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-6 py-2.5 text-sm font-medium text-foreground hover:bg-muted hover:scale-[1.02] transition-all duration-150 disabled:opacity-50"
+                    className="w-full py-2 text-center text-xs text-muted-foreground hover:text-foreground hover:bg-muted/30 rounded-lg transition-all cursor-pointer disabled:opacity-50"
                   >
                     {loading ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -275,13 +259,6 @@ export function PromptList({ initialItems, nextCursor: initialCursor, categories
         </div>
       </div>
 
-      {!selectedPrompt && (
-        <PromptContextPanel
-          favorites={initialItems.filter((p) => p.favorite).map((p) => ({ id: p.id, title: p.title }))}
-          recentPrompts={[...initialItems].sort((a, b) => (b.lastUsedAt?.getTime() || 0) - (a.lastUsedAt?.getTime() || 0)).slice(0, 5).map((p) => ({ id: p.id, title: p.title }))}
-        />
-      )}
-
       <AnimatePresence mode="wait">
         {selectedPrompt && (
           <PromptPreviewPanel
@@ -289,29 +266,11 @@ export function PromptList({ initialItems, nextCursor: initialCursor, categories
             prompt={selectedPrompt}
             onClose={handleClose}
             onUpdate={() => router.refresh()}
+            onTagClick={onTagClick}
+            autoEdit={searchParams.get("new") === "true"}
           />
         )}
       </AnimatePresence>
     </div>
-  );
-}
-
-function Section({ label, count, children }: { label: string; count: number; children: React.ReactNode }) {
-  return (
-    <section>
-      <div className="flex items-center gap-2 mb-4">
-        <h2 className="text-xs font-semibold text-section-foreground uppercase tracking-[0.1em]">{label}</h2>
-        <span className="text-xs text-muted-foreground px-1.5 py-0.5 rounded bg-muted">{count}</span>
-      </div>
-      <motion.div
-        className="space-y-3"
-        variants={stagger.container}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: "-30px" }}
-      >
-        {children}
-      </motion.div>
-    </section>
   );
 }

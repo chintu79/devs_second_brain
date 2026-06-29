@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Palette, RotateCcw, Download, Upload, Loader2, Key, Plus, Trash2, Copy, Check, Eye, EyeOff, Server, Wifi, WifiOff } from "lucide-react";
+import { Palette, RotateCcw, Download, Upload, Loader2, Key, Plus, Trash2, Copy, Check, Eye, EyeOff, Server, Wifi, WifiOff, PanelRight, ToggleLeft, ToggleRight } from "lucide-react";
 import { toast } from "sonner";
 import { getAccents, setAccents, defaultAccents, type SectionAccent } from "@/components/theme/accent-provider";
 import { exportVault } from "@/actions/export";
@@ -49,9 +49,12 @@ export default function SettingsPage() {
   const [envStatus, setEnvStatus] = useState<Record<string, boolean> | null>(null);
   const [aiKey, setAiKey] = useState("");
   const [savingAiKey, setSavingAiKey] = useState(false);
+  const [previewAutoOpen, setPreviewAutoOpen] = useState(true);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setPreviewAutoOpen(localStorage.getItem("preview-auto-open") !== "false");
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setAccentsState(getAccents());
     listApiKeys().then(setApiKeys);
@@ -60,6 +63,12 @@ export default function SettingsPage() {
       if (ai !== null) setAiKey(ai);
     });
   }, []);
+
+  function togglePreview() {
+    const next = !previewAutoOpen;
+    setPreviewAutoOpen(next);
+    localStorage.setItem("preview-auto-open", String(next));
+  }
 
   function updateAccent(id: SectionAccent, value: string) {
     if (!isValidHex(value)) return;
@@ -164,7 +173,7 @@ export default function SettingsPage() {
   }
 
   return (
-      <div className="max-w-2xl mx-auto" data-accent="settings">
+      <div className="max-w-2xl mx-auto min-h-full" data-accent="settings">
         <div className="flex items-center gap-3 mb-8">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
             <Palette className="h-5 w-5 text-primary" />
@@ -293,6 +302,33 @@ export default function SettingsPage() {
             <p className="text-xs text-[#71717A]">
               Get a free key at <a href="https://openrouter.ai/keys" className="text-primary underline underline-offset-2 hover:opacity-80">openrouter.ai/keys</a>. Leave empty to use the <code className="text-xs bg-muted px-1 rounded">OPENROUTER_API_KEY</code> env var.
             </p>
+          </div>
+        </div>
+
+        {/* Preview */}
+        <h2 className="text-sm font-semibold text-[#E4E4E7] mb-3">Preview</h2>
+        <div className="rounded-xl border border-border/20 p-5 mb-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted">
+                <PanelRight className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <div>
+                <p className="text-sm text-[#F4F4F5]">Auto-open preview panel</p>
+                <p className="text-xs text-[#71717A]">Reopen the last viewed item when you revisit a section</p>
+              </div>
+            </div>
+            <button
+              onClick={togglePreview}
+              aria-label={previewAutoOpen ? "Disable auto-open" : "Enable auto-open"}
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {previewAutoOpen ? (
+                <ToggleRight className="h-6 w-6 text-primary" />
+              ) : (
+                <ToggleLeft className="h-6 w-6" />
+              )}
+            </button>
           </div>
         </div>
 

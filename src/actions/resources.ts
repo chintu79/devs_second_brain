@@ -16,8 +16,6 @@ export async function createResource(formData: FormData) {
   const reason = formData.get("reason") as string;
   const tagsString = formData.get("tags") as string;
 
-  if (!title || !url || !category) return { error: "Title, URL, and Category are required" };
-
   const tagNames = parseTagNames(tagsString || "");
 
   try {
@@ -29,6 +27,7 @@ export async function createResource(formData: FormData) {
       },
     });
     revalidatePath("/resources");
+    revalidatePath("/");
     if (tagNames.length > 0) revalidatePath("/tags");
 
     return { success: true, id: resource.id };

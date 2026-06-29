@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { motion } from "framer-motion"
+import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Eye, EyeOff, UserPlus } from "lucide-react"
@@ -10,7 +10,6 @@ import { register } from "@/actions/auth"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { stagger, fadeInUp } from "@/lib/motion"
 import { registerSchema } from "@/lib/schemas"
 
 type RegisterFormValues = {
@@ -20,6 +19,7 @@ type RegisterFormValues = {
 }
 
 export default function RegisterPage() {
+  const router = useRouter();
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
   const [showPassword, setShowPassword] = useState(false)
 
@@ -39,19 +39,14 @@ export default function RegisterPage() {
     const result = await register(formData)
     if (result?.error) {
       setMessage({ type: "error", text: result.error })
-    } else if (result?.success) {
-      setMessage({ type: "success", text: result.success })
+    } else if (result?.redirect) {
+      router.push(result.redirect);
     }
   }
 
   return (
-    <motion.div
-      className="w-full max-w-sm"
-      variants={stagger.container}
-      initial="hidden"
-      animate="visible"
-    >
-      <motion.div variants={fadeInUp} className="mb-8">
+    <div className="w-full max-w-sm">
+      <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
           <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[var(--color-prompts)]/10 md:hidden">
             <UserPlus className="h-5 w-5 text-[var(--color-prompts)]" />
@@ -61,34 +56,16 @@ export default function RegisterPage() {
         <p className="text-sm text-[var(--text-muted)]">
           Enter your details to get started
         </p>
-      </motion.div>
+      </div>
 
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-        {message && (
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.25, ease: [0, 0, 0.2, 1] }}
-            className={`rounded-xl border p-3 text-sm ${
-              message.type === "success"
-                ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400"
-                : "border-destructive/20 bg-destructive/5 text-destructive"
-            }`}
-          >
-            {message.type === "success" ? (
-              <span>
-                {message.text}{" "}
-                <Link href="/login" className="underline underline-offset-2">
-                  Sign in
-                </Link>
-              </span>
-            ) : (
-              message.text
-            )}
-          </motion.div>
+        {message?.type === "error" && (
+          <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">
+            {message.text}
+          </div>
         )}
 
-        <motion.div variants={fadeInUp} className="space-y-2">
+        <div className="space-y-2">
           <Label htmlFor="name" className="text-sm text-[var(--text-secondary)]">
             Name
           </Label>
@@ -98,9 +75,9 @@ export default function RegisterPage() {
             placeholder="John Doe"
             className="h-11 rounded-xl border-border/40 bg-muted/30 px-4 text-sm transition-all duration-200 placeholder:text-[var(--text-muted)] focus-visible:border-[var(--color-prompts)]/40 focus-visible:ring-[var(--color-prompts)]/15"
           />
-        </motion.div>
+        </div>
 
-        <motion.div variants={fadeInUp} className="space-y-2">
+        <div className="space-y-2">
           <Label htmlFor="email" className="text-sm text-[var(--text-secondary)]">
             Email
           </Label>
@@ -114,9 +91,9 @@ export default function RegisterPage() {
           {errors.email && (
             <p className="text-xs text-destructive">{errors.email.message}</p>
           )}
-        </motion.div>
+        </div>
 
-        <motion.div variants={fadeInUp} className="space-y-2">
+        <div className="space-y-2">
           <Label htmlFor="password" className="text-sm text-[var(--text-secondary)]">
             Password
           </Label>
@@ -140,9 +117,9 @@ export default function RegisterPage() {
           {errors.password && (
             <p className="text-xs text-destructive">{errors.password.message}</p>
           )}
-        </motion.div>
+        </div>
 
-        <motion.div variants={fadeInUp}>
+        <div>
           <Button
             type="submit"
             className="w-full h-11 rounded-xl text-sm font-medium"
@@ -150,9 +127,9 @@ export default function RegisterPage() {
           >
             {isSubmitting ? "Creating account..." : "Create account"}
           </Button>
-        </motion.div>
+        </div>
 
-        <motion.div variants={fadeInUp} className="text-center">
+        <div className="text-center">
           <p className="text-sm text-[var(--text-muted)]">
             Already have an account?{" "}
             <Link
@@ -162,8 +139,8 @@ export default function RegisterPage() {
               Sign in
             </Link>
           </p>
-        </motion.div>
+        </div>
       </form>
-    </motion.div>
+    </div>
   )
 }

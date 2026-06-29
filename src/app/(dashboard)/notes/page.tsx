@@ -24,7 +24,7 @@ export default async function NotesPage() {
   ]);
 
   return (
-    <div data-accent="notes" className="-m-5 lg:-m-6 h-[calc(100vh-var(--header-height,0px))] flex overflow-hidden">
+    <div data-accent="notes" className="absolute inset-0 flex overflow-hidden">
       <Suspense fallback={<div className="flex-1" />}>
         <NoteWorkspace
           notes={flattenListTags(notes)}

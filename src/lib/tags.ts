@@ -1,6 +1,8 @@
+const MAX_TAGS = 3
+
 export function parseTagNames(input: string): string[] {
   if (!input || !input.trim()) return [];
-  return input.split(",").map((t) => t.trim()).filter(Boolean);
+  return input.split(",").map((t) => t.trim()).filter(Boolean).slice(0, MAX_TAGS);
 }
 
 export function buildTagCreate(tagNames: string[], userId: string) {

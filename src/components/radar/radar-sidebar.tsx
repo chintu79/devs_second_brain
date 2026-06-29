@@ -4,24 +4,9 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { collapsible } from "@/lib/motion";
 import {
-  Radio,
-  Sparkles,
-  Globe,
-  Layout,
-  Server,
-  Container,
-  Smartphone,
-  Terminal,
-  Database,
-  Bot,
-  Wrench,
-  Cloud,
-  Bookmark,
-  Archive,
-  Clock,
-  ChevronDown,
-  Search,
-  GitBranch,
+  Radio, Sparkles, Globe, Layout, Server, Container, Smartphone,
+  Terminal, Database, Bot, Wrench, Cloud, Bookmark, Clock,
+  ChevronDown, Search, GitBranch, Gem, Layers, User,
 } from "lucide-react";
 import { GithubImport } from "@/components/resources/github-import";
 
@@ -31,10 +16,14 @@ interface RadarSidebarProps {
   onSectionChange: (section: string) => void;
   bookmarkedCount: number;
   recentlyViewedCount: number;
+  forYouCount: number;
+  myStackCount: number;
+  gemsCount: number;
+  userTags: string[];
 }
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
-  all: Radio,
+  all: Globe,
   ai: Sparkles,
   agents: Bot,
   frontend: Layout,
@@ -48,22 +37,27 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 };
 
 export function RadarSidebar({
-  categories,
-  activeSection,
-  onSectionChange,
-  bookmarkedCount,
-  recentlyViewedCount,
+  categories, activeSection, onSectionChange,
+  bookmarkedCount, recentlyViewedCount,
+  forYouCount, myStackCount, gemsCount, userTags,
 }: RadarSidebarProps) {
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({
-    explore: false,
+    explore: true,
   });
   const [githubImportOpen, setGithubImportOpen] = useState(false);
 
   const toggle = (key: string) => setCollapsed((p) => ({ ...p, [key]: !p[key] }));
 
   const personalItems = [
-    { id: "bookmarked", label: "Bookmarks", icon: Bookmark, count: bookmarkedCount },
-    { id: "viewed", label: "Previously Viewed", icon: Clock, count: recentlyViewedCount },
+    { id: "for-you", label: "For You", icon: Layers, count: forYouCount },
+    { id: "all", label: "Trending Today", icon: Globe, count: 0 },
+    { id: "gems", label: "Hidden Gems", icon: Gem, count: gemsCount },
+    ...(userTags.length > 0 ? [{ id: "my-stack", label: "My Stack", icon: User, count: myStackCount }] : []),
+  ];
+
+  const browseItems = [
+    { id: "bookmarked", label: "Saved", icon: Bookmark, count: bookmarkedCount },
+    { id: "viewed", label: "Recently Viewed", icon: Clock, count: recentlyViewedCount },
   ];
 
   return (
@@ -73,14 +67,14 @@ export function RadarSidebar({
         <button
           onClick={() => setGithubImportOpen(true)}
           aria-label="Import from GitHub"
-          className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground/60 hover:text-foreground hover:bg-muted/60 hover:scale-[1.1] transition-all duration-150"
+          className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all"
         >
           <GitBranch className="h-4 w-4" />
         </button>
       </div>
 
       <div className="flex-1 overflow-y-auto py-2 px-2 space-y-0.5">
-        {/* Personal items */}
+        <div className="px-3 pb-1 text-[10px] font-semibold text-sidebar-foreground/40 uppercase tracking-[0.12em]">Personal</div>
         {personalItems.map((item) => (
           <button
             key={item.id}
@@ -97,7 +91,23 @@ export function RadarSidebar({
 
         <div className="h-px bg-border/30 my-2" />
 
-        {/* Explore section */}
+        <div className="px-3 pb-1 text-[10px] font-semibold text-sidebar-foreground/40 uppercase tracking-[0.12em]">Browse</div>
+        {browseItems.map((item) => (
+          <button
+            key={item.id}
+            onClick={() => onSectionChange(item.id)}
+            className={`sidebar-item w-full text-sm transition-transform duration-150 ${activeSection === item.id ? "sidebar-item-active" : "hover:scale-[1.02]"}`}
+          >
+            <item.icon className="h-4 w-4 shrink-0" />
+            <span className="flex-1 text-left">{item.label}</span>
+            {item.count > 0 && (
+              <span className="text-xs text-muted-foreground bg-muted/60 px-1.5 py-0.5 rounded">{item.count}</span>
+            )}
+          </button>
+        ))}
+
+        <div className="h-px bg-border/30 my-2" />
+
         <CollapsibleSection
           label="Explore"
           icon={Search}
@@ -134,7 +144,7 @@ function CollapsibleSection({
 }) {
   return (
     <div className="pt-2">
-      <button onClick={onToggle} className="flex items-center gap-2 w-full px-3 py-1.5 text-xs font-semibold text-section-foreground uppercase tracking-[0.1em] hover:text-foreground hover:scale-[1.02] transition-all duration-150">
+      <button onClick={onToggle} className="flex items-center gap-2 w-full px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/30 rounded-md transition-all">
         <Icon className="h-3.5 w-3.5" />
         {label}
         <ChevronDown className={`h-3.5 w-3.5 ml-auto transition-transform duration-150 ${collapsed ? "-rotate-90" : ""}`} />

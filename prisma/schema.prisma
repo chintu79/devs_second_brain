@@ -20,6 +20,7 @@ model User {
   prompts    Prompt[]
   references Reference[]
   resources  Resource[]
+  dailyEntries DailyEntry[]
   tags       Tag[]
   accounts   Account[]
   sessions   Session[]
@@ -202,6 +203,19 @@ model ApiKey {
   user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([key])
+}
+
+model DailyEntry {
+  id        String   @id @default(cuid())
+  date      DateTime @map("date")
+  content   String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, date])
+  @@map("daily_entries")
 }
 
 model RadarBookmark {

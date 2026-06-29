@@ -5,8 +5,10 @@ import {
   X, FolderKanban, Link2, Sparkles, FileText, Star, Clock, Tag, Calendar,
   ExternalLink, Globe, Hash, Bookmark, Lightbulb,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { IconBtn } from "@/components/shared/icon-btn";
 import { slideInRight } from "@/lib/motion";
+import { formatDate, formatRelative } from "@/lib/utils";
+import { TYPE_CONFIG } from "@/lib/constants";
 
 type ResultType = "project" | "resource" | "prompt" | "note";
 
@@ -32,39 +34,14 @@ interface PreviewResult {
 
 interface SearchPreviewPanelProps {
   result: PreviewResult;
+  matchReason?: string;
+  relatedItems?: PreviewResult[];
   onClose: () => void;
   relatedLabel?: string;
 }
 
-const typeConfig: Record<ResultType, { icon: React.ComponentType<{ className?: string }>; label: string; color: string }> = {
-  project: { icon: FolderKanban, label: "Project", color: "text-blue-400" },
-  resource: { icon: Link2, label: "Resource", color: "text-amber-400" },
-  prompt: { icon: Sparkles, label: "Prompt", color: "text-purple-400" },
-  note: { icon: FileText, label: "Note", color: "text-emerald-400" },
-};
-
-function formatDate(dateStr?: string): string {
-  if (!dateStr) return "";
-  const date = new Date(dateStr);
-  return date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
-}
-
-function formatRelative(dateStr?: string): string {
-  if (!dateStr) return "";
-  const date = new Date(dateStr);
-  const diff = Date.now() - date.getTime();
-  const mins = Math.floor(diff / 60000);
-  const hrs = Math.floor(diff / 3600000);
-  const days = Math.floor(diff / 86400000);
-  if (mins < 1) return "now";
-  if (mins < 60) return `${mins}m ago`;
-  if (hrs < 24) return `${hrs}h ago`;
-  if (days < 30) return `${days}d ago`;
-  return formatDate(dateStr);
-}
-
-export function SearchPreviewPanel({ result, onClose }: SearchPreviewPanelProps) {
-  const config = typeConfig[result.type];
+export function SearchPreviewPanel({ result, matchReason, relatedItems, onClose }: SearchPreviewPanelProps) {
+  const config = TYPE_CONFIG[result.type];
   const Icon = config.icon;
   const IconColor = config.color;
 
@@ -81,14 +58,14 @@ export function SearchPreviewPanel({ result, onClose }: SearchPreviewPanelProps)
         <div className="flex items-center gap-2">
           <Icon className={`h-4 w-4 ${IconColor}`} />
           <span className="text-xs text-section-foreground uppercase tracking-[0.1em] font-semibold">{config.label}</span>
+          {result.url && (
+            <a href={result.url} target="_blank" rel="noopener noreferrer" className="inline-flex h-7 items-center gap-1 rounded-md px-2.5 text-xs font-medium border border-border bg-card text-foreground hover:bg-muted transition-colors ml-2">
+              <ExternalLink className="h-3 w-3" />
+              Open
+            </a>
+          )}
         </div>
-        <button
-          onClick={onClose}
-          aria-label="Close panel"
-          className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <X className="h-4 w-4" />
-        </button>
+        <IconBtn icon={X} label="Close" onClick={onClose} />
       </div>
 
       {/* Content */}
@@ -172,6 +149,15 @@ export function SearchPreviewPanel({ result, onClose }: SearchPreviewPanelProps)
             )}
           </div>
 
+          {/* Match reason */}
+          {matchReason && (
+            <div className="rounded-lg border border-border/60 bg-primary/5 p-3">
+              <p className="text-xs text-primary/70 italic">
+                Matches because {matchReason}
+              </p>
+            </div>
+          )}
+
           {/* Tags */}
           {result.tags && result.tags.length > 0 && (
             <div>
@@ -232,21 +218,36 @@ export function SearchPreviewPanel({ result, onClose }: SearchPreviewPanelProps)
               </div>
             </div>
           )}
+
+          {/* Connected Knowledge */}
+          {relatedItems && relatedItems.length > 0 && (
+            <div>
+              <h3 className="text-xs font-semibold text-section-foreground uppercase tracking-[0.1em] mb-3 flex items-center gap-1.5">
+                <Link2 className="h-3.5 w-3.5" />
+                Connected Knowledge
+              </h3>
+              <div className="space-y-2">
+                {relatedItems.map((item) => (
+                  <div key={item.id} className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border/30 bg-muted/20">
+                    {TYPE_CONFIG[item.type] && (() => {
+                      const cfg = TYPE_CONFIG[item.type];
+                      return <cfg.icon className={`h-3.5 w-3.5 shrink-0 ${cfg.color}`} />;
+                    })()}
+                    <span className="text-sm text-foreground/80 truncate">{item.title}</span>
+                    {item.tags && item.tags.length > 0 && (
+                      <span className="text-[10px] text-muted-foreground shrink-0 ml-auto">
+                        {item.tags.slice(0, 2).join(", ")}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Footer */}
-      <div className="shrink-0 border-t border-border/30 px-5 py-3 flex items-center gap-2">
-        {result.url && (
-          <a
-            href={result.url} target="_blank" rel="noopener noreferrer"
-            className="inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-xs font-medium border border-border bg-card text-foreground hover:bg-muted transition-colors"
-          >
-            <ExternalLink className="h-3.5 w-3.5" />
-            Open
-          </a>
-        )}
-      </div>
+      
     </motion.div>
   );
 }

@@ -3,7 +3,7 @@
 import { memo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { motion, LayoutGroup } from "framer-motion";
+
 import {
   LayoutDashboard,
   Link2,
@@ -18,6 +18,7 @@ import {
   Settings,
   Book,
   LogOut,
+  Calendar,
   type LucideIcon,
 } from "lucide-react";
 import { logout } from "@/actions/auth";
@@ -36,11 +37,12 @@ export const sidebarLinks: SidebarLink[] = [
   { href: "/prompts", label: "Prompts", icon: MessageSquare, accent: "prompts" },
   { href: "/notes", label: "Notes", icon: StickyNote, accent: "notes" },
   { href: "/projects", label: "Projects", icon: FolderKanban, accent: "projects" },
-  { href: "/tags", label: "Tags", icon: Tags, accent: "tags" },
+  { href: "/knowledge", label: "Knowledge", icon: Tags, accent: "knowledge" },
+  { href: "/log", label: "Daily Log", icon: Calendar, accent: "notes" },
   { href: "/radar", label: "OS Radar", icon: Radio, accent: "radar" },
   { href: "/graph", label: "Graph", icon: GitGraph, accent: "graph" },
   { href: "/chat", label: "AI Chat", icon: Bot, accent: "chat" },
-  { href: "/search", label: "Search", icon: Search, accent: "search" },
+  { href: "/search", label: "Explore", icon: Search, accent: "search" },
 ];
 
 export const Sidebar = memo(function Sidebar() {
@@ -64,8 +66,7 @@ export const Sidebar = memo(function Sidebar() {
         <span className="text-[10px] font-semibold uppercase tracking-[0.12em] px-3 pb-2 text-sidebar-foreground">
           Navigation
         </span>
-        <LayoutGroup id="nav-group">
-          {sidebarLinks.slice(0, 4).map((link) => {
+        {sidebarLinks.slice(0, 4).map((link) => {
             const Icon = link.icon;
             const isActive = pathname === link.href || pathname.startsWith(link.href + "/");
             return (
@@ -75,27 +76,19 @@ export const Sidebar = memo(function Sidebar() {
                 data-accent={link.accent}
                 className={`sidebar-link sidebar-item transition-transform duration-150 ${isActive ? "sidebar-item-active" : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:scale-[1.02]"}`}
               >
-                {isActive && (
-                  <motion.div
-                    layoutId="nav-indicator"
-                    className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-0.5 rounded-full sidebar-indicator"
-                    transition={{ type: "spring", stiffness: 350, damping: 28, mass: 0.9 }}
-                  />
-                )}
+                {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-0.5 rounded-full sidebar-indicator" />}
                 <Icon className="h-4 w-4" />
                 {link.label}
               </Link>
             );
           })}
-        </LayoutGroup>
 
         <div className="divider-sidebar mx-3" />
 
         <span className="text-[10px] font-semibold uppercase tracking-[0.12em] px-3 pb-2 text-sidebar-foreground">
           Workspace
         </span>
-        <LayoutGroup id="workspace-group">
-          {sidebarLinks.slice(4).map((link) => {
+        {sidebarLinks.slice(4).map((link) => {
             const Icon = link.icon;
             const isActive = pathname === link.href || pathname.startsWith(link.href + "/");
             return (
@@ -105,19 +98,12 @@ export const Sidebar = memo(function Sidebar() {
                 data-accent={link.accent}
                 className={`sidebar-link sidebar-item transition-transform duration-150 ${isActive ? "sidebar-item-active" : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:scale-[1.02]"}`}
               >
-                {isActive && (
-                  <motion.div
-                    layoutId="workspace-indicator"
-                    className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-0.5 rounded-full sidebar-indicator"
-                    transition={{ type: "spring", stiffness: 350, damping: 28, mass: 0.9 }}
-                  />
-                )}
+                {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-0.5 rounded-full sidebar-indicator" />}
                 <Icon className="h-4 w-4" />
                 {link.label}
               </Link>
             );
           })}
-        </LayoutGroup>
       </div>
 
       {/* Profile / Settings */}

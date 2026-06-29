@@ -140,8 +140,8 @@ function buildSections(repos: Repository[]) {
       repos: sorted.slice(0, 10),
     },
     {
-      id: "hidden-gems",
-      label: "Hidden Gems",
+      id: "discovery",
+      label: "Discovery",
       repos: sorted.filter((r) => r.stars >= 500 && r.stars <= 2000).slice(0, 6),
     },
     {
@@ -201,9 +201,14 @@ export async function fetchRepoByUrl(url: string) {
   }
 }
 
+function daysAgo(n: number): string {
+  const d = new Date(Date.now() - n * 86400000)
+  return d.toISOString().slice(0, 10)
+}
+
 export async function fetchTrendingRepos() {
   try {
-    const url = `${GITHUB_API}/search/repositories?q=stars:>300+pushed:>2025-01-01&sort=stars&order=desc&per_page=50`
+    const url = `${GITHUB_API}/search/repositories?q=stars:>300+created:>=${daysAgo(14)}&sort=stars&order=desc&per_page=50`
     const res = await fetch(url, {
       headers: getHeaders(),
       next: { revalidate: 3600 },

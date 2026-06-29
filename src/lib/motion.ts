@@ -2,12 +2,9 @@
 export const duration = {
   micro: 0.12,
   hover: 0.18,
-  tap: 0.12,
-  search: 0.25,
   panel: 0.25,
   page: 0.15,
   reveal: 0.3,
-  modal: 0.2,
 } as const;
 
 /* ── Easing ── */
@@ -15,8 +12,6 @@ export const ease = {
   standard: [0.25, 0.1, 0.25, 1] as [number, number, number, number],
   decelerate: [0.0, 0.0, 0.2, 1] as [number, number, number, number],
   accelerate: [0.4, 0.0, 1, 1] as [number, number, number, number],
-  spring: { type: "spring" as const, stiffness: 350, damping: 25, mass: 0.8 },
-  springSnappy: { type: "spring" as const, stiffness: 400, damping: 30, mass: 0.5 },
 } as const;
 
 /* ── Fade In Up ── */
@@ -61,6 +56,15 @@ export const collapsible = {
   animate: { height: "auto", opacity: 1 },
   exit: { height: 0, opacity: 0 },
   transition: { duration: duration.micro, ease: ease.standard },
+};
+
+/* ── Content Reveal (staggered panel sections) ── */
+export const contentReveal = {
+  hidden: { opacity: 0, y: 12 },
+  visible: (i: number) => ({
+    opacity: 1, y: 0,
+    transition: { duration: duration.reveal, delay: 0.05 + i * 0.04, ease: ease.standard },
+  }),
 };
 
 

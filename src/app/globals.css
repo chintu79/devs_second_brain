@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -106,7 +105,7 @@
   --accent-bg: rgba(138, 86, 226, 0.10);
 }
 
-[data-accent="tags"] {
+[data-accent="knowledge"] {
   --accent: #C6488C;
   --accent-bg: rgba(198, 72, 140, 0.10);
 }
@@ -158,6 +157,10 @@
   --sidebar-item-accent: #C6488C;
 }
 
+.sidebar-link[data-accent="knowledge"] {
+  --sidebar-item-accent: #C6488C;
+}
+
 .sidebar-link[data-accent="search"] {
   --sidebar-item-accent: #D84B64;
 }
@@ -206,13 +209,13 @@
   --color-sidebar-fg: #555551;
 
   /* ── Border Hierarchy ──
-     Four tiers based on same base color at different opacities:
-     subtle (6%) → default (9%) → medium (14%) → hover (22%)
+     Cards need clear separation — default is bumped for scanability.
+     subtle (8%) → default (20%) → medium (25%) → hover (35%)
   */
   --border-subtle: rgba(36, 36, 36, 0.08);
-  --border-default: rgba(36, 36, 36, 0.12);
-  --border-medium: rgba(36, 36, 36, 0.16);
-  --border-hover: rgba(36, 36, 36, 0.25);
+  --border-default: rgba(36, 36, 36, 0.20);
+  --border-medium: rgba(36, 36, 36, 0.25);
+  --border-hover: rgba(36, 36, 36, 0.35);
   --color-border-color: var(--border-default);
   --color-sidebar-border-color: var(--border-subtle);
 
@@ -339,13 +342,13 @@
   --color-sidebar-fg: #929390;
 
   /* ── Border Hierarchy ──
-     Default:  7% opacity — structural, barely perceived
-     Hover:   18% opacity — clear on interaction, no glare
+     Default: 14% opacity — visible card separation
+     Hover:   25% opacity — clear on interaction
      Sidebar:  4% opacity — navigation border, minimal noise
   */
-  --color-border-color: rgba(232, 231, 230, 0.07);
+  --color-border-color: rgba(232, 231, 230, 0.14);
   --color-sidebar-border-color: rgba(232, 231, 230, 0.04);
-  --border-hover: rgba(232, 231, 230, 0.18);
+  --border-hover: rgba(232, 231, 230, 0.25);
 
   /* ── Shadow System ──
      Dark theme shadows use deeper opacity since bg is already dark.
@@ -463,247 +466,6 @@ html.theme-transition *::after {
     box-shadow 0.2s ease !important;
 }
 
-/* ── Border Hierarchy ── */
-.border-page {
-  border: 1px solid var(--color-border-color);
-}
-
-.border-interactive {
-  border: 1px solid var(--color-border-color);
-  transition: border-color 0.15s ease;
-}
-
-.border-interactive:hover {
-  border-color: var(--border-hover);
-}
-
-.border-active {
-  border-color: var(--accent, #6366f1);
-}
-
-/* ── Divider System ── */
-.divider-section {
-  height: 1px;
-  background: var(--color-border-color);
-  margin: 2em 0;
-}
-
-.divider-content {
-  height: 1px;
-  background: var(--color-border-color);
-  margin: 1em 0;
-}
-
-.divider-sidebar {
-  height: 1px;
-  background: var(--color-sidebar-border-color);
-  margin: 0.75em 0;
-}
-
-/* ── Section Container ── */
-.section-container {
-  border: 1px solid var(--color-border-color);
-  border-radius: 20px;
-  padding: 24px;
-}
-
-/* ── Typography Scale ──
-   Every text size in the app comes from here.
-   No page should invent its own font-size, tracking, or line-height.
-*/
-.text-display {
-  font-size: 1.75rem;
-  line-height: 1.2;
-  letter-spacing: -0.03em;
-  font-weight: 700;
-}
-
-.text-page-title {
-  font-size: 1.25rem;
-  line-height: 1.3;
-  letter-spacing: -0.02em;
-  font-weight: 600;
-}
-
-.text-section-title {
-  font-size: 0.75rem;
-  line-height: 1.25;
-  letter-spacing: 0.08em;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-
-.text-card-title {
-  font-size: 0.9375rem;
-  line-height: 1.35;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-}
-
-.text-body {
-  font-size: 0.875rem;
-  line-height: 1.55;
-}
-
-.text-secondary {
-  font-size: 0.8125rem;
-  line-height: 1.45;
-  color: var(--color-secondary-fg);
-}
-
-.text-metadata {
-  font-size: 0.75rem;
-  line-height: 1.4;
-  color: var(--color-muted-fg);
-}
-
-.text-caption {
-  font-size: 0.6875rem;
-  line-height: 1.3;
-  color: var(--color-muted-fg);
-}
-
-.text-tiny-label {
-  font-size: 0.625rem;
-  line-height: 1.2;
-  letter-spacing: 0.06em;
-  font-weight: 600;
-  text-transform: uppercase;
-  color: var(--color-muted-fg);
-}
-
-/* ── Card Variants ──
-   Shared card system — every card in the app uses one of these.
-   Avoid inline rounded-xl / bg-card / border combinations.
-*/
-.card-base {
-  border-radius: var(--radius-xl);
-  border: 1px solid var(--color-border-color);
-  background: var(--card-bg);
-  transition: all 0.15s ease;
-}
-
-.card-interactive {
-  border-radius: var(--radius-xl);
-  border: 1px solid var(--color-border-color);
-  background: var(--card-bg);
-  transition: all 0.15s ease;
-  cursor: pointer;
-}
-
-.card-interactive:hover {
-  border-color: var(--border-hover);
-  box-shadow: var(--shadow-elevated);
-}
-
-.card-list {
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border-color);
-  background: var(--card-bg);
-  padding: 0.75rem 0.875rem;
-  transition: all 0.15s ease;
-}
-
-.card-list:hover {
-  border-color: var(--border-hover);
-}
-
-.card-stat {
-  border-radius: var(--radius-xl);
-  border: 1px solid var(--color-border-color);
-  background: var(--card-bg);
-  padding: 1rem 1.25rem;
-}
-
-.card-inspector {
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border-color);
-  background: var(--card-bg);
-  padding: 0.75rem 1rem;
-}
-
-/* ── Panel Layout ──
-   All right-side panels share the same structure.
-*/
-.panel-detail {
-  @apply w-[800px] shrink-0 border-l border-border/50 bg-background overflow-hidden flex flex-col;
-}
-
-.panel-detail-card {
-  @apply w-[800px] shrink-0 border-l border-border/50 bg-card overflow-hidden flex flex-col;
-}
-
-.panel-context {
-  @apply w-[320px] shrink-0 border-l border-border/30 bg-muted/20 overflow-y-auto;
-}
-
-.panel-header {
-  @apply flex items-center justify-between px-5 py-4 border-b border-border/30;
-}
-
-.panel-body {
-  @apply flex-1 overflow-y-auto p-5 space-y-5;
-}
-
-.panel-footer {
-  @apply flex items-center gap-2 px-5 py-3 border-t border-border/30;
-}
-
-/* ── Inspector Panel (right-side detail panels) ── */
-.inspector-section {
-  @apply space-y-3;
-}
-
-.inspector-label {
-  font-size: 0.625rem;
-  line-height: 1.2;
-  letter-spacing: 0.06em;
-  font-weight: 600;
-  text-transform: uppercase;
-  color: var(--color-muted-fg);
-}
-
-.inspector-value {
-  @apply text-sm text-foreground/80;
-}
-
-.inspector-divider {
-  @apply h-px bg-border/30 my-4;
-}
-
-/* ── Page Workspace Layout ── */
-.workspace-layout {
-  @apply -m-5 lg:-m-6 h-[calc(100vh-var(--header-height,0px))] flex overflow-hidden;
-}
-
-.workspace-sidebar {
-  @apply hidden xl:flex h-full w-56 shrink-0 flex-col border-r border-border/50;
-}
-
-.workspace-content {
-  @apply flex-1 min-w-0 p-4 space-y-5;
-}
-
-/* ── Feed / List Area ── */
-.list-container {
-  @apply space-y-3;
-}
-
-.feed-container {
-  @apply flex flex-col flex-1 shrink-0 border-r border-border/50;
-}
-
-/* Premium card elevation */
-.card-elevated {
-  @apply border border-border bg-card transition-all duration-300 ease-out;
-}
-
-.card-elevated:hover {
-  @apply -translate-y-0.5;
-  box-shadow: var(--shadow-elevated);
-  border-color: var(--border-hover);
-}
-
 /* Sidebar accent indicator */
 .sidebar-item {
   @apply relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150;
@@ -714,14 +476,6 @@ html.theme-transition *::after {
   color: var(--color-sidebar-primary-foreground, #fafafa);
 }
 
-/* Hydration-safe accent utilities — set --accent-c via style prop (Dark Reader ignores custom props) */
-.accent-bg { background-color: var(--accent-c); }
-.accent-bg-15 { background-color: color-mix(in srgb, var(--accent-c) 15%, transparent); }
-.accent-bg-12 { background-color: color-mix(in srgb, var(--accent-c) 12%, transparent); }
-.accent-text { color: var(--accent-c); }
-.accent-border-left { border-left-color: var(--accent-c); border-left-width: 2px; }
-.accent-badge { background-color: color-mix(in srgb, var(--accent-c) 15%, transparent); color: var(--accent-c); }
-
 .sidebar-logo-bg {
   background-color: var(--accent, #6366f1);
 }
@@ -730,153 +484,14 @@ html.theme-transition *::after {
   background-color: var(--sidebar-item-accent, #6366f1);
 }
 
-/* Vault accent left border */
-.vault-card {
-  @apply relative overflow-hidden;
-}
-
-.vault-card::after {
-  content: "";
-  @apply absolute top-2 left-0 h-6 w-0.5 rounded-full opacity-0 transition-all duration-200;
-  background: var(--accent, #6366f1);
-}
-
-.vault-card:hover::after {
-  @apply opacity-100;
-}
-
-/* Skeleton pulse */
-@keyframes skeleton-pulse {
-
-  0%,
-  100% {
-    opacity: 0.4;
-  }
-
-  50% {
-    opacity: 0.2;
-  }
-}
-
-.skeleton {
-  animation: skeleton-pulse 1.5s ease-in-out infinite;
-  @apply rounded-md bg-muted;
-}
-
-/* Entrance animations — CSS only, no JS dependency */
-@keyframes fade-in-up {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-fade-in-up {
-  animation: fade-in-up 0.5s ease-out forwards;
-}
-
-.animate-fade-in-up-d1 {
-  animation: fade-in-up 0.5s ease-out 0.1s forwards;
-}
-
-.animate-fade-in-up-d2 {
-  animation: fade-in-up 0.5s ease-out 0.2s forwards;
-}
-
-.animate-fade-in-up-d3 {
-  animation: fade-in-up 0.5s ease-out 0.3s forwards;
-}
-
-.animate-fade-in-up-d4 {
-  animation: fade-in-up 0.5s ease-out 0.4s forwards;
-}
-
-@keyframes fade-in-up-scale {
-  from {
-    opacity: 0;
-    transform: translateY(20px) scale(0.98);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-.animate-fade-in-up-scale {
-  animation: fade-in-up-scale 0.5s ease-out 0.4s forwards;
-  opacity: 0;
-}
-
-/* ── Micro-animations ── */
-
-@keyframes glow-pulse {
-
-  0%,
-  100% {
-    opacity: 1;
-  }
-
-  50% {
-    opacity: 0.5;
-  }
-}
-
-.animate-glow-pulse {
-  animation: glow-pulse 3s ease-in-out infinite;
-}
-
-@keyframes float {
-
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-
-  50% {
-    transform: translateY(-4px);
-  }
-}
-
-.animate-float {
-  animation: float 4s ease-in-out infinite;
-}
-
-@keyframes dash-flow {
-  to {
-    stroke-dashoffset: -20;
-  }
-}
-
-.animate-dash-flow path {
-  stroke-dasharray: 4 4;
-  animation: dash-flow 1s linear infinite;
-}
-
-@keyframes icon-glow {
-
-  0%,
-  100% {
-    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
-  }
-
-  50% {
-    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.08);
-  }
-}
-
-.group:hover .animate-icon-glow {
-  animation: icon-glow 1.5s ease-in-out infinite;
-}
-
-/* Command palette overlay */
-.cmdk-overlay {
-  @apply fixed inset-0 z-50 bg-black/60 backdrop-blur-sm;
+.panel-detail {
+  width: 800px;
+  flex-shrink: 0;
+  border-left: 1px solid var(--color-border-color, oklch(0.87 0.01 100));
+  background: var(--color-background);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 /* ── Premium Note Prose for markdown rendering ── */
@@ -1013,27 +628,32 @@ html.theme-transition *::after {
   color: var(--color-muted-fg);
 }
 
-.note-prose .note-table-wrapper {
+.note-prose .note-table-wrapper,
+.chat-message-content .note-table-wrapper {
   @apply my-6 overflow-x-auto rounded-xl border border-border;
 }
 
-.note-prose .note-table {
+.note-prose .note-table,
+.chat-message-content .note-table {
   @apply w-full text-sm border-collapse;
 }
 
-.note-prose .note-table th {
+.note-prose .note-table th,
+.chat-message-content .note-table th {
   @apply px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wider;
   background: var(--color-muted-bg);
   border-bottom: 1px solid var(--color-border-color);
   color: #d4d4d8;
 }
 
-.note-prose .note-table td {
+.note-prose .note-table td,
+.chat-message-content .note-table td {
   @apply px-4 py-2.5 border-t border-border;
   line-height: 1.5;
 }
 
-.note-prose .note-table tr:first-child td {
+.note-prose .note-table tr:first-child td,
+.chat-message-content .note-table tr:first-child td {
   border-top: none;
 }
 

@@ -65,7 +65,7 @@ Before generating any UI or feature, ask:
 - Radar must feel like Product Hunt + Readwise Reader + Arc Spaces
 - Search must feel like Raycast / Spotlight
 - Motion vocabulary: Reveal, Fade, Fade Up/Down, Slide, Stagger, Lift, Float, Morph, Expand, Collapse, Crossfade, Shared Element, Scale In, Focus Shift, Highlight, Progressive Reveal, Depth Shift, Context Slide, Active Indicator Slide, Hover Lift, Underline Reveal
-- Timing: micro-interactions 100-200ms, hovers 150-250ms, page transitions 250-400ms, panels 250-350ms, search 200-300ms, typewriter 60ms type / 35ms delete
+- Timing: micro-interactions 100-200ms, hovers 150-250ms, page transitions 250-400ms, panels 250-350ms, search 200-300ms
 - Easing: ease-out, spring (natural deceleration), no bounce/elastic/overshoot
 - Section containers: border-radius 20px, padding 24px, gap 32px
 - Every section page wrapped with `data-accent` attribute
@@ -76,36 +76,29 @@ Before generating any UI or feature, ask:
 
 ## Progress
 ### Done
-- Globals.css: section accent CSS variables, sidebar-item per-link accent (`--sidebar-item-accent`), border hierarchy classes (`.border-page`/`.border-interactive`/`.border-active`), divider system, section container (radius 20px), selection color-mix, scrollbar, premium note-prose, skeleton, entrance animations, command palette overlay
-- Sidebar refactored into Navigation / Workspace / Profile groups with `data-accent` per link, animated active indicator via Framer Motion `LayoutGroup` + `layoutId` (replaced CSS `::before` pseudo-element)
-- Dashboard page: greeting hero with accent-colored name, Continue Working (accent header icon, progress bars, status dots), Recent Activity (compact rows, type-colored icons), Knowledge Library (4-col grid with left accent border per vault card)
-- All section pages wrapped with `data-accent` attribute
-- Radar redesigned: three-column workspace with sidebar | feed | detail/context panel, personal items + collapsible Explore categories, growth indicators (Trending/Hot/Rising/Stable/New), 24 mock repos
-- Search redesigned: client-side workspace with debounced globalSearch, hero search bar (h-14 text-lg), grouped results, type-colored borders, preview panel with full context, context panel (recent/suggested), URL-driven selection
-- Motion library (`src/lib/motion.ts`): centralized variants (fadeIn, fadeInUp, slideInRight, stagger, cardHover, activePill, collapsible, panelTransition, contentStagger), timing constants, easing
-- Landing page hero: `HeroEntrance` client component with sequenced Framer Motion stagger, `TypewriterText` cycling 6 phrases
-- Developer Workflow section: enlarged icons (h-16 w-16), `AnimatedArrow` with rotation + oscillation
-- Page transitions, AnimatedSection, AnimatedCard use shared `fadeInUp` variant
-- Card hover standardization: search-result-card, repository-card, prompt-card use shared `cardHover` (scale: 1.015)
-- Staggered list reveals: resource-list, prompt-list, project-list, note-list, radar-feed use `stagger.container` + `fadeInUp`
-- Panel slide-in alignment: all 5 right panels use shared `slideInRight` variant
-- Collapsible sections: note-sidebar, radar-sidebar, project-sidebar use shared `collapsible` variant
-- Radar feed scroll: sticky search bar inside overflow container
-- Full hover consistency pass across entire codebase: `transition-all duration-150` + `hover:scale` on all interactive elements (sidebar items, nav links, filter pills, context panels, command bar, dashboard items, landing page, vault cards, tag chips, toolbar buttons, section toggles, footer links)
-- Fixed missing hover effects on vault cards (note-card, resource-card, prompt-card, project-card) — replaced defunct `card-hover` class with proper `hover:border-border/60 hover:shadow-sm hover:scale-[1.02]`
-- Added hover border to note-list sidebar items (`hover:border-border/60`)
-- Removed stale `card-hover` class from shadcn Card component (only used in auth pages)
-- **Lighthouse a11y — Button labels**: Added `aria-label` to 28 icon-only buttons across 15 files (command-bar, navbar, 4 vault cards, copy-button, chat-ui, tags-manager, note-sidebar, project-sidebar, resources-content, project-workspace, note-reader-panel, search-preview-panel, repository-detail-panel, prompt-preview-panel, settings page, error page)
-- **Lighthouse a11y — Color contrast**: Bumped dark mode `--color-muted-fg` from `#6d7275` to `#8a9299` (raises contrast from 2.58:1 to 4.5:1+ against `#2f3437`); fixed sidebar active item text to white (`--color-sidebar-primary-foreground`) instead of accent color; fixed sidebar section labels to neutral `sidebar-foreground/60` instead of accent-tinted `color-mix` (which was ~1.85:1); fixed sidebar logo text to always-white instead of accent variable
-- **Lighthouse perf — LCP optimization**: Restructured dashboard page to stream greeting immediately — extracted `DashboardGreeting` (renders h1 from session only, zero DB await), `DashboardPrimarySection` (merged vault blocks + streak + timeline + insights in single Suspense boundary with skeleton fallback), `DashboardGraphSection` (below-fold in separate Suspense). Eliminated ~12 DB queries from blocking the greeting render — LCP element now appears at FCP time instead of waiting for all queries
-- **Motion timing reduction**: Reduced `duration.page` (0.3→0.15), `duration.reveal` (0.55→0.3), `duration.panel` (0.3→0.25), stagger `delayChildren` (0.1→0.05), `staggerChildren` (0.06→0.04) — cuts entrance animation delay in half for faster content visibility
-- **Dashboard skeletons**: Created `DashboardSkeleton` (4-card grid matching vault blocks), `ActivitySkeleton` (timeline + insights card layout), `GraphSkeleton` (graph card placeholder) — used as Suspense fallbacks for progressive loading
+- **3 features built**: Contribution heatmap (365-day GitHub-style grid), Backlinks (title mentions across vault items), Daily log hero (greeting with today's plan + streak count).
+- **Ponytail audit pass** (−136 lines): Removed 12 dead shadcn exports, deleted dead exports (`getDailyEntry`, `setPreviewAutoOpen`), inlined `generateRawKey`/`maskKey` one-liners, replaced hand-rolled `formatRelative` with `Intl.RelativeTimeFormat`, simplified `safeQuery`, removed non-functional Bell button.
+- **UI/UX polish**: Added `toast.success()` to all 14 CRUD operations. Fixed broken note favorite toggle. Added `cursor-pointer` to load-more buttons. Added `title` tooltips to all 8 AI Suggest buttons. Added `hover:scale-[1.02]` to sidebar items in resources/prompts.
+- **Radar improved**: Saved repos from DB in feed via `getBookmarkedRepos()`. Bookmarks sidebar shows real count. Toast on bookmark/unbookmark. Removed duplicate "Save to Resources" button — radar is self-contained.
+- **Professional UI cleanup + workspace simplification**: Removed ☕ emoji (→ `FileText` icon), removed `savedBy`/`Few Developers` gimmick badges, replaced `Sparkles` → `ArrowUp` in radar growth indicators, renamed "Hidden Gems" → "Discovery", renamed "Forgotten Gems" → "Rediscovered", replaced typewriter animation with static text, replaced bounce typing indicator with "Thinking...", removed `animate-pulse` on note Bot icon, removed floating decorative cards from auth page, removed `animate-glow-pulse`/`animate-float`/`animate-icon-glow` CSS animations from globals.css. Removed icon boxes from resource-item, prompt-card, note-list cards. Removed time-based list sections from resource-list and prompt-list. Made favorites always visible (no hover-to-reveal). Added active filter chips with clear buttons to all three list views. Deleted `resource-filters.tsx` and `prompt-filters.tsx`. Restructured resource-reader-panel and prompt-preview-panel into Knowledge Inspector (connections, clickable tags, collapsible metadata). Made note-reader-panel tags clickable. Restructured resource and prompt sidebars (separated actions, collapsible categories/tags, inline sort).
+- Globals.css: section accent CSS variables, sidebar-item per-link accent, border hierarchy, divider system, section container (radius 20px), selection color-mix, scrollbar, premium note-prose, skeleton, entrance animations, command palette overlay
+- Sidebar: Navigation/Workspace/Profile groups with `data-accent`, Framer Motion `LayoutGroup` + `layoutId` active indicator
+- Dashboard: streaming Suspense boundaries (greeting → primary → graph), skeletons per section, LCP at FCP
+- Radar: three-column workspace (sidebar | feed | detail), growth indicators, 24 repos
+- Search: debounced `globalSearch`, grouped results, type-colored borders, preview panel, URL-driven selection
+- Motion library: centralized variants in `src/lib/motion.ts`, `cardHover` variant (scale: 1.015)
+- Full hover consistency: `transition-all duration-150` + `hover:scale` hierarchy (1.01/1.015/1.02/1.03/1.05/1.1)
+- Lighthouse a11y: `aria-label` on 28 icon-only buttons, color contrast fix (`--color-muted-fg: #8a9299`)
+- Chat & Docs: two-column chat workspace with context panel, code block copy, docs TOC with animated indicator, reading progress bar
 
 ### In Progress
 - (none)
 
+### Done (this session)
+- **Notes workspace UX refactor**: Compact card redesign (p-2.5, single-line preview at 80 chars, word count + reading time in compact metadata row, `useMemo`d previews, border-left selected indicator with `border-l-2 border-primary` instead of background-color wash, no related-project indicator in list). Consolidated reader panel metadata (category + reading time + word count + updated + created all in one compact block below title, removed footer meta). Reading progress bar via `useScroll`/`useSpring` from framer-motion. Made context panel items navigable (Related Notes/Backlinks → `router.push(/notes?id=X)`, Resources/Prompts/Projects → their respective sections). Added helpful empty state for context panel. Removed redundant "Note" header label. Removed `projects` prop from `NoteList` (unused). Better empty state in note-list ("Try a different category, tag, or search term"). Sidebar spacing improvements (`my-2`→`my-3`, `pt-2`→`pt-3`). Cleaned up unused imports (`Loader2` from workspace, `FileText`/`Link2` from note-list).
+
 ### Blocked
-- (none)
+- Registration fails on Vercel: Neon database unreachable from Vercel region
 
 ## AI Chat & Docs Redesign
 - **Chat workspace**: Two-column layout (chat + context panel), URL-driven `?from=` context param, context-aware suggested actions per section (resources/notes/prompts/projects/docs)
@@ -129,11 +122,11 @@ Before generating any UI or feature, ask:
 - `DashboardGreeting` at `src/app/(dashboard)/dashboard/dashboard-greeting.tsx` — renders h1 from session only (no DB calls)
 - `DashboardPrimarySection` at `src/app/(dashboard)/dashboard/dashboard-data.tsx` — merged 9 queries into single Promise.all (counts + recent items + analytics), renders vault blocks + streak + timeline + insights
 - Skeleton components at `src/app/(dashboard)/dashboard/skeletons.tsx` — `DashboardSkeleton` (4-card grid), `ActivitySkeleton` (timeline + insights), `GraphSkeleton` (graph placeholder)
-- Landing page hero uses `HeroEntrance` client component with Framer Motion stagger (no CSS animation classes)
+- Landing page hero uses `HeroEntrance` client component with Framer Motion stagger, static "resource." text (no typewriter)
 - Sidebar active indicator uses Framer Motion `layoutId` with `LayoutGroup`
 - All list/feed components use `stagger.container` + `fadeInUp` per-item
 - All right-side panels share `slideInRight` variant
-- `animate-dash-flow` CSS class preserved but unused (replaced by `AnimatedArrow` client component)
+- `animate-dash-flow` CSS class unused, kept for reference
 - `FadeIn` IntersectionObserver component retained for landing page scroll reveals below the fold
 - Vault cards (note, resource, prompt, project) use inline `transition-all duration-150 hover:border-border/60 hover:shadow-sm hover:scale-[1.02]` — the `card-hover` class has been removed from <Card />
 
@@ -162,7 +155,7 @@ Before generating any UI or feature, ask:
 - `src/components/resources/resource-list.tsx`: Staggered card reveal, search, filter pills with hover:scale-[1.03]
 - `src/components/prompts/prompt-list.tsx`: Staggered card reveal, CTA with hover:scale-[1.03]
 - `src/components/projects/project-list.tsx`: Staggered card reveal
-- `src/components/notes/note-list.tsx`: Staggered card reveal, hover border on items
+- `src/components/notes/note-list.tsx`: Staggered card reveal, compact cards (p-2.5, single-line preview), active filter chips, no icon box, always-visible favorite + delete, `useMemo`d previews, border-left selected indicator
 - `src/components/notes/note-sidebar.tsx`: Collapsible sections, section toggle with hover:scale-[1.02], create button hover:scale-[1.1]
 - `src/components/radar/radar-feed.tsx`: Staggered card reveal, sticky search bar
 - `src/components/radar/radar-sidebar.tsx`: Collapsible sections, section toggle with hover:scale-[1.02]
@@ -177,10 +170,10 @@ Before generating any UI or feature, ask:
 - `src/components/search/search-preview-panel.tsx`: Uses shared `slideInRight` variant
 - `src/components/prompts/prompt-preview-panel.tsx`: Uses shared `slideInRight` variant
 - `src/components/radar/repository-detail-panel.tsx`: Uses shared `slideInRight` variant
-- `src/components/notes/note-reader-panel.tsx`: Uses shared `slideInRight` variant, context items hover:scale-[1.02]
+- `src/components/notes/note-reader-panel.tsx`: Uses shared `slideInRight` variant, consolidated metadata header, reading progress bar via `useScroll`/`useSpring`, navigable context panel items (router.push), clickable tags via onTagClick, helpful empty state for context panel
 - `src/components/projects/project-workspace.tsx`: WorkspacePanel uses shared `slideInRight` variant, tabs with hover:scale-[1.02]
-- `src/components/resources/resource-filters.tsx`: Category + tag filter pills with hover:scale-[1.03]
-- `src/components/prompts/prompt-filters.tsx`: Category filter pills with hover:scale-[1.03]
+- `src/components/resources/resource-filters.tsx`: **Deleted** — filtering handled by sidebar + active chips
+- `src/components/prompts/prompt-filters.tsx`: **Deleted** — filtering handled by sidebar + active chips
 - `src/components/dashboard/command-bar.tsx`: Search bar hover:scale-[1.01], quick actions + bell hover:scale-[1.1]
 - `src/components/dashboard/continue-working.tsx`: Project cards with hover:scale-[1.01], "All projects" link hover:scale-[1.02]
 - `src/components/dashboard/recent-activity.tsx`: Activity items hover:scale-[1.01], "View all" link hover:scale-[1.02]

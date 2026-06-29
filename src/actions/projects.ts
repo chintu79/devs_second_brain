@@ -3,7 +3,7 @@
 import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
-import { parseTagNames, buildTagCreate, flattenListTags } from "@/lib/tags";
+import { parseTagNames, buildTagCreate } from "@/lib/tags";
 
 export async function createProject(formData: FormData) {
   const session = await auth();
@@ -14,8 +14,7 @@ export async function createProject(formData: FormData) {
   const status = formData.get("status") as string;
   const techStackString = formData.get("techStack") as string;
   const tagsString = formData.get("tags") as string;
-
-  if (!title || !status) return { error: "Title and status are required" };
+  const planMd = formData.get("planMd") as string;
 
   const techStack = techStackString ? techStackString.split(",").map((t) => t.trim()).filter(Boolean) : [];
   const tagNames = parseTagNames(tagsString || "");
@@ -23,11 +22,14 @@ export async function createProject(formData: FormData) {
   try {
     const project = await prisma.project.create({
       data: {
-        title, description: description || "", status, techStack, userId: session.user.id,
+        title: title || "", description: description || "", status: status || "", techStack,
+        planMd: planMd || "",
+        userId: session.user.id,
         tags: buildTagCreate(tagNames, session.user.id),
       },
     });
     revalidatePath("/projects");
+    revalidatePath("/");
     if (tagNames.length > 0) revalidatePath("/tags");
 
     return { success: true, id: project.id };
@@ -134,23 +136,4 @@ export async function archiveProject(id: string) {
   }
 }
 
-export async function fetchMoreProjects(cursor?: string, limit = 20) {
-  const session = await auth();
-  if (!session?.user?.id) return { items: [], nextCursor: null };
 
-  const items = await prisma.project.findMany({
-    where: { userId: session.user.id },
-    orderBy: { updatedAt: "desc" },
-    take: limit + 1,
-    ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
-    include: { tags: { include: { tag: true } } },
-  });
-
-  const hasMore = items.length > limit;
-  if (hasMore) items.pop();
-
-  return {
-    items: flattenListTags(items.map((p) => ({ ...p, createdAt: p.createdAt, updatedAt: p.updatedAt }))),
-    nextCursor: hasMore ? items[items.length - 1].id : null,
-  };
-}

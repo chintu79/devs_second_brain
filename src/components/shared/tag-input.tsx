@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { X, TagIcon } from "lucide-react";
 import { searchTags } from "@/actions/tags";
 
@@ -11,7 +10,9 @@ interface TagInputProps {
   placeholder?: string;
 }
 
-export function TagInput({ value, onChange, placeholder = "Add tags..." }: TagInputProps) {
+const MAX_TAGS = 3
+
+export function TagInput({ value, onChange, placeholder = `Add tags... (max ${MAX_TAGS})` }: TagInputProps) {
   const [inputValue, setInputValue] = useState("");
   const [suggestions, setSuggestions] = useState<{ id: string; name: string }[]>([]);
   const [open, setOpen] = useState(false);
@@ -41,7 +42,7 @@ export function TagInput({ value, onChange, placeholder = "Add tags..." }: TagIn
   }, [inputValue]);
 
   function addTag(name: string) {
-    if (tags.includes(name)) return;
+    if (tags.includes(name) || tags.length >= MAX_TAGS) return;
     const updated = [...tags, name].join(", ");
     onChange(updated);
     setInputValue("");
@@ -117,16 +118,11 @@ export function TagInput({ value, onChange, placeholder = "Add tags..." }: TagIn
         />
       </div>
 
-      <AnimatePresence>
-        {open && suggestions.length > 0 && (
-          <motion.div
-            ref={listRef}
-            initial={{ opacity: 0, y: -4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -4 }}
-            transition={{ duration: 0.15 }}
-            className="absolute z-50 left-0 right-0 top-full mt-1 rounded-md border border-border bg-popover shadow-md overflow-hidden"
-          >
+      {open && suggestions.length > 0 && (
+        <div
+          ref={listRef}
+          className="absolute z-50 left-0 right-0 top-full mt-1 rounded-md border border-border bg-popover shadow-md overflow-hidden"
+        >
             {suggestions.map((s, i) => (
               <button
                 key={s.id}
@@ -140,9 +136,8 @@ export function TagInput({ value, onChange, placeholder = "Add tags..." }: TagIn
                 <span>{s.name}</span>
               </button>
             ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
+        </div>
+      )}
     </div>
   );
 }

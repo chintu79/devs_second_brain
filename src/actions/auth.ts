@@ -33,7 +33,8 @@ export async function register(formData: FormData) {
       },
     });
 
-    return { success: "User registered successfully! You can now log in." };
+    await signIn("credentials", { email, password, redirect: false });
+    return { success: true, redirect: "/onboard" };
   } catch (error) {
     console.error("Registration error:", error);
     return { error: `Registration failed: ${error instanceof Error ? error.message : "Unknown error"}` };

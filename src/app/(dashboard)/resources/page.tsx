@@ -15,22 +15,10 @@ export default async function ResourcesPage() {
     );
   }
 
-  const [initialResult, categories, resourceTags, recentNotes, projects] = await Promise.all([
+  const [initialResult, categories, resourceTags] = await Promise.all([
     safeQuery("resources.fetchMore", () => fetchMoreResources(undefined, 20), { items: [], nextCursor: null }),
     safeQuery("resources.categories", () => prisma.resource.findMany({ where: { userId }, distinct: ["category"], select: { category: true } }), []),
     safeQuery("resources.tags", () => prisma.resourceTag.findMany({ where: { resource: { userId } }, include: { tag: { select: { name: true } } }, take: 500 }), []),
-    safeQuery("resources.recentNotes", () => prisma.note.findMany({
-      where: { userId },
-      orderBy: { createdAt: "desc" },
-      take: 5,
-      select: { id: true, title: true },
-    }), []),
-    safeQuery("resources.recentProjects", () => prisma.project.findMany({
-      where: { userId },
-      orderBy: { createdAt: "desc" },
-      take: 5,
-      select: { id: true, title: true },
-    }), []),
   ]);
 
   const allCategories = categories.map((c) => c.category).sort();
@@ -42,8 +30,6 @@ export default async function ResourcesPage() {
       nextCursor={initialResult.nextCursor}
       allCategories={allCategories}
       allTags={allTags}
-      recentNotes={recentNotes}
-      projects={projects}
     />
   );
 }

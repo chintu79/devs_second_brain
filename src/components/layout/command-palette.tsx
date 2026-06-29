@@ -11,6 +11,8 @@ import {
   CommandList,
   CommandSeparator,
 } from "@/components/ui/command";
+import { toast } from "sonner";
+import { createNote } from "@/actions/notes";
 import {
   LayoutDashboard,
   Bookmark,
@@ -22,6 +24,8 @@ import {
   FileText,
   Link2,
   Loader2,
+  Zap,
+  Calendar,
 } from "lucide-react";
 import { globalSearch } from "@/actions/search";
 
@@ -31,6 +35,7 @@ const navItems = [
   { id: "prompts", label: "Prompts", icon: Sparkles, href: "/prompts" },
   { id: "notes", label: "Notes", icon: StickyNote, href: "/notes" },
   { id: "projects", label: "Projects", icon: FolderKanban, href: "/projects" },
+  { id: "log", label: "Daily Log", icon: Calendar, href: "/log" },
   { id: "radar", label: "Open Source Radar", icon: Radio, href: "/radar" },
   { id: "search", label: "Search Everything", icon: Search, href: "/search" },
 ];
@@ -51,6 +56,9 @@ export function CommandPalette({ open: controlledOpen, onOpenChange }: CommandPa
   const router = useRouter();
   const [internalOpen, setInternalOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [capturing, setCapturing] = useState(false);
+  const [captureText, setCaptureText] = useState("");
+  const captureRef = useRef<HTMLTextAreaElement>(null);
   const [results, setResults] = useState<{
     resources: any[]; prompts: any[]; notes: any[]; projects: any[]; // eslint-disable-line @typescript-eslint/no-explicit-any
   }>({ resources: [], prompts: [], notes: [], projects: [] });
@@ -86,7 +94,10 @@ export function CommandPalette({ open: controlledOpen, onOpenChange }: CommandPa
     if (!open) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setQuery("");
-       
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setCapturing(false);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setCaptureText("");
       setResults({ resources: [], prompts: [], notes: [], projects: [] });
     }
   }, [open]);
@@ -137,6 +148,31 @@ export function CommandPalette({ open: controlledOpen, onOpenChange }: CommandPa
   const hasResults = results.resources.length > 0 || results.prompts.length > 0 ||
     results.notes.length > 0 || results.projects.length > 0;
 
+  const handleQuickCapture = useCallback(async () => {
+    if (!captureText.trim()) return;
+    const title = captureText.split('\n')[0].slice(0, 80) || `Quick note ${new Date().toLocaleDateString()}`;
+    const fd = new FormData();
+    fd.set("title", title);
+    fd.set("content", captureText);
+    fd.set("category", "personal");
+    fd.set("tags", "quick-capture");
+    const result = await createNote(fd);
+    if (result.error) {
+      toast.error(result.error);
+    } else {
+      toast.success("Captured!");
+      setCaptureText("");
+      setCapturing(false);
+      setOpen(false);
+    }
+  }, [captureText, setOpen]);
+
+  useEffect(() => {
+    if (capturing && captureRef.current) {
+      captureRef.current.focus();
+    }
+  }, [capturing]);
+
   return (
     <CommandDialog open={open} onOpenChange={setOpen}>
       <CommandInput
@@ -145,9 +181,32 @@ export function CommandPalette({ open: controlledOpen, onOpenChange }: CommandPa
         onValueChange={setQuery}
       />
       <CommandList>
-        {!query.trim() ? (
+        {capturing ? (
+          <div className="p-4 space-y-3">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Quick Capture</p>
+            <textarea
+              ref={captureRef}
+              value={captureText}
+              onChange={(e) => setCaptureText(e.target.value)}
+              placeholder="What's on your mind?"
+              className="w-full min-h-[100px] rounded-lg border border-border bg-muted p-3 text-sm text-foreground placeholder:text-muted-foreground/60 resize-none outline-none focus:border-primary/40"
+              onKeyDown={(e) => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); handleQuickCapture(); } }}
+            />
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] text-muted-foreground">⌘+Enter to save</span>
+              <div className="flex gap-2">
+                <button onClick={() => { setCapturing(false); setCaptureText(""); }} className="px-3 py-1.5 text-xs rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">Cancel</button>
+                <button onClick={handleQuickCapture} disabled={!captureText.trim()} className="px-3 py-1.5 text-xs rounded-md bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-40 transition-all">Save</button>
+              </div>
+            </div>
+          </div>
+        ) : !query.trim() ? (
           <>
             <CommandGroup heading="Navigation">
+              <CommandItem onSelect={() => setCapturing(true)}>
+                <Zap className="mr-2 h-4 w-4" />
+                <span>Quick Capture</span>
+              </CommandItem>
               {navItems.map((item) => {
                 const Icon = item.icon;
                 return (

@@ -15,12 +15,10 @@ export async function getAnalytics() {
   const startOfWeek = new Date(now);
   startOfWeek.setDate(now.getDate() - now.getDay());
   startOfWeek.setHours(0, 0, 0, 0);
-  const thirtyDaysAgo = new Date(now);
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
   const yearAgo = new Date(now);
   yearAgo.setDate(yearAgo.getDate() - 365);
 
-  const [totalResources, totalPrompts, totalNotes, totalProjects, todayResources, todayPrompts, todayNotes, todayProjects, weekResources, weekPrompts, weekNotes, weekProjects, resourceCategories, promptCategories, noteCategories, projectStatuses, tags, recentActivity, recentUpdates] = await Promise.all([
+  const [totalResources, totalPrompts, totalNotes, totalProjects, todayResources, todayPrompts, todayNotes, todayProjects, weekResources, weekPrompts, weekNotes, weekProjects, resourceCategories, promptCategories, noteCategories, projectStatuses, tags, allResources, allPrompts, allNotes, allProjects, dailyEntries] = await Promise.all([
     prisma.resource.count({ where: { userId } }),
     prisma.prompt.count({ where: { userId } }),
     prisma.note.count({ where: { userId } }),
@@ -43,99 +41,48 @@ export async function getAnalytics() {
 
     prisma.tag.findMany({ where: { userId }, take: 50, include: { _count: { select: { resources: true, prompts: true, notes: true, projects: true } } } }),
 
-    // Only last 30 days of createdAt for activity chart
-    prisma.resource.findMany({ where: { userId, createdAt: { gte: thirtyDaysAgo } }, select: { createdAt: true } }),
-    prisma.note.findMany({ where: { userId, updatedAt: { gte: thirtyDaysAgo } }, select: { createdAt: true, updatedAt: true } }),
+    // All items from the last year for heatmap + streak
+    prisma.resource.findMany({ where: { userId, createdAt: { gte: yearAgo } }, select: { createdAt: true } }),
+    prisma.prompt.findMany({ where: { userId, createdAt: { gte: yearAgo } }, select: { createdAt: true } }),
+    prisma.note.findMany({ where: { userId, createdAt: { gte: yearAgo } }, select: { createdAt: true, updatedAt: true } }),
+    prisma.project.findMany({ where: { userId, createdAt: { gte: yearAgo } }, select: { createdAt: true } }),
+    prisma.dailyEntry.findMany({ where: { userId, createdAt: { gte: yearAgo } }, select: { date: true } }),
   ]);
 
-  // Activity by day (last 30 days)
+  // Group by day for all 365 days
   const dayMap = new Map<string, number>();
-  for (let i = 29; i >= 0; i--) {
+  for (let i = 364; i >= 0; i--) {
     const d = new Date(now);
     d.setDate(d.getDate() - i);
     dayMap.set(d.toISOString().slice(0, 10), 0);
   }
 
-  for (const r of recentActivity) {
-    const key = r.createdAt.toISOString().slice(0, 10);
-    if (dayMap.has(key)) dayMap.set(key, dayMap.get(key)! + 1);
-  }
-  for (const r of recentUpdates) {
-    const key = r.createdAt.toISOString().slice(0, 10);
-    if (dayMap.has(key)) dayMap.set(key, dayMap.get(key)! + 1);
-    const updKey = r.updatedAt.toISOString().slice(0, 10);
-    if (dayMap.has(updKey)) dayMap.set(updKey, dayMap.get(updKey)! + 1);
-  }
+  for (const r of allResources) { const k = r.createdAt.toISOString().slice(0, 10); if (dayMap.has(k)) dayMap.set(k, dayMap.get(k)! + 1); }
+  for (const r of allPrompts) { const k = r.createdAt.toISOString().slice(0, 10); if (dayMap.has(k)) dayMap.set(k, dayMap.get(k)! + 1); }
+  for (const r of allNotes) { const k = r.createdAt.toISOString().slice(0, 10); if (dayMap.has(k)) dayMap.set(k, dayMap.get(k)! + 1); const uk = r.updatedAt.toISOString().slice(0, 10); if (dayMap.has(uk)) dayMap.set(uk, dayMap.get(uk)! + 1); }
+  for (const r of allProjects) { const k = r.createdAt.toISOString().slice(0, 10); if (dayMap.has(k)) dayMap.set(k, dayMap.get(k)! + 1); }
+  for (const r of dailyEntries) { const k = r.date.toISOString().slice(0, 10); if (dayMap.has(k)) dayMap.set(k, dayMap.get(k)! + 1); }
 
   const activity = Array.from(dayMap.entries()).map(([date, count]) => ({ date, count }));
 
-  // Streak: check last 365 days of activity. 
-  // We traverse backwards from today. Need to check if there were ANY items created/updated
-  // on each day. Since we only fetched 30 days, the streak will be incomplete if >30.
-  // For longer streaks, fetch the year's data more efficiently.
+  // Streak
   let streak = 0;
   for (let i = 0; i < 365; i++) {
     const d = new Date(now);
     d.setDate(d.getDate() - i);
     const key = d.toISOString().slice(0, 10);
-    if ((dayMap.get(key) || 0) > 0) {
-      streak++;
-    } else if (i > 0) {
-      break;
-    }
+    if ((dayMap.get(key) || 0) > 0) streak++;
+    else if (i > 0) break;
   }
 
-  // If streak is 30+, we hit the boundary of our 30-day window
-  // Fetch older data to check if streak continues
-  if (streak >= 30) {
-    const oldestDate = new Date(now);
-    oldestDate.setDate(oldestDate.getDate() - 31);
-    const olderResources = await prisma.resource.findMany({ where: { userId, createdAt: { lt: oldestDate, gte: yearAgo } }, take: 500, select: { createdAt: true }, orderBy: { createdAt: "desc" } });
-    const olderPrompts = await prisma.prompt.findMany({ where: { userId, createdAt: { lt: oldestDate, gte: yearAgo } }, take: 500, select: { createdAt: true }, orderBy: { createdAt: "desc" } });
-    const olderNotes = await prisma.note.findMany({ where: { userId, updatedAt: { lt: oldestDate, gte: yearAgo } }, take: 500, select: { createdAt: true, updatedAt: true }, orderBy: { updatedAt: "desc" } });
-    const olderProjects = await prisma.project.findMany({ where: { userId, createdAt: { lt: oldestDate, gte: yearAgo } }, take: 500, select: { createdAt: true }, orderBy: { createdAt: "desc" } });
-
-    const olderDates = new Set<string>();
-    for (const r of olderResources) olderDates.add(r.createdAt.toISOString().slice(0, 10));
-    for (const p of olderPrompts) olderDates.add(p.createdAt.toISOString().slice(0, 10));
-    for (const n of olderNotes) {
-      olderDates.add(n.createdAt.toISOString().slice(0, 10));
-      olderDates.add(n.updatedAt.toISOString().slice(0, 10));
-    }
-    for (const p of olderProjects) olderDates.add(p.createdAt.toISOString().slice(0, 10));
-
-    for (let i = 31; i < 365; i++) {
-      const d = new Date(now);
-      d.setDate(d.getDate() - i);
-      const key = d.toISOString().slice(0, 10);
-      if (olderDates.has(key)) {
-        streak++;
-      } else {
-        break;
-      }
-    }
-  }
-
-  // Category distribution (from groupBy)
   const catMap = new Map<string, number>();
   for (const c of resourceCategories) catMap.set(c.category, c._count);
   for (const c of promptCategories) catMap.set(c.category, (catMap.get(c.category) || 0) + c._count);
   for (const c of noteCategories) catMap.set(c.category, (catMap.get(c.category) || 0) + c._count);
+  const categories = Array.from(catMap.entries()).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count);
 
-  const categories = Array.from(catMap.entries())
-    .map(([name, count]) => ({ name, count }))
-    .sort((a, b) => b.count - a.count);
+  const tagUsage = tags.map((t) => ({ name: t.name, count: t._count.resources + t._count.prompts + t._count.notes + t._count.projects })).sort((a, b) => b.count - a.count).slice(0, 20);
 
-  // Tag usage
-  const tagUsage = tags
-    .map((t) => ({
-      name: t.name,
-      count: t._count.resources + t._count.prompts + t._count.notes + t._count.projects,
-    }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 20);
-
-  // Vault type distribution
   const byType = [
     { name: "Resources", value: totalResources },
     { name: "Prompts", value: totalPrompts },
@@ -143,16 +90,13 @@ export async function getAnalytics() {
     { name: "Projects", value: totalProjects },
   ].filter((t) => t.value > 0);
 
-  // Project status breakdown
-  const projectStatusesList = projectStatuses.map((p) => ({ name: p.status, count: p._count }));
-
   return {
       totals: { resources: totalResources, prompts: totalPrompts, notes: totalNotes, projects: totalProjects, total: totalResources + totalPrompts + totalNotes + totalProjects },
       activity,
       categories,
       tagUsage,
       byType,
-      projectStatuses: projectStatusesList,
+      projectStatuses: projectStatuses.map((p) => ({ name: p.status, count: p._count })),
       streak,
       todayCounts: { resources: todayResources, prompts: todayPrompts, notes: todayNotes, projects: todayProjects },
       weekCounts: { resources: weekResources, prompts: weekPrompts, notes: weekNotes, projects: weekProjects },

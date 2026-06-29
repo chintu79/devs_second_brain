@@ -3,17 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { collapsible } from "@/lib/motion";
-import {
-  FileText,
-  Star,
-  Clock,
-  Archive,
-  ChevronDown,
-  Hash,
-  Tag,
-  Layers,
-  Plus,
-} from "lucide-react";
+import { FileText, Star, Clock, Archive, Hash, Tag, Layers, Plus, ArrowUpDown, Bookmark } from "lucide-react";
 
 interface NoteSidebarProps {
   categories: { name: string; count: number }[];
@@ -32,184 +22,126 @@ interface NoteSidebarProps {
 }
 
 export function NoteSidebar({
-  categories,
-  allTags,
-  clusters,
-  totalNotes,
-  favCount,
-  archivedCount,
-  activeSection,
-  onSectionChange,
-  activeCategory,
-  onCategoryChange,
-  activeTag,
-  onTagChange,
-  onCreate,
+  categories, allTags, clusters, totalNotes, favCount, archivedCount,
+  activeSection, onSectionChange, activeCategory, onCategoryChange, activeTag, onTagChange, onCreate,
 }: NoteSidebarProps) {
-  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({
-    clusters: false,
-    categories: false,
-    tags: false,
-  });
-
-  function toggleCollapse(key: string) {
-    setCollapsed((prev) => ({ ...prev, [key]: !prev[key] }));
-  }
-
-  const navItems = [
-    { id: "all", label: "All Notes", icon: FileText, count: totalNotes },
-    { id: "favorites", label: "Favorites", icon: Star, count: favCount },
-    { id: "recent", label: "Recent Notes", icon: Clock, count: null },
-    { id: "archived", label: "Archived", icon: Archive, count: archivedCount },
-  ];
+  const [catOpen, setCatOpen] = useState(true);
+  const [tagsOpen, setTagsOpen] = useState(false);
+  const [clusterOpen, setClusterOpen] = useState(false);
 
   return (
-    <div className="h-full w-56 shrink-0 border-r border-border/50 bg-sidebar flex flex-col overflow-y-auto">
-      <div className="px-3 pt-3 pb-2 flex items-center justify-between border-b border-border/30">
-        <span className="text-xs font-semibold text-section-foreground uppercase tracking-[0.1em]">Notes</span>
-        <button
-          onClick={onCreate}
-          aria-label="Create new note"
-          className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 text-primary hover:bg-primary/20 hover:scale-[1.1] transition-all duration-150"
-        >
-          <Plus className="h-4 w-4" />
-        </button>
-      </div>
-
-      <div className="flex-1 overflow-y-auto py-2 px-2 space-y-0.5">
-        {navItems.map((item) => (
-          <button
-            key={item.id}
-            onClick={() => {
-              onSectionChange(item.id);
-              onCategoryChange(null);
-              onTagChange(null);
-            }}
-            className={`sidebar-item w-full text-sm transition-transform duration-150 ${activeSection === item.id && !activeCategory && !activeTag ? "sidebar-item-active" : "hover:scale-[1.02]"
-              }`}
-          >
-            <item.icon className="h-4 w-4 shrink-0" />
-            <span className="flex-1 text-left">{item.label}</span>
-            {item.count !== null && (
-              <span className="text-xs text-muted-foreground bg-muted/60 px-1.5 py-0.5 rounded">{item.count}</span>
-            )}
+    <div className="hidden xl:flex h-full w-56 shrink-0 bg-sidebar flex-col border-r border-border/50">
+      <div className="flex-1 overflow-y-auto py-3 px-2 space-y-1">
+        {/* Create */}
+        <div className="px-3 pb-2 border-b border-border/20">
+          <button onClick={onCreate} aria-label="Create new note" className="inline-flex items-center gap-1.5 w-full px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-all hover:scale-[1.03]">
+            <Plus className="h-3.5 w-3.5" />
+            New Note
           </button>
-        ))}
+        </div>
 
-        <div className="h-px bg-border/30 my-2" />
-
-        {/* Knowledge Clusters */}
-        <CollapsibleSection
-          label="Clusters"
-          icon={Layers}
-          collapsed={collapsed.clusters}
-          onToggle={() => toggleCollapse("clusters")}
-        >
-          {clusters.map((c) => (
-            <button
-              key={c.name}
-              onClick={() => {
-                onCategoryChange(null);
-                onTagChange(null);
-                onSectionChange(`cluster:${c.name}`);
-              }}
-              className={`sidebar-item w-full text-sm transition-transform duration-150 ${activeSection === `cluster:${c.name}` ? "sidebar-item-active" : "hover:scale-[1.02]"
-                }`}
-            >
-              <span className="w-2 h-2 rounded-full bg-primary/60 shrink-0" />
-              <span className="flex-1 text-left">{c.name}</span>
-              <span className="text-xs text-muted-foreground">{c.count}</span>
+        {/* Browse */}
+        <div className="pt-1">
+          <h4 className="px-3 py-1.5 text-xs font-semibold text-section-foreground uppercase tracking-[0.1em]">Browse</h4>
+          <div className="space-y-0.5">
+            <button onClick={() => { onSectionChange("all"); onCategoryChange(null); onTagChange(null); }} className={`sidebar-item w-full text-sm transition-transform duration-150 hover:scale-[1.02] ${activeSection === "all" && !activeCategory && !activeTag ? "sidebar-item-active" : ""}`}>
+              <Bookmark className="h-3.5 w-3.5" />
+              All Notes
+              <span className="ml-auto text-xs text-muted-foreground bg-muted/60 px-1.5 py-0.5 rounded">{totalNotes}</span>
             </button>
-          ))}
-        </CollapsibleSection>
+            <button onClick={() => { onSectionChange("favorites"); onCategoryChange(null); onTagChange(null); }} className={`sidebar-item w-full text-sm transition-transform duration-150 hover:scale-[1.02] ${activeSection === "favorites" ? "sidebar-item-active" : ""}`}>
+              <Star className="h-3.5 w-3.5" />
+              Favorites
+              <span className="ml-auto text-xs text-muted-foreground bg-muted/60 px-1.5 py-0.5 rounded">{favCount}</span>
+            </button>
+            <button onClick={() => { onSectionChange("recent"); onCategoryChange(null); onTagChange(null); }} className={`sidebar-item w-full text-sm transition-transform duration-150 hover:scale-[1.02] ${activeSection === "recent" ? "sidebar-item-active" : ""}`}>
+              <Clock className="h-3.5 w-3.5" />
+              Recent
+            </button>
+            <button onClick={() => { onSectionChange("archived"); onCategoryChange(null); onTagChange(null); }} className={`sidebar-item w-full text-sm transition-transform duration-150 hover:scale-[1.02] ${activeSection === "archived" ? "sidebar-item-active" : ""}`}>
+              <Archive className="h-3.5 w-3.5" />
+              Archived
+              <span className="ml-auto text-xs text-muted-foreground bg-muted/60 px-1.5 py-0.5 rounded">{archivedCount}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Clusters */}
+        {clusters.length > 0 && (
+          <div className="pt-2">
+            <button onClick={() => setClusterOpen(!clusterOpen)} className="flex items-center gap-2 w-full px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/30 rounded-md transition-all">
+              <Layers className="h-3.5 w-3.5" />
+              Clusters
+              <ArrowUpDown className={`h-3 w-3 ml-auto transition-transform duration-150 ${clusterOpen ? "" : "rotate-180"}`} />
+            </button>
+            <AnimatePresence initial={false}>
+              {clusterOpen && (
+                <motion.div variants={collapsible} className="overflow-hidden">
+                  <div className="space-y-0.5 pt-0.5">
+                    {clusters.map((c) => (
+                      <button key={c.name} onClick={() => { onCategoryChange(null); onTagChange(null); onSectionChange(`cluster:${c.name}`); }} className={`sidebar-item w-full text-sm transition-transform duration-150 hover:scale-[1.02] ${activeSection === `cluster:${c.name}` ? "sidebar-item-active" : ""}`}>
+                        <span className="w-2 h-2 rounded-full bg-primary/60 shrink-0" />
+                        <span className="flex-1 text-left">{c.name}</span>
+                        <span className="text-xs text-muted-foreground">{c.count}</span>
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        )}
 
         {/* Categories */}
-        <CollapsibleSection
-          label="Categories"
-          icon={Hash}
-          collapsed={collapsed.categories}
-          onToggle={() => toggleCollapse("categories")}
-        >
-          {categories.map((c) => (
-            <button
-              key={c.name}
-              onClick={() => {
-                onCategoryChange(c.name);
-                onTagChange(null);
-                onSectionChange("all");
-              }}
-              className={`sidebar-item w-full text-sm transition-transform duration-150 ${activeCategory === c.name ? "sidebar-item-active" : "hover:scale-[1.02]"
-                }`}
-            >
-              <span className="flex-1 text-left capitalize">{c.name}</span>
-              <span className="text-xs text-muted-foreground">{c.count}</span>
+        {categories.length > 0 && (
+          <div className="pt-2">
+            <button onClick={() => setCatOpen(!catOpen)} className="flex items-center gap-2 w-full px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/30 rounded-md transition-all">
+              <Hash className="h-3.5 w-3.5" />
+              Categories
+              <ArrowUpDown className={`h-3 w-3 ml-auto transition-transform duration-150 ${catOpen ? "" : "rotate-180"}`} />
             </button>
-          ))}
-        </CollapsibleSection>
+            <AnimatePresence initial={false}>
+              {catOpen && (
+                <motion.div variants={collapsible} className="overflow-hidden">
+                  <div className="space-y-0.5 pt-0.5">
+                    {categories.map((c) => (
+                      <button key={c.name} onClick={() => { onCategoryChange(c.name); onTagChange(null); onSectionChange("all"); }} className={`sidebar-item w-full text-sm capitalize transition-transform duration-150 hover:scale-[1.02] ${activeCategory === c.name ? "sidebar-item-active" : ""}`}>
+                        <span className="flex-1 text-left">{c.name}</span>
+                        <span className="text-xs text-muted-foreground">{c.count}</span>
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        )}
 
         {/* Tags */}
-        <CollapsibleSection
-          label="Tags"
-          icon={Tag}
-          collapsed={collapsed.tags}
-          onToggle={() => toggleCollapse("tags")}
-        >
-          {allTags.map((t) => (
-            <button
-              key={t.name}
-              onClick={() => {
-                onTagChange(t.name);
-                onCategoryChange(null);
-                onSectionChange("all");
-              }}
-              className={`sidebar-item w-full text-sm transition-transform duration-150 ${activeTag === t.name ? "sidebar-item-active" : "hover:scale-[1.02]"
-                }`}
-            >
-              <span className="flex-1 text-left">{t.name}</span>
-              <span className="text-xs text-muted-foreground">{t.count}</span>
+        {allTags.length > 0 && (
+          <div className="pt-2">
+            <button onClick={() => setTagsOpen(!tagsOpen)} className="flex items-center gap-2 w-full px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/30 rounded-md transition-all">
+              <Tag className="h-3.5 w-3.5" />
+              Tags
+              <ArrowUpDown className={`h-3 w-3 ml-auto transition-transform duration-150 ${tagsOpen ? "" : "rotate-180"}`} />
             </button>
-          ))}
-        </CollapsibleSection>
-      </div>
-    </div>
-  );
-}
-
-function CollapsibleSection({
-  label,
-  icon: Icon,
-  collapsed,
-  onToggle,
-  children,
-}: {
-  label: string;
-  icon: React.ComponentType<{ className?: string }>;
-  collapsed: boolean;
-  onToggle: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="pt-2">
-      <button
-        onClick={onToggle}
-        className="flex items-center gap-2 w-full px-3 py-1.5 text-xs font-semibold text-section-foreground uppercase tracking-[0.1em] hover:text-foreground hover:scale-[1.02] transition-all duration-150"
-      >
-        <Icon className="h-3.5 w-3.5" />
-        {label}
-        <ChevronDown
-          className={`h-3.5 w-3.5 ml-auto transition-transform duration-150 ${collapsed ? "-rotate-90" : ""}`}
-        />
-      </button>
-      <AnimatePresence initial={false}>
-        {!collapsed && (
-          <motion.div
-            variants={collapsible}
-            className="overflow-hidden"
-          >
-            <div className="space-y-0.5 pt-0.5">{children}</div>
-          </motion.div>
+            <AnimatePresence initial={false}>
+              {tagsOpen && (
+                <motion.div variants={collapsible} className="overflow-hidden">
+                  <div className="space-y-0.5 pt-0.5">
+                    {allTags.map((t) => (
+                      <button key={t.name} onClick={() => { onTagChange(t.name); onCategoryChange(null); onSectionChange("all"); }} className={`sidebar-item w-full text-sm transition-transform duration-150 hover:scale-[1.02] ${activeTag === t.name ? "sidebar-item-active" : ""}`}>
+                        <span className="flex-1 text-left">{t.name}</span>
+                        <span className="text-xs text-muted-foreground">{t.count}</span>
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         )}
-      </AnimatePresence>
+      </div>
     </div>
   );
 }

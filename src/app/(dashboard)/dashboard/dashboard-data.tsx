@@ -1,125 +1,82 @@
 import prisma, { safeQuery } from "@/lib/prisma";
-import { includeTags, flattenListTags } from "@/lib/tags";
 import { getAnalytics } from "@/actions/analytics";
-import { DashboardVaultBlocks } from "./vault-blocks";
-import { DashboardTimeline } from "./timeline";
-import { GraphView } from "@/components/graph/graph-view";
-import { DashboardSection } from "./dashboard-content";
-import { DashboardInsights } from "./insights";
+import { DashboardMain } from "@/components/dashboard/dashboard-main";
 
-export async function DashboardPrimarySection({ userId }: { userId: string | undefined }) {
+const SEVEN_DAYS = new Date(Date.now() - 7 * 86400000);
+const THIRTY_DAYS = new Date(Date.now() - 30 * 86400000);
+
+export async function DashboardMainSection({
+  userId, plan,
+}: {
+  userId: string | undefined; plan: string | null;
+}) {
   if (!userId) return null;
 
-  const [resourceCount, promptCount, noteCount, projectCount, recentResources, recentPrompts, recentNotes, activeProjects] = await Promise.all([
-    safeQuery("resource.count", () => prisma.resource.count({ where: { userId } }), 0),
-    safeQuery("prompt.count", () => prisma.prompt.count({ where: { userId } }), 0),
-    safeQuery("note.count", () => prisma.note.count({ where: { userId } }), 0),
-    safeQuery("project.count", () => prisma.project.count({ where: { userId } }), 0),
-    safeQuery("resource.recent", () => prisma.resource.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, take: 5, select: { id: true, title: true, url: true, createdAt: true } }), []),
-    safeQuery("prompt.recent", () => prisma.prompt.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, take: 5, select: { id: true, title: true, createdAt: true } }), []),
-    safeQuery("note.recent", () => prisma.note.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, take: 5, select: { id: true, title: true, createdAt: true } }), []),
-    safeQuery("project.active", () => prisma.project.findMany({ where: { userId, status: { notIn: ["archived"] } }, orderBy: { createdAt: "desc" }, take: 5, select: { id: true, title: true, status: true, createdAt: true } }), []),
+  const [
+    analytics, resources, prompts, notes, projects,
+    staleProjectRows, staleNoteRows,
+  ] = await Promise.all([
+    safeQuery("analytics", () => getAnalytics(), null),
+    safeQuery("dash.resources", () => prisma.resource.findMany({
+      where: { userId }, orderBy: { createdAt: "desc" }, take: 5,
+      select: { id: true, title: true, createdAt: true },
+    }), []),
+    safeQuery("dash.prompts", () => prisma.prompt.findMany({
+      where: { userId }, orderBy: { createdAt: "desc" }, take: 5,
+      select: { id: true, title: true, createdAt: true, lastUsedAt: true },
+    }), []),
+    safeQuery("dash.notes", () => prisma.note.findMany({
+      where: { userId }, orderBy: { updatedAt: "desc" }, take: 5,
+      select: { id: true, title: true, createdAt: true, updatedAt: true },
+    }), []),
+    safeQuery("dash.projects", () => prisma.project.findMany({
+      where: { userId, status: { notIn: ["archived"] } }, orderBy: { updatedAt: "desc" }, take: 5,
+      select: { id: true, title: true, status: true, createdAt: true, updatedAt: true },
+    }), []),
+    safeQuery("stale.projects", () => prisma.project.findMany({
+      where: { userId, updatedAt: { lt: SEVEN_DAYS }, status: { notIn: ["archived", "done"] } },
+      select: { id: true, title: true, updatedAt: true },
+    }), []),
+    safeQuery("stale.notes", () => prisma.note.findMany({
+      where: { userId, updatedAt: { lt: THIRTY_DAYS } },
+      select: { id: true, title: true, updatedAt: true },
+    }), []),
   ]);
 
-  const analyticsData = await getAnalytics();
+  const continueItems = [
+    ...resources.map((r) => ({ id: r.id, title: r.title, type: "resource" as const, updatedAt: r.createdAt })),
+    ...prompts.map((p) => ({ id: p.id, title: p.title, type: "prompt" as const, updatedAt: p.lastUsedAt ?? p.createdAt })),
+    ...notes.map((n) => ({ id: n.id, title: n.title, type: "note" as const, updatedAt: n.updatedAt })),
+    ...projects.map((p) => ({ id: p.id, title: p.title, type: "project" as const, updatedAt: p.updatedAt })),
+  ].sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()).slice(0, 3);
 
-  const totalItems = resourceCount + promptCount + noteCount + projectCount;
-  const hasActivity = !!analyticsData && !("error" in analyticsData);
+  const recentItems = [
+    ...resources.map((r) => ({ id: r.id, title: r.title, type: "resource" as const, href: `/resources?id=${r.id}`, createdAt: r.createdAt })),
+    ...prompts.map((p) => ({ id: p.id, title: p.title, type: "prompt" as const, href: `/prompts?id=${p.id}`, createdAt: p.createdAt })),
+    ...notes.map((n) => ({ id: n.id, title: n.title, type: "note" as const, href: `/notes?id=${n.id}`, createdAt: n.createdAt })),
+    ...projects.map((p) => ({ id: p.id, title: p.title, type: "project" as const, href: `/projects?id=${p.id}`, createdAt: p.createdAt })),
+  ].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).slice(0, 5);
 
-  const timeline = [
-    ...recentResources.map((r) => ({ id: r.id, type: "resource" as const, title: r.title, href: "/resources", createdAt: r.createdAt })),
-    ...recentPrompts.map((p) => ({ id: p.id, type: "prompt" as const, title: p.title, href: "/prompts", createdAt: p.createdAt })),
-    ...recentNotes.map((n) => ({ id: n.id, type: "note" as const, title: n.title, href: "/notes", createdAt: n.createdAt })),
-    ...activeProjects.map((p) => ({ id: p.id, type: "project" as const, title: p.title, href: "/projects", createdAt: p.createdAt })),
-  ].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).slice(0, 10);
-
-  return (
-    <>
-      <DashboardSection>
-        <div className="flex items-start justify-between mb-6 mt-3">
-          <div>
-            <p className="text-base text-secondary-foreground">
-              {totalItems > 0
-                ? `${totalItems} items across ${[resourceCount, promptCount, noteCount, projectCount].filter((c) => c > 0).length} vaults`
-                : "Start building your second brain"}
-            </p>
-            <div className="flex items-center gap-3 mt-2">
-              {hasActivity && analyticsData!.streak > 0 && (
-                <span className="flex items-center gap-1 text-sm text-amber-400">
-                  {analyticsData!.streak}-day streak
-                </span>
-              )}
-            </div>
-          </div>
-          {hasActivity && (
-            <div className="flex items-center gap-4 text-xs text-muted-foreground shrink-0">
-              <div className="text-right">
-                <p className="text-foreground/80 font-medium">Today</p>
-                <p>+{analyticsData!.todayCounts.resources + analyticsData!.todayCounts.prompts + analyticsData!.todayCounts.notes + analyticsData!.todayCounts.projects} items</p>
-              </div>
-              <div className="text-right">
-                <p className="text-foreground/80 font-medium">This Week</p>
-                <p>+{analyticsData!.weekCounts.resources + analyticsData!.weekCounts.prompts + analyticsData!.weekCounts.notes + analyticsData!.weekCounts.projects} items</p>
-              </div>
-            </div>
-          )}
-        </div>
-      </DashboardSection>
-
-      <DashboardSection>
-        <div className="mb-6">
-          <DashboardVaultBlocks
-            resources={{ count: resourceCount, items: recentResources.map((r) => ({ id: r.id, title: r.title, createdAt: r.createdAt })) }}
-            prompts={{ count: promptCount, items: recentPrompts.map((p) => ({ id: p.id, title: p.title, createdAt: p.createdAt })) }}
-            notes={{ count: noteCount, items: recentNotes.map((n) => ({ id: n.id, title: n.title, createdAt: n.createdAt })) }}
-            projects={{ count: projectCount, items: activeProjects.map((p) => ({ id: p.id, title: p.title, status: p.status, createdAt: p.createdAt })) }}
-          />
-        </div>
-      </DashboardSection>
-
-      <DashboardSection>
-        <div className="flex gap-6">
-          <div className="flex-[3] min-w-0">
-            <DashboardTimeline items={timeline} />
-          </div>
-          {hasActivity && (
-            <div className="flex-[2] min-w-0">
-              <DashboardInsights data={analyticsData} />
-            </div>
-          )}
-        </div>
-      </DashboardSection>
-    </>
-  );
-}
-
-export async function DashboardGraphSection({ userId }: { userId: string | undefined }) {
-  if (!userId) return null;
-
-  const [graphResources, graphPrompts, graphNotes, graphProjects] = await Promise.all([
-    safeQuery("graph.resources", () => prisma.resource.findMany({ where: { userId }, take: 500, ...includeTags }), []),
-    safeQuery("graph.prompts", () => prisma.prompt.findMany({ where: { userId }, take: 500, ...includeTags }), []),
-    safeQuery("graph.notes", () => prisma.note.findMany({ where: { userId }, take: 500, ...includeTags }), []),
-    safeQuery("graph.projects", () => prisma.project.findMany({ where: { userId }, take: 500, ...includeTags }), []),
-  ]);
+  const hasAnalytics = analytics !== null && !("error" in analytics);
+  const todayCounts = hasAnalytics
+    ? { resources: analytics!.todayCounts.resources, prompts: analytics!.todayCounts.prompts, notes: analytics!.todayCounts.notes, projects: analytics!.todayCounts.projects }
+    : { resources: 0, prompts: 0, notes: 0, projects: 0 };
 
   return (
-    <DashboardSection>
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-semibold text-foreground">Knowledge Graph</h2>
-          <a href="/graph" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-            Open full graph →
-          </a>
-        </div>
-        <GraphView
-          compact
-          resources={flattenListTags(graphResources).map((r) => ({ id: r.id, title: r.title, tags: r.tags }))}
-          prompts={flattenListTags(graphPrompts).map((p) => ({ id: p.id, title: p.title, tags: p.tags }))}
-          notes={flattenListTags(graphNotes).map((n) => ({ id: n.id, title: n.title, tags: n.tags }))}
-          projects={flattenListTags(graphProjects).map((p) => ({ id: p.id, title: p.title, tags: p.tags }))}
-        />
-      </div>
-    </DashboardSection>
+    <DashboardMain
+      continueItems={continueItems}
+      todayCounts={todayCounts}
+      staleProjects={staleProjectRows}
+      staleNotes={staleNoteRows}
+      recentItems={recentItems}
+      plan={plan}
+      analytics={hasAnalytics ? {
+        totalResources: analytics!.totals.resources,
+        totalNotes: analytics!.totals.notes,
+        totalPrompts: analytics!.totals.prompts,
+        totalProjects: analytics!.totals.projects,
+        streak: analytics!.streak,
+      } : null}
+    />
   );
 }

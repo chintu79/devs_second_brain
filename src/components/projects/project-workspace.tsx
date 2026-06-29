@@ -4,23 +4,27 @@ import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Markdown } from "@/components/shared/markdown";
 import {
-  Search, Star, Pencil, Trash2, Archive, X, ExternalLink,
+  Search, Star, Pencil, Lock, Unlock, Trash2, Archive, X, ExternalLink,
   ClipboardList, FileText, Sparkles, Clock, Link2,
   CircleDot, Layers, FlaskConical, Hammer, CheckCircle2,
   ChevronRight, ChevronDown, Copy, FolderKanban, Plus, Loader2,
-  Columns3, List, Save,
+  Columns3, List,
 } from "lucide-react";
 import { slideInRight } from "@/lib/motion";
+import { formatRelative } from "@/lib/utils";
 import { ProjectSidebar } from "./project-sidebar";
 import { ProjectList } from "./project-list";
 import { KanbanBoard } from "./kanban-board";
-import { toggleProjectFavorite, deleteProject, saveProjectPlan, archiveProject, editProject } from "@/actions/projects";
+import { toggleProjectFavorite, deleteProject, saveProjectPlan, archiveProject, editProject, createProject } from "@/actions/projects";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
+import { InlineEditor } from "@/components/shared/inline-editor";
+import { TagInput } from "@/components/shared/tag-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ProjectDialog } from "@/components/vaults/project-dialog";
+import { useAutosave } from "@/hooks/use-autosave";
+import { PROJECT_STATUS_META } from "@/lib/constants";
+
+const PROJECT_TEMPLATE = "## Vision\n\nWhat are you trying to build?\n\n## Current Focus\n\nWhat are you working on today?\n\n## Roadmap\n\n\n## Tasks\n\n- [ ]\n\n\n## Decisions\n\n";
 
 /* ── Types ── */
 interface Project {
@@ -36,15 +40,6 @@ interface ProjectWorkspaceProps {
   projects: Project[]; resources: Resource[]; prompts: PromptItem[]; notes: Note[];
 }
 
-const statusMeta: Record<string, { label: string; color: string; icon: React.ComponentType<{ className?: string }> }> = {
-  idea: { label: "Idea", color: "text-amber-400", icon: CircleDot },
-  research: { label: "Research", color: "text-blue-400", icon: FlaskConical },
-  planning: { label: "Planning", color: "text-purple-400", icon: Layers },
-  building: { label: "Building", color: "text-green-400", icon: Hammer },
-  completed: { label: "Completed", color: "text-emerald-400", icon: CheckCircle2 },
-  archived: { label: "Archived", color: "text-muted-foreground", icon: Archive },
-};
-
 /* ── Main Component ── */
 export function ProjectWorkspace({ projects, resources, prompts, notes }: ProjectWorkspaceProps) {
   const router = useRouter();
@@ -56,7 +51,6 @@ export function ProjectWorkspace({ projects, resources, prompts, notes }: Projec
   const [activeTag, setActiveTag] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
   const [viewMode, setViewMode] = useState<"list" | "kanban">("list");
-  const [createOpen, setCreateOpen] = useState(false);
   const PAGE_SIZE = 20;
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -99,6 +93,7 @@ export function ProjectWorkspace({ projects, resources, prompts, notes }: Projec
     router.replace(`/projects${p.toString() ? `?${p}` : ""}`, { scroll: false });
   }, [router, searchParams]);
 
+
   function select(id: string) { setSelectedId(id === selectedId ? null : id); }
   function close() { setSelectedId(null); }
 
@@ -128,6 +123,19 @@ export function ProjectWorkspace({ projects, resources, prompts, notes }: Projec
     };
   }, [selectedProject, notes, resources, prompts]);
 
+  const connectionCounts = useMemo(() => {
+    const map = new Map<string, { notes: number; resources: number; prompts: number }>();
+    for (const p of projects) {
+      const tags = p.tags;
+      map.set(p.id, {
+        notes: notes.filter((n) => n.tags.some((t) => tags.includes(t))).length,
+        resources: resources.filter((r) => r.tags.some((t) => tags.includes(t))).length,
+        prompts: prompts.filter((p_) => p_.tags.some((t) => tags.includes(t))).length,
+      });
+    }
+    return map;
+  }, [projects, notes, resources, prompts]);
+
   /* ── Counts ── */
   const counts = useMemo(() => ({
     total: projects.length,
@@ -140,7 +148,14 @@ export function ProjectWorkspace({ projects, resources, prompts, notes }: Projec
     fav: projects.filter((p) => p.favorite).length,
   }), [projects]);
 
-  const tabs = ["overview", "PLAN.md", "Resources", "Notes", "Prompts", "Timeline"];
+  const tabs = useMemo(() => [
+    { id: "overview", label: "Overview" },
+    { id: "plan.md", label: "PLAN.md" },
+    { id: "resources", label: `Resources (${connected.resources.length})` },
+    { id: "notes", label: `Notes (${connected.notes.length})` },
+    { id: "prompts", label: `Prompts (${connected.prompts.length})` },
+    { id: "timeline", label: "Timeline" },
+  ], [connected]);
 
   return (
     <div className="flex h-full" onKeyDown={handleKeyDown}>
@@ -150,17 +165,29 @@ export function ProjectWorkspace({ projects, resources, prompts, notes }: Projec
         researchCount={counts.research} buildingCount={counts.building}
         completedCount={counts.completed} archivedCount={counts.archived} favCount={counts.fav}
         allTags={allTags} activeSection={activeSection} onSectionChange={setActiveSection}
-        activeTag={activeTag} onTagChange={setActiveTag} onCreate={() => setCreateOpen(true)}
+        activeTag={activeTag} onTagChange={setActiveTag} onCreate={async () => {
+          const formData = new FormData();
+          formData.set("title", "");
+          formData.set("description", "");
+          formData.set("status", "idea");
+          formData.set("techStack", "");
+          formData.set("tags", "");
+          formData.set("planMd", PROJECT_TEMPLATE);
+          const result = await createProject(formData);
+          if (result.success && result.id) {
+            window.location.href = `/projects?id=${result.id}&new=true`;
+          }
+        }}
       />
 
       {/* ── List / Kanban column ── */}
       <div className={`w-[474px] shrink-0 border-r border-border/50 flex flex-col ${viewMode === "kanban" ? "px-0" : "px-2"}`}>
         <div className="px-4 pt-3 pb-2 pr-8 border-b border-border/30 flex items-center gap-3">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input ref={searchRef} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search projects..."
-              className="flex h-8 w-full rounded-md border border-border bg-card pl-8 pr-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/20 transition-all"
+              className="flex h-10 w-full rounded-lg border border-border bg-card pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/20 transition-all"
             />
           </div>
           <div className="flex items-center rounded-lg border border-border/40 p-0.5 bg-card shrink-0">
@@ -192,10 +219,18 @@ export function ProjectWorkspace({ projects, resources, prompts, notes }: Projec
         </div>
         {viewMode === "list" ? (
           <>
-            <div className="px-3 py-2 border-b border-border/20">
+            <div className="px-3 py-2 border-b border-border/20 space-y-1.5">
               <span className="text-[10px] text-muted-foreground">{filtered.length} project{filtered.length !== 1 ? "s" : ""}</span>
+              {activeTag && (
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20">
+                    #{activeTag}
+                    <button onClick={() => setActiveTag(null)} className="hover:text-primary/70" aria-label="Clear tag filter">&times;</button>
+                  </span>
+                </div>
+              )}
             </div>
-            <ProjectList projects={displayedProjects} selectedId={selectedId} onSelect={select} />
+            <ProjectList projects={displayedProjects} selectedId={selectedId} onSelect={select} connectionCounts={connectionCounts} />
             {hasMore && (
               <motion.button
                 onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
@@ -233,11 +268,11 @@ export function ProjectWorkspace({ projects, resources, prompts, notes }: Projec
             onTabChange={setActiveTab}
             onClose={close}
             onUpdate={() => router.refresh()}
+            autoEdit={searchParams.get("new") === "true"}
           />
         )}
       </AnimatePresence>
 
-      <ProjectDialog open={createOpen} onOpenChange={setCreateOpen} />
     </div>
   );
 }
@@ -245,25 +280,25 @@ export function ProjectWorkspace({ projects, resources, prompts, notes }: Projec
 /* ── Workspace Panel ── */
 function WorkspacePanel({
   project: initialProject, connected, allNotes, allResources, allPrompts, allProjects, tabs,
-  activeTab, onTabChange, onClose, onUpdate,
+  activeTab, onTabChange, onClose, onUpdate, autoEdit = false,
 }: {
   project: Project; connected: { notes: Note[]; resources: Resource[]; prompts: PromptItem[] };
   allNotes: Note[]; allResources: Resource[]; allPrompts: PromptItem[]; allProjects: Project[];
-  tabs: string[]; activeTab: string; onTabChange: (t: string) => void; onClose: () => void; onUpdate: () => void;
+  tabs: { id: string; label: string }[]; activeTab: string; onTabChange: (t: string) => void; onClose: () => void; onUpdate: () => void; autoEdit?: boolean;
 }) {
+  const router = useRouter();
   const [project, setProject] = useState(initialProject);
   const [planEditing, setPlanEditing] = useState(false);
   const [planContent, setPlanContent] = useState(initialProject.planMd);
   const [planSaving, setPlanSaving] = useState(false);
   const [isFav, setIsFav] = useState(initialProject.favorite);
   const [favPending, setFavPending] = useState(false);
-  const [editing, setEditing] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const [locked, setLocked] = useState(!autoEdit);
   const [editTitle, setEditTitle] = useState(initialProject.title);
   const [editDesc, setEditDesc] = useState(initialProject.description);
   const [editStatus, setEditStatus] = useState(initialProject.status);
   const [editStack, setEditStack] = useState(initialProject.techStack.join(", "));
-  const [editTags, setEditTags] = useState(initialProject.tags.join(", "));
+  const [editTags, setEditTags] = useState(initialProject.tags.slice(0, 3).join(", "));
 
   useEffect(() => {
     setProject(initialProject);
@@ -273,10 +308,29 @@ function WorkspacePanel({
     setEditDesc(initialProject.description);
     setEditStatus(initialProject.status);
     setEditStack(initialProject.techStack.join(", "));
-    setEditTags(initialProject.tags.join(", "));
+    setEditTags(initialProject.tags.slice(0, 3).join(", "));
   }, [initialProject]);
 
-  const meta = statusMeta[project.status] || statusMeta.idea;
+  const { status: saveStatus, saveNow } = useAutosave({
+    data: { title: editTitle, description: editDesc, status: editStatus, techStack: editStack, tags: editTags },
+    onSave: async (data) => {
+      const formData = new FormData();
+      formData.set("title", data.title);
+      formData.set("description", data.description);
+      formData.set("status", data.status);
+      formData.set("techStack", data.techStack);
+      formData.set("tags", data.tags);
+      const result = await editProject(project.id, formData);
+      if (result?.success) {
+        setProject((prev) => ({ ...prev, title: data.title, description: data.description, status: data.status }));
+        onUpdate();
+      }
+    },
+    delay: 2000,
+    enabled: !locked,
+  });
+
+  const meta = PROJECT_STATUS_META[project.status] || PROJECT_STATUS_META.idea;
   const StatusIcon = meta.icon;
 
   async function handleFavorite() {
@@ -312,23 +366,6 @@ function WorkspacePanel({
     onUpdate();
   }
 
-  async function handleEdit() {
-    setSaving(true);
-    const formData = new FormData();
-    formData.set("title", editTitle);
-    formData.set("description", editDesc);
-    formData.set("status", editStatus);
-    formData.set("techStack", editStack);
-    formData.set("tags", editTags);
-    const result = await editProject(project.id, formData);
-    setSaving(false);
-    if (result?.success) {
-      setEditing(false);
-      setProject((prev) => ({ ...prev, title: editTitle, description: editDesc, status: editStatus }));
-      onUpdate();
-    }
-  }
-
   /* ── Timeline ── */
   const timeline = useMemo(() => {
     const events: { date: Date; label: string; icon: string }[] = [{ date: project.createdAt, label: `Created project "${project.title}"`, icon: "create" }];
@@ -353,7 +390,7 @@ function WorkspacePanel({
       tabIndex={-1}
     >
       {/* ── Header ── */}
-      <div className="shrink-0 border-b border-border/40">
+      <div className={`shrink-0 border-b border-border/40 transition-opacity duration-150 ${!locked ? "opacity-50" : ""}`}>
         <div className="px-5 py-4">
           <div className="flex items-start gap-4">
             <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${isFav ? "bg-amber-500/10" : "bg-muted"}`}>
@@ -363,22 +400,44 @@ function WorkspacePanel({
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <div className="flex items-center gap-2">
-                    <h1 className="text-xl font-semibold text-foreground">{project.title}</h1>
-                    <span className={`flex items-center gap-1 text-xs font-medium px-2.5 py-0.5 rounded-full ${meta.color} bg-current/5`}>
-                      <StatusIcon className="h-3.5 w-3.5" />
-                      {meta.label}
-                    </span>
+                    {locked ? (
+                      <h1 className="text-xl font-semibold text-foreground">{project.title}</h1>
+                    ) : (
+                      <input className="w-full bg-transparent text-xl font-semibold text-foreground outline-none border-b border-border/30 pb-0.5 focus:border-primary/40 transition-colors" value={editTitle} onChange={e => setEditTitle(e.target.value)} placeholder="Untitled project" />
+                    )}
+                    {locked ? (
+                      <span className={`flex items-center gap-1 text-xs font-medium px-2.5 py-0.5 rounded-full ${meta.color} bg-current/5`}>
+                        <StatusIcon className="h-3.5 w-3.5" />
+                        {meta.label}
+                      </span>
+                    ) : (
+                      <Select value={editStatus} onValueChange={v => v && setEditStatus(v)}>
+                        <SelectTrigger className="h-6 text-xs font-medium px-1.5 py-0.5 rounded-full border-border/40">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Object.entries(PROJECT_STATUS_META).map(([k, v]) => (
+                            <SelectItem key={k} value={k}>{v.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
                   </div>
-                  {project.description && (
-                    <p className="text-base text-secondary-foreground mt-1.5">{project.description}</p>
+                  {locked ? (
+                    project.description && <p className="text-base text-secondary-foreground mt-1.5">{project.description}</p>
+                  ) : (
+                    <textarea className="w-full bg-transparent text-base text-secondary-foreground mt-1.5 outline-none border-b border-border/30 focus:border-primary/40 transition-colors resize-none" value={editDesc} onChange={e => setEditDesc(e.target.value)} rows={2} placeholder="Describe this project..." />
                   )}
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
-                  {!editing && (
+                  <button onClick={async () => {
+                    if (!locked) await saveNow();
+                    setLocked(!locked);
+                  }} aria-label={locked ? "Unlock project" : "Lock project"} className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all">
+                    {locked ? <Lock className="h-3.5 w-3.5" /> : <Unlock className="h-3.5 w-3.5" />}
+                  </button>
+                  {locked && (
                     <>
-                      <button onClick={() => setEditing(true)} aria-label="Edit project" className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all">
-                        <Pencil className="h-3.5 w-3.5" />
-                      </button>
                       <button onClick={handleDelete} aria-label="Delete project" className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-destructive transition-all">
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
@@ -387,21 +446,36 @@ function WorkspacePanel({
                       </button>
                     </>
                   )}
+                  {saveStatus === "saving" && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
+                  {saveStatus === "saved" && <span className="text-[10px] text-emerald-400">Saved</span>}
                   <button onClick={handleFavorite} disabled={favPending} aria-label={isFav ? "Unfavorite project" : "Favorite project"} className={`flex h-7 w-7 items-center justify-center rounded-md transition-colors ${isFav ? "text-amber-400" : "text-muted-foreground hover:text-amber-400"}`}>
                     <Star className={`h-3.5 w-3.5 ${isFav ? "fill-amber-400" : ""}`} />
                   </button>
-                  <button onClick={onClose} aria-label="Close panel" className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground transition-colors">
+                  <button onClick={onClose} aria-label="Close panel" className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all">
                     <X className="h-4 w-4" />
                   </button>
                 </div>
               </div>
 
               {/* Meta row */}
-              <div className="flex items-center gap-3 mt-2.5 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> Updated {formatRel(project.updatedAt)}</span>
-                <span>{project.techStack.slice(0, 3).join(", ")}{project.techStack.length > 3 ? ` +${project.techStack.length - 3}` : ""}</span>
-                {project.tags.length > 0 && (
-                  <span className="flex items-center gap-1"><Link2 className="h-3 w-3" /> {project.tags.join(", ")}</span>
+              <div className="flex items-center gap-3 mt-2.5 text-xs text-muted-foreground flex-wrap">
+                <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> Updated {formatRelative(project.updatedAt)}</span>
+                {project.planMd && <span>{project.planMd.split(/\s+/).filter(Boolean).length}w</span>}
+                {connected.notes.length + connected.resources.length + connected.prompts.length > 0 && (
+                  <span className="flex items-center gap-1">
+                    <Link2 className="h-3 w-3" /> {connected.notes.length + connected.resources.length + connected.prompts.length} connected
+                  </span>
+                )}
+                {locked ? (
+                  <>
+                    <span>{project.techStack.slice(0, 3).join(", ")}{project.techStack.length > 3 ? ` +${project.techStack.length - 3}` : ""}</span>
+                    <span>{project.tags.slice(0, 3).join(", ")}{project.tags.length > 3 ? ` +${project.tags.length - 3}` : ""}</span>
+                  </>
+                ) : (
+                  <>
+                    <input className="bg-transparent text-xs text-muted-foreground outline-none border-b border-border/30 focus:border-primary/40 transition-colors" value={editStack} onChange={e => setEditStack(e.target.value)} placeholder="React, Node, Python..." />
+                    <TagInput value={editTags} onChange={setEditTags} placeholder="Add tags..." />
+                  </>
                 )}
               </div>
 
@@ -417,18 +491,18 @@ function WorkspacePanel({
         </div>
 
         {/* ── Tabs ── */}
-        {!editing && (
-          <div className="flex gap-0 px-4">
+        {locked && (
+          <div className={`flex gap-0 px-4 transition-opacity duration-150 ${!locked ? "opacity-50" : ""}`}>
             {tabs.map((tab) => (
               <button
-                key={tab}
-                onClick={() => onTabChange(tab.toLowerCase())}
-                className={`px-4 py-2.5 text-xs font-medium border-b-2 transition-all duration-150 ${activeTab === tab.toLowerCase()
+                key={tab.id}
+                onClick={() => onTabChange(tab.id)}
+                className={`px-4 py-2.5 text-xs font-medium border-b-2 transition-all duration-150 ${activeTab === tab.id
                   ? "border-primary text-foreground"
                   : "border-transparent text-muted-foreground hover:text-foreground hover:scale-[1.02]"
                   }`}
               >
-                {tab}
+                {tab.label}
               </button>
             ))}
           </div>
@@ -437,109 +511,67 @@ function WorkspacePanel({
 
       {/* ── Content ── */}
       <div className="flex-1 overflow-y-auto">
-        {editing ? (
-          <div className="px-10 py-8 space-y-4 max-w-5xl">
-            <h2 className="text-base font-semibold text-foreground mb-6">Edit Project</h2>
-            <div className="space-y-2">
-              <label className="text-xs text-section-foreground uppercase tracking-[0.1em] font-semibold">Title</label>
-              <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} className="h-9 text-sm" />
-            </div>
-            <div className="space-y-2">
-              <label className="text-xs text-section-foreground uppercase tracking-[0.1em] font-semibold">Description</label>
-              <Textarea value={editDesc} onChange={(e) => setEditDesc(e.target.value)} rows={3} className="text-sm" />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-xs text-section-foreground uppercase tracking-[0.1em] font-semibold">Status</label>
-                <Select value={editStatus} onValueChange={(v) => v && setEditStatus(v)}>
-                  <SelectTrigger className="h-9 text-sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(statusMeta).map(([k, v]) => (
-                      <SelectItem key={k} value={k}>{v.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs text-section-foreground uppercase tracking-[0.1em] font-semibold">Tech Stack</label>
-                <Input value={editStack} onChange={(e) => setEditStack(e.target.value)} placeholder="React, Node, Postgres" className="h-9 text-sm" />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <label className="text-xs text-section-foreground uppercase tracking-[0.1em] font-semibold">Tags</label>
-              <Input value={editTags} onChange={(e) => setEditTags(e.target.value)} placeholder="react, typescript" className="h-9 text-sm" />
-            </div>
-            <div className="flex gap-2 pt-2">
-              <Button onClick={handleEdit} disabled={saving} size="sm" className="h-9 text-sm gap-1">
-                <Save className="h-4 w-4" />{saving ? "Saving..." : "Save"}
-              </Button>
-              <Button onClick={() => {
-                setEditing(false);
-                setEditTitle(project.title);
-                setEditDesc(project.description);
-                setEditStatus(project.status);
-                setEditStack(project.techStack.join(", "));
-                setEditTags(project.tags.join(", "));
-              }} variant="outline" size="sm" className="h-9 text-sm">Cancel</Button>
-            </div>
+        <div className="flex h-full">
+          <div className="flex-1 min-w-0">
+            {activeTab === "overview" && <OverviewTab project={project} connected={connected} timeline={timeline} />}
+            {activeTab === "plan.md" && (
+              <PlanTab
+                content={planContent} editing={planEditing} saving={planSaving}
+                onEdit={() => setPlanEditing(true)}
+                onCancel={() => { setPlanEditing(false); setPlanContent(project.planMd); }}
+                onSave={handleSavePlan}
+                onChange={setPlanContent}
+              />
+            )}
+            {activeTab === "resources" && <ResourcesTab resources={connected.resources} />}
+            {activeTab === "notes" && <NotesTab notes={connected.notes} />}
+            {activeTab === "prompts" && <PromptsTab prompts={connected.prompts} />}
+            {activeTab === "timeline" && <TimelineTab events={timeline} />}
           </div>
-        ) : (
-          <div className="flex h-full">
-            <div className="flex-1 min-w-0">
-              {activeTab === "overview" && <OverviewTab project={project} connected={connected} timeline={timeline} />}
-              {activeTab === "plan.md" && (
-                <PlanTab
-                  content={planContent} editing={planEditing} saving={planSaving}
-                  onEdit={() => setPlanEditing(true)}
-                  onCancel={() => { setPlanEditing(false); setPlanContent(project.planMd); }}
-                  onSave={handleSavePlan}
-                  onChange={setPlanContent}
-                />
-              )}
-              {activeTab === "resources" && <ResourcesTab resources={connected.resources} />}
-              {activeTab === "notes" && <NotesTab notes={connected.notes} />}
-              {activeTab === "prompts" && <PromptsTab prompts={connected.prompts} />}
-              {activeTab === "timeline" && <TimelineTab events={timeline} />}
-            </div>
 
-            {/* ── Context Panel ── */}
-            <div className="w-56 shrink-0 border-l border-border/30 bg-muted/20 overflow-y-auto px-4 py-5 space-y-5">
-              <h3 className="text-[10px] font-semibold text-section-foreground uppercase tracking-[0.12em]">Context</h3>
+          {/* ── Context Panel ── */}
+          <div className={`w-56 shrink-0 border-l border-border/30 bg-muted/20 overflow-y-auto px-4 py-5 space-y-5 transition-opacity duration-150 ${!locked ? "opacity-50" : ""}`}>
+            <h3 className="text-[10px] font-semibold text-section-foreground uppercase tracking-[0.12em]">Context</h3>
 
-              <ContextSection icon={Clock} label="Recent">
-                {timeline.slice(0, 3).map((e) => (
-                  <p key={e.label} className="text-[10px] text-muted-foreground leading-relaxed">{e.label}</p>
+            <ContextSection icon={Clock} label="Recent">
+              {timeline.slice(0, 3).map((e) => (
+                <p key={e.label} className="text-[10px] text-muted-foreground leading-relaxed">{e.label}</p>
+              ))}
+            </ContextSection>
+
+            {allProjects.filter((p) => p.id !== project.id && p.tags.some((t) => project.tags.includes(t))).length > 0 && (
+              <ContextSection icon={FolderKanban} label="Related Projects">
+                {allProjects.filter((p) => p.id !== project.id && p.tags.some((t) => project.tags.includes(t))).slice(0, 3).map((p) => (
+                  <button key={p.id} onClick={() => router.push(`/projects?id=${p.id}`)} className="w-full text-left text-[10px] text-muted-foreground hover:text-foreground truncate transition-colors">{p.title}</button>
                 ))}
               </ContextSection>
+            )}
 
-              {allProjects.filter((p) => p.id !== project.id && p.tags.some((t) => project.tags.includes(t))).slice(0, 3).length > 0 && (
-                <ContextSection icon={FolderKanban} label="Related Projects">
-                  {allProjects.filter((p) => p.id !== project.id && p.tags.some((t) => project.tags.includes(t))).slice(0, 3).map((p) => (
-                    <div key={p.id} className="text-[10px] text-muted-foreground leading-relaxed">{p.title}</div>
-                  ))}
-                </ContextSection>
-              )}
+            {connected.notes.length > 0 && (
+              <ContextSection icon={FileText} label={`Notes (${connected.notes.length})`}>
+                {connected.notes.slice(0, 3).map((n) => (
+                  <button key={n.id} onClick={() => router.push(`/notes?id=${n.id}`)} className="w-full text-left text-[10px] text-muted-foreground hover:text-foreground truncate transition-colors">{n.title}</button>
+                ))}
+              </ContextSection>
+            )}
 
-              {connected.notes.length > 0 && (
-                <ContextSection icon={FileText} label="Notes ({connected.notes.length})">
-                  {connected.notes.slice(0, 3).map((n) => (
-                    <div key={n.id} className="text-[10px] text-muted-foreground truncate">{n.title}</div>
-                  ))}
-                </ContextSection>
-              )}
+            {connected.resources.length > 0 && (
+              <ContextSection icon={Link2} label={`Resources (${connected.resources.length})`}>
+                {connected.resources.slice(0, 3).map((r) => (
+                  <button key={r.id} onClick={() => router.push(`/resources?id=${r.id}`)} className="w-full text-left text-[10px] text-muted-foreground hover:text-foreground truncate transition-colors">{r.title}</button>
+                ))}
+              </ContextSection>
+            )}
 
-              {connected.resources.length > 0 && (
-                <ContextSection icon={Link2} label="Resources ({connected.resources.length})">
-                  {connected.resources.slice(0, 3).map((r) => (
-                    <div key={r.id} className="text-[10px] text-muted-foreground truncate">{r.title}</div>
-                  ))}
-                </ContextSection>
-              )}
-            </div>
+            {connected.prompts.length > 0 && (
+              <ContextSection icon={Sparkles} label={`Prompts (${connected.prompts.length})`}>
+                {connected.prompts.slice(0, 3).map((p) => (
+                  <button key={p.id} onClick={() => router.push(`/prompts?id=${p.id}`)} className="w-full text-left text-[10px] text-muted-foreground hover:text-foreground truncate transition-colors">{p.title}</button>
+                ))}
+              </ContextSection>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </motion.div>
   );
@@ -549,62 +581,127 @@ function WorkspacePanel({
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function OverviewTab({ project, connected, timeline }: { project: Project; connected: any; timeline: any[] }) {
+  const tasks = useMemo(() => {
+    if (!project.planMd) return { todo: [], done: [], total: 0, doneCount: 0, pct: 0 };
+    const lines = project.planMd.split("\n");
+    const todo: string[] = [];
+    const done: string[] = [];
+    for (const l of lines) {
+      const m = l.match(/^- \[(\s|x)\] (.+)/i);
+      if (m) {
+        if (m[1].toLowerCase() === "x") done.push(m[2]);
+        else todo.push(m[2]);
+      }
+    }
+    const total = Math.max(1, todo.length + done.length);
+    return { todo, done, total, doneCount: done.length, pct: Math.round((done.length / total) * 100) };
+  }, [project.planMd]);
+
   return (
     <div className="px-10 py-8 space-y-6 max-w-5xl">
-      {/* Status + next action */}
+      {/* 1. Current Focus (from plan tasks) */}
       <div className="rounded-xl border border-border/60 bg-card p-6">
-        <h2 className="text-sm font-semibold text-section-foreground uppercase tracking-[0.1em] mb-3">Project Health</h2>
-        <div className="flex items-center gap-3 mb-4">
-          <span className={`text-base font-semibold capitalize ${statusMeta[project.status]?.color || ""}`}>
-            {statusMeta[project.status]?.label || project.status}
-          </span>
-          <span className="text-sm text-muted-foreground">&middot; Updated {formatRel(project.updatedAt)}</span>
+        <h2 className="text-sm font-semibold text-section-foreground uppercase tracking-[0.1em] mb-3">Current Focus</h2>
+        {project.planMd && project.description && (
+          <p className="text-sm text-foreground/80 mb-4 leading-relaxed">{project.description}</p>
+        )}
+        {tasks.todo.length > 0 ? (
+          <div className="space-y-2">
+            {tasks.todo.slice(0, 4).map((task, i) => (
+              <div key={i} className="flex items-center gap-2.5 text-sm text-muted-foreground">
+                <div className="w-1.5 h-1.5 rounded-full border border-muted-foreground/40 shrink-0" />
+                <span>{task}</span>
+              </div>
+            ))}
+            {tasks.todo.length > 4 && (
+              <p className="text-xs text-muted-foreground/60 ml-4">+{tasks.todo.length - 4} more tasks</p>
+            )}
+          </div>
+        ) : (
+          <div className="rounded-lg bg-muted/40 p-4 border border-border/40">
+            <p className="text-sm text-muted-foreground">
+              {!project.planMd
+                ? "Write a PLAN.md to define your milestones and tasks."
+                : "All tasks complete. Add new tasks to keep going."}
+            </p>
+          </div>
+        )}
+        {tasks.total > 0 && (
+          <div className="mt-4">
+            <div className="flex items-center justify-between text-xs text-muted-foreground mb-1.5">
+              <span>Progress</span>
+              <span>{tasks.doneCount}/{tasks.total} tasks</span>
+            </div>
+            <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+              <div className="h-full rounded-full bg-primary transition-all duration-500" style={{ width: `${tasks.pct}%` }} />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 2. Connected Knowledge */}
+      <div className="grid grid-cols-3 gap-4">
+        <div className="rounded-xl border border-border/60 bg-card p-5 hover:border-primary/30 transition-colors">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+            <FileText className="h-4 w-4" /> Notes
+          </div>
+          <p className="text-2xl font-semibold text-foreground">{connected.notes.length}</p>
+          <p className="text-xs text-muted-foreground/60 mt-1">Connected by tags</p>
         </div>
-        <div className="rounded-lg bg-muted/50 p-4 border border-border/40">
-          <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold mb-1">Next Step</p>
-          <p className="text-base text-foreground">
-            {project.planMd ? "Continue working on your plan" : "Write a PLAN.md to define milestones"}
-          </p>
+        <div className="rounded-xl border border-border/60 bg-card p-5 hover:border-primary/30 transition-colors">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+            <Link2 className="h-4 w-4" /> Resources
+          </div>
+          <p className="text-2xl font-semibold text-foreground">{connected.resources.length}</p>
+          <p className="text-xs text-muted-foreground/60 mt-1">Connected by tags</p>
+        </div>
+        <div className="rounded-xl border border-border/60 bg-card p-5 hover:border-primary/30 transition-colors">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+            <Sparkles className="h-4 w-4" /> Prompts
+          </div>
+          <p className="text-2xl font-semibold text-foreground">{connected.prompts.length}</p>
+          <p className="text-xs text-muted-foreground/60 mt-1">Connected by tags</p>
         </div>
       </div>
 
-      {/* Recent activity */}
+      {/* 3. Tech stack + Stats */}
+      <div className="grid grid-cols-2 gap-4">
+        {project.techStack.length > 0 && (
+          <div className="rounded-xl border border-border/60 bg-card p-5">
+            <h3 className="text-xs font-semibold text-section-foreground uppercase tracking-[0.1em] mb-2">Tech Stack</h3>
+            <div className="flex flex-wrap gap-1.5">
+              {project.techStack.map((t) => (
+                <span key={t} className="px-2 py-0.5 rounded text-xs font-medium bg-muted text-secondary-foreground">{t}</span>
+              ))}
+            </div>
+          </div>
+        )}
+        {project.planMd && (
+          <div className="rounded-xl border border-border/60 bg-card p-5">
+            <h3 className="text-xs font-semibold text-section-foreground uppercase tracking-[0.1em] mb-2">Documentation</h3>
+            <div className="flex items-center gap-3 text-sm text-muted-foreground">
+              <span>{project.planMd.split(/\s+/).filter(Boolean).length} words</span>
+              <span>{tasks.pct}% complete</span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 4. Recent activity */}
       {timeline.length > 0 && (
         <div className="rounded-xl border border-border/60 bg-card p-6">
-          <h2 className="text-sm font-semibold text-section-foreground uppercase tracking-[0.1em] mb-3">Recent Activity</h2>
+          <h2 className="text-sm font-semibold text-section-foreground uppercase tracking-[0.1em] mb-3">Activity</h2>
           <div className="space-y-3">
             {timeline.slice(0, 5).map((e) => (
               <div key={e.label} className="flex items-start gap-3 text-sm">
                 <div className="w-1.5 h-1.5 rounded-full bg-primary/40 mt-2 shrink-0" />
                 <span className="text-muted-foreground">{e.label}</span>
-                <span className="text-muted-foreground/50 ml-auto shrink-0">{formatRel(e.date)}</span>
+                <span className="text-muted-foreground/50 ml-auto shrink-0">{formatRelative(e.date)}</span>
               </div>
             ))}
           </div>
         </div>
       )}
-
-      {/* Connected items grid */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="rounded-xl border border-border/60 bg-card p-5">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-            <FileText className="h-4 w-4" /> Notes
-          </div>
-          <p className="text-2xl font-semibold text-foreground">{connected.notes.length}</p>
-        </div>
-        <div className="rounded-xl border border-border/60 bg-card p-5">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-            <Link2 className="h-4 w-4" /> Resources
-          </div>
-          <p className="text-2xl font-semibold text-foreground">{connected.resources.length}</p>
-        </div>
-        <div className="rounded-xl border border-border/60 bg-card p-5">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-            <Sparkles className="h-4 w-4" /> Prompts
-          </div>
-          <p className="text-2xl font-semibold text-foreground">{connected.prompts.length}</p>
-        </div>
-      </div>
     </div>
   );
 }
@@ -629,7 +726,7 @@ function PlanTab({ content, editing, saving, onEdit, onCancel, onSave, onChange 
 
       {editing ? (
         <div className="space-y-3">
-          <Textarea value={content} onChange={(e) => onChange(e.target.value)} rows={24} className="text-base font-mono leading-relaxed" />
+          <InlineEditor content={content} onChange={onChange} editable placeholder="Start your project plan..." />
           <div className="flex gap-2">
             <Button onClick={onSave} disabled={saving} size="sm" className="h-9 text-sm">{saving ? "Saving..." : "Save"}</Button>
             <Button onClick={onCancel} variant="outline" size="sm" className="h-9 text-sm">Cancel</Button>
@@ -638,25 +735,7 @@ function PlanTab({ content, editing, saving, onEdit, onCancel, onSave, onChange 
       ) : (
         <div className="note-prose">
           {content ? (
-            <Markdown components={{
-              code: ({ className, children, ...props }) => {
-                const m = /language-(\w+)/.exec(className || "");
-                if (!className || !m) return <code className="inline-code" {...props}>{children}</code>;
-                return (
-                  <div className="code-block-wrapper">
-                    <div className="code-block-header"><span className="code-block-lang">{m[1]}</span></div>
-                    <pre className="code-block has-header"><code className={className} {...props}>{children}</code></pre>
-                  </div>
-                );
-              },
-              blockquote: ({ children, ...props }) => <blockquote className="note-blockquote" {...props}>{children}</blockquote>,
-              a: ({ children, href, ...props }) => <a className="note-link" href={href} target="_blank" rel="noopener noreferrer" {...props}>{children}</a>,
-              ul: ({ children, ...props }) => <ul className="note-list" {...props}>{children}</ul>,
-              ol: ({ children, ...props }) => <ol className="note-list" {...props}>{children}</ol>,
-              table: ({ children, ...props }) => <div className="note-table-wrapper"><table className="note-table" {...props}>{children}</table></div>,
-            }}>
-              {content}
-            </Markdown>
+            <Markdown>{content}</Markdown>
           ) : (
             <div className="text-center py-20 text-muted-foreground">
               <ClipboardList className="h-10 w-10 mx-auto mb-4" />
@@ -674,7 +753,7 @@ function PlanTab({ content, editing, saving, onEdit, onCancel, onSave, onChange 
 }
 
 function ResourcesTab({ resources }: { resources: Resource[] }) {
-  if (resources.length === 0) return <EmptyTab icon={Link2} title="No resources yet" desc="Add resources that relate to this project" />;
+  if (resources.length === 0) return <EmptyTab icon={Link2} title="No resources yet" desc="Add resources that relate to this project" hint="Tag a resource with the same tag as this project to connect it here" />;
   return (
     <div className="px-10 py-8 space-y-3 max-w-5xl">
       {resources.map((r) => (
@@ -696,7 +775,7 @@ function ResourcesTab({ resources }: { resources: Resource[] }) {
 }
 
 function NotesTab({ notes }: { notes: Note[] }) {
-  if (notes.length === 0) return <EmptyTab icon={FileText} title="No notes yet" desc="Write notes that relate to this project" />;
+  if (notes.length === 0) return <EmptyTab icon={FileText} title="No notes yet" desc="Write notes that relate to this project" hint="Tag a note with the same tag as this project to connect it here" />;
   return (
     <div className="px-10 py-8 space-y-3 max-w-5xl">
       {notes.map((n) => (
@@ -707,7 +786,7 @@ function NotesTab({ notes }: { notes: Note[] }) {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-base font-medium text-foreground">{n.title}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">{n.category} &middot; Created {formatRel(n.createdAt)}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{n.category} &middot; Created {formatRelative(n.createdAt)}</p>
             </div>
           </div>
         </div>
@@ -718,7 +797,7 @@ function NotesTab({ notes }: { notes: Note[] }) {
 
 function PromptsTab({ prompts }: { prompts: PromptItem[] }) {
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  if (prompts.length === 0) return <EmptyTab icon={Sparkles} title="No prompts yet" desc="Create prompts that relate to this project" />;
+  if (prompts.length === 0) return <EmptyTab icon={Sparkles} title="No prompts yet" desc="Create prompts that relate to this project" hint="Tag a prompt with the same tag as this project to connect it here" />;
   return (
     <div className="px-10 py-8 space-y-3 max-w-5xl">
       {prompts.map((p) => (
@@ -746,7 +825,7 @@ function PromptsTab({ prompts }: { prompts: PromptItem[] }) {
 }
 
 function TimelineTab({ events }: { events: { date: Date; label: string; icon: string }[] }) {
-  if (events.length === 0) return <EmptyTab icon={Clock} title="No activity yet" desc="Changes to this project will appear here" />;
+  if (events.length === 0) return <EmptyTab icon={Clock} title="No activity yet" desc="Changes to this project will appear here" hint="Edit this project's plan or update its status to start tracking activity" />;
   return (
     <div className="px-10 py-8 max-w-5xl">
       <div className="relative pl-8 border-l-2 border-border/50 space-y-6">
@@ -754,7 +833,7 @@ function TimelineTab({ events }: { events: { date: Date; label: string; icon: st
           <div key={e.label} className="relative">
             <div className="absolute -left-[33px] top-1 w-3.5 h-3.5 rounded-full bg-primary/20 border-[3px] border-primary/60" />
             <p className="text-sm text-foreground/90">{e.label}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">{formatRel(e.date)}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{formatRelative(e.date)}</p>
           </div>
         ))}
       </div>
@@ -762,7 +841,7 @@ function TimelineTab({ events }: { events: { date: Date; label: string; icon: st
   );
 }
 
-function EmptyTab({ icon: Icon, title, desc }: { icon: React.ComponentType<{ className?: string }>; title: string; desc: string }) {
+function EmptyTab({ icon: Icon, title, desc, hint }: { icon: React.ComponentType<{ className?: string }>; title: string; desc: string; hint?: string }) {
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
       <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted mb-3">
@@ -770,6 +849,7 @@ function EmptyTab({ icon: Icon, title, desc }: { icon: React.ComponentType<{ cla
       </div>
       <p className="text-sm font-medium text-muted-foreground mb-1">{title}</p>
       <p className="text-[11px] text-muted-foreground/60 max-w-[200px]">{desc}</p>
+      {hint && <p className="text-[10px] text-muted-foreground/40 max-w-[220px] mt-3 leading-relaxed">{hint}</p>}
     </div>
   );
 }
@@ -784,18 +864,4 @@ function ContextSection({ icon: Icon, label, children }: { icon: React.Component
       <div className="space-y-1.5">{children}</div>
     </div>
   );
-}
-
-/* ── Helpers ── */
-function formatRel(date: Date): string {
-  const diff = Date.now() - date.getTime();
-  const mins = Math.floor(diff / 60000);
-  const hrs = Math.floor(diff / 3600000);
-  const days = Math.floor(diff / 86400000);
-  if (mins < 1) return "now";
-  if (mins < 60) return `${mins}m ago`;
-  if (hrs < 24) return `${hrs}h ago`;
-  if (days < 7) return `${days}d ago`;
-  if (days < 30) return `${Math.floor(days / 7)}w ago`;
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
