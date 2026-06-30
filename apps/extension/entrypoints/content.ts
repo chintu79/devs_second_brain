@@ -37,16 +37,8 @@ function showFloatBtn(rect: DOMRect) {
     floatBtn.onclick = () => {
       clearFloat();
       const ctx = getContext();
-      const selText = window.getSelection()?.toString() || "";
-      const hasSel = !!selText;
       openPopup(
-        {
-          id: hasSel ? "save-note" : "save-page",
-          label: hasSel ? "Save Selection" : "Save Page",
-          description: "",
-          icon: "",
-          tab: hasSel ? "note" : "resource",
-        },
+        { id: "save", label: ctx?.label || document.title, description: "", icon: "", tab: "resource" },
         ctx || {
           id: "generic",
           label: document.title,
@@ -66,6 +58,72 @@ function showFloatBtn(rect: DOMRect) {
     Math.max(rect.top + scrollY - 14, scrollY + 8) + "px";
 }
 
+// ─── Cloudflare challenge detection ───
+
+function isCloudflareChallenge(): boolean {
+  return (
+    document.querySelector("#cf-challenge-wrapper, #cf-please-wait, [id^='cf-challenge-']") !== null ||
+    document.title.includes("Just a moment") ||
+    document.body?.textContent?.includes("Checking your browser") ||
+    window.location.href.includes("__cf_chl_tk")
+  );
+}
+
+// ponytail: interval poll instead of MutationObserver — challenge page DOM
+// is minimal and replacing MutationObserver with a lighter check avoids
+// tripping detection. Upgrade to observer if perf matters.
+function waitForRealPage(maxMs = 30000): Promise<void> {
+  return new Promise<void>((resolve) => {
+    if (!isCloudflareChallenge()) return resolve();
+    const interval = setInterval(() => {
+      if (!isCloudflareChallenge()) {
+        clearInterval(interval);
+        resolve();
+      }
+    }, 2000);
+    setTimeout(() => clearInterval(interval), maxMs);
+  });
+}
+
+function initUI() {
+  const unmount = mountContextUI();
+
+  // Selection floater — minimal listener, only creates DOM on actual selection
+  document.addEventListener("mouseup", onMouseUp);
+  document.addEventListener("mousedown", (e) => {
+    if (!(e.target as HTMLElement)?.closest?.(".dv-float, .dv-chip, .dv-menu")) clearFloat();
+  });
+  document.addEventListener("scroll", clearFloat, true);
+
+  // Message handlers — no DOM injection until user acts
+  chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+    if (msg.type === "getPageData") {
+      sendResponse(getSiteMeta());
+    }
+    if (msg.type === "showToast") {
+      showToast(msg.message);
+      sendResponse(true);
+    }
+    if (msg.type === "showInlinePopup") {
+      injectBaseStyles();
+      const ctx = getContext();
+      openPopup(
+        { id: "save", label: ctx?.label || document.title, description: "", icon: "", tab: "resource" },
+        ctx || {
+          id: "generic",
+          label: document.title,
+          meta: {},
+          pageData: { ...getSiteMeta(), siteId: "generic" },
+        },
+        null,
+      );
+      sendResponse(true);
+    }
+  });
+
+  return unmount;
+}
+
 // ─── Entry ───
 
 export default defineContentScript({
@@ -78,50 +136,17 @@ export default defineContentScript({
     "*://nextjs.org/*",
     "*://tailwindcss.com/*",
     "*://svelte.dev/*",
+    "*://*.dev/*",
   ],
   main() {
-    // Mount context-aware chips on supported sites (GitHub, YouTube, docs)
-    const unmount = mountContextUI();
+    // If this is a Cloudflare challenge page, defer all injection until
+    // the real page loads (Cloudflare redirects after verification).
+    if (isCloudflareChallenge()) {
+      waitForRealPage().then(initUI);
+      return;
+    }
 
-    // Selection floater — minimal listener, only creates DOM on actual selection
-    document.addEventListener("mouseup", onMouseUp);
-    document.addEventListener("mousedown", (e) => {
-      if (!(e.target as HTMLElement)?.closest?.(".dv-float, .dv-chip, .dv-menu")) clearFloat();
-    });
-    document.addEventListener("scroll", clearFloat, true);
-
-    // Message handlers — no DOM injection until user acts
-    chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
-      if (msg.type === "getPageData") {
-        sendResponse(getSiteMeta());
-      }
-      if (msg.type === "showToast") {
-        showToast(msg.message);
-        sendResponse(true);
-      }
-      if (msg.type === "showInlinePopup") {
-        injectBaseStyles();
-        const ctx = getContext();
-        const selText = window.getSelection()?.toString() || "";
-        openPopup(
-          {
-            id: "save-page",
-            label: ctx?.label || document.title,
-            description: "",
-            icon: "",
-            tab: selText ? "note" : "resource",
-          },
-          ctx || {
-            id: "generic",
-            label: document.title,
-            meta: {},
-            pageData: { ...getSiteMeta(), siteId: "generic" },
-          },
-          null,
-        );
-        sendResponse(true);
-      }
-    });
+    const unmount = initUI();
 
     return () => {
       unmount();

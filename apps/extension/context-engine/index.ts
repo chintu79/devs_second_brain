@@ -1,26 +1,12 @@
 import type { Provider, Context } from "./types";
-import { githubProvider } from "../providers/github";
-import { youtubeProvider } from "../providers/youtube";
-import { docsProvider } from "../providers/docs";
-import { genericProvider } from "../providers/generic";
-
-const providers: Provider[] = [
-  githubProvider,
-  youtubeProvider,
-  docsProvider,
-  genericProvider,
-];
+import { detect as registryDetect } from "../providers/registry";
+import "../providers/github";
+import "../providers/youtube";
+import "../providers/docs";
+import "../providers/generic";
 
 let activeCleanup: (() => void) | null = null;
 let lastUrl = "";
-
-function runDetection(): { provider: Provider; ctx: Context } | null {
-  for (const p of providers) {
-    const ctx = p.detect();
-    if (ctx) return { provider: p, ctx };
-  }
-  return null;
-}
 
 function mount() {
   if (activeCleanup) {
@@ -28,7 +14,7 @@ function mount() {
     activeCleanup = null;
   }
 
-  const result = runDetection();
+  const result = registryDetect();
   if (!result) return;
   if (result.provider.id === "generic") return;
 
@@ -52,7 +38,7 @@ let observer: MutationObserver | null = null;
 
 export function mountContextUI(): () => void {
   lastUrl = window.location.href;
-  const result = runDetection();
+  const result = registryDetect();
 
   // Only set up observers on supported sites (skip generic/unsupported)
   if (result && result.provider.id !== "generic") {
@@ -80,13 +66,13 @@ export function mountContextUI(): () => void {
 }
 
 export function getContext(): Context | null {
-  const result = runDetection();
+  const result = registryDetect();
   return result?.ctx || null;
 }
 
 export function getActions(context?: Context) {
   if (!context) return [];
-  const result = runDetection();
+  const result = registryDetect();
   if (result && result.ctx.id === context.id) return result.provider.getActions(result.ctx);
   return [];
 }

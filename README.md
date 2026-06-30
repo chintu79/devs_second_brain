@@ -1,192 +1,134 @@
 # Dev Second Brain
 
-A developer-focused knowledge OS. Save, organize, search, and rediscover resources, AI prompts, notes, and projects — all connected through tags and surfaced through context panels.
+A developer-focused knowledge OS. Save, organize, search, and rediscover resources, AI prompts, notes, and projects — all connected through tags and surfaced through context panels. Includes a **Chrome extension** for one-click capture from any page.
 
-> Save. Connect. Retrieve.
+> Capture. Connect. Retrieve.
 
 ---
 
-## For Users
-
-### What you can do
+## Features
 
 | Area | What it does |
 |------|--------------|
-| **Resources** | Save links, articles, tools, and videos with category, tags, and personal notes |
-| **Prompts** | Reusable AI prompts with variables, versioning, categories, and copy-to-clipboard |
+| **Resources** | Save links, articles, tools, videos with category, tags, and personal notes |
+| **Prompts** | Reusable AI prompts with variables, categories, and copy-to-clipboard |
 | **Notes** | Markdown editor with tags, backlinks, and a sidebar browser |
 | **Projects** | Long-form project docs with structured PLAN.md workspaces and milestones |
 | **Radar** | Open Source Radar — trending repos with growth indicators (Hot / Trending / Rising) |
-| **Search** | Global fuzzy search across all vaults with type-colored grouped results and a preview panel |
-| **Dashboard** | Hero greeting, Continue Working, Recent Activity timeline, Knowledge Library vault cards |
+| **Search** | Global fuzzy search across all vaults with grouped results and preview panel |
+| **Dashboard** | Hero greeting, Continue Working, Recent Activity timeline, Knowledge Library |
 | **Chat** | AI chat with vault-aware context — ask questions about your saved items |
 | **Graph** | Interactive knowledge graph visualizing tag/item relationships |
-| **Quick Capture** | Cmd+Shift+K to save anything without leaving your current page |
-| **Sections** | Per-section accent colors, collapsible sidebars, animated panels |
-
-### Keyboard shortcuts
-
-| Shortcut | Action |
-|----------|--------|
-| `Cmd+K` | Open command palette / global search |
-| `Cmd+Shift+K` | Open Quick Capture modal |
-| `Esc` | Close panels, modals, and palettes |
+| **Extension** | Chrome extension — contextual chips on GitHub, YouTube, docs; text selection float button |
 
 ---
 
-## For Contributors
-
-### Tech stack
-
-| Layer | Choice |
-|-------|--------|
-| Framework | Next.js (App Router, Turbopack) |
-| Language | TypeScript |
-| Styling | Tailwind CSS v4 + shadcn/ui + Framer Motion |
-| Database | PostgreSQL + Prisma (with `@prisma/adapter-pg`) |
-| Auth | NextAuth v5 (Credentials provider, JWT sessions) |
-| Animation | Framer Motion (centralized variants in `src/lib/motion.ts`) |
-
-### Prerequisites
-
-Make sure these are installed on your machine:
-
-| Software | Why you need it | Download |
-|----------|----------------|----------|
-| **Git** | To clone the repository | [git-scm.com/downloads](https://git-scm.com/downloads) |
-| **Docker** | To run the app and database in containers (easiest option) | [docs.docker.com/get-docker](https://docs.docker.com/get-docker/) |
-| **Node.js 22+** | Only needed for manual setup (not needed for Docker) | [nodejs.org](https://nodejs.org) |
-| **PostgreSQL 16+** | Only needed for manual setup (Docker includes it) | [postgresql.org/download](https://www.postgresql.org/download/) |
-
----
-
-### Option 1 — Docker (recommended)
-
-This runs both the app and PostgreSQL in containers. No need to install Node.js, PostgreSQL, or configure anything manually.
+## Quick Start (Docker)
 
 ```bash
-# 1. Clone the repository
-git clone https://github.com/chintu79/devs_second_brain.git
-
-# 2. Go into the project folder
-cd devs_second_brain
-
-# 3. Build and start
+git clone git@github.com:chintu79/devs_second_brain.git
+cd devs_second_brain/apps/web
 docker compose up --build
 ```
 
-Wait for the build to finish (it may take a few minutes the first time). Once you see the app running, open **http://localhost:3000** in your browser, create an account, and you're in.
+Open http://localhost:3000, register an account.
 
-> **Important**: If you previously ran `npm run dev` on this project, open an incognito/private browser window — the old login cookie won't work with the Docker version.
+> See [DEPLOY.md](./DEPLOY.md) for all deployment options (Render, Vercel, VPS, extension).
 
 ---
 
-### Option 2 — Manual setup (no Docker)
-
-Requires Node.js 22+ and a running PostgreSQL database.
-
-```bash
-# 1. Clone the repository
-git clone https://github.com/chintu79/devs_second_brain.git
-
-# 2. Go into the project folder
-cd devs_second_brain
-
-# 3. Install dependencies
-npm install
-
-# 4. Create your environment config
-cp .env.example .env
-```
-
-**5. Edit `.env`** with your database credentials:
-
-| Variable | What to put |
-|----------|-------------|
-| `DATABASE_URL` | Your PostgreSQL connection string (e.g. `postgresql://user:password@localhost:5432/dev_second_brain`) |
-| `NEXTAUTH_SECRET` | Run `openssl rand -base64 32` and paste the output |
-| `NEXTAUTH_URL` | `http://localhost:3000` (for local development) |
-
-```bash
-# 6. Generate the Prisma client
-npx prisma generate
-
-# 7. Create database tables
-npx prisma db push
-
-# 8. Start the dev server
-npm run dev
-```
-
-Open **http://localhost:3000**, register an account, and start using it.
-
-### Environment variables
-
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `DATABASE_URL` | Yes | PostgreSQL connection string |
-| `NEXTAUTH_SECRET` | Yes | Encryption secret for JWT (run `openssl rand -base64 32`) |
-| `NEXTAUTH_URL` | Yes | Application URL (e.g. `http://localhost:3000`) |
-| `GITHUB_TOKEN` | No | GitHub personal access token for Radar (higher rate limits) |
-| `OPENROUTER_API_KEY` | No | OpenRouter key for AI chat features |
-| `OPENROUTER_MODEL` | No | Model override (default: `meta-llama/llama-3.2-3b-instruct:free`) |
-
-### Project structure
+## Project Structure
 
 ```
-src/
-├── actions/            # Server actions (auth, CRUD, search)
-├── app/
-│   ├── (auth)/         # Login, register
-│   ├── (dashboard)/    # Dashboard, vaults, search, radar, chat, docs
-│   └── api/            # NextAuth + API routes
-├── components/
-│   ├── auth/           # Auth page components
-│   ├── ui/             # shadcn/ui primitives
-│   ├── layout/         # Sidebar, navbar, shell
-│   ├── dashboard/      # Command bar, activity, vault cards
-│   ├── landing/        # Landing page hero, features, arrows
-│   ├── resources/      # List, filters, reader panel, context panel
-│   ├── prompts/        # List, filters, card, preview panel, context panel
-│   ├── notes/          # List, sidebar, reader panel
-│   ├── projects/       # List, sidebar, workspace panel
-│   ├── radar/          # Feed, sidebar, repo card, detail panel, context panel
-│   ├── search/         # Search bar, result card, preview panel, context panel
-│   ├── chat/           # Chat UI, context panel, workspace
-│   ├── docs/           # TOC, reading progress bar
-│   ├── shared/         # EmptyState, ScrollReveal, etc.
-│   └── vaults/         # NoteCard, ResourceCard, ProjectCard, PromptCard
-├── lib/                # Auth config, Prisma client, utils, motion variants, mock data
-├── generated/          # Generated Prisma client
-└── middleware.ts       # Route protection
+devventory
+├── apps/
+│   ├── web/                    # Next.js 16 web application
+│   │   ├── src/
+│   │   │   ├── actions/        # Server actions (CRUD, search, auth)
+│   │   │   ├── app/            # App Router pages + API routes
+│   │   │   │   ├── (auth)/     # Login, register
+│   │   │   │   ├── (dashboard)/# Dashboard, vaults, radar, search, chat, docs
+│   │   │   │   └── api/        # API routes (NextAuth, ext, chat)
+│   │   │   ├── components/     # React components by domain
+│   │   │   ├── hooks/          # Custom hooks (use-autosave)
+│   │   │   └── lib/            # Auth, Prisma, AI, GitHub, tags, motion
+│   │   ├── prisma/             # Schema + migrations
+│   │   └── Dockerfile
+│   │
+│   └── extension/              # Chrome MV3 browser extension (WXT)
+│       ├── entrypoints/        # background.ts, content.ts
+│       ├── providers/          # GitHub, YouTube, Docs, Generic + Registry
+│       ├── context-engine/     # Capability system, popup, UI, metadata
+│       └── lib/                # Types, messages
+│
+├── packages/
+│   ├── motion/                 # Framer Motion variants (fadeInUp, slideInRight, stagger)
+│   ├── types/                  # Zod schemas + category constants
+│   ├── ui/                     # shadcn/ui primitives (Button, Dialog, Command, Select)
+│   ├── shared/                 # EmptyState, ErrorCard, IconBtn, Markdown
+│   ├── utils/                  # cn(), formatDate(), formatRelative()
+│   └── config/                 # Shared tsconfig
+│
+├── DEPLOY.md                   # Full deployment guide
+├── CONTRIBUTING.md             # Contribution guidelines
+└── RENDER_DEPLOY.md            # Render-specific instructions
 ```
 
-### Design conventions
+---
 
-- **Animations**: All Framer Motion variants centralized in `src/lib/motion.ts`. Use shared variants (`fadeInUp`, `slideInRight`, `stagger`, `cardHover`) instead of inline `initial`/`animate` objects.
-- **Hover scale hierarchy**: 1.01 (cards), 1.015 (cardHover variant), 1.02 (sidebar/context), 1.03 (nav/CTA), 1.05 (icons), 1.1 (toolbar). Always `transition-all duration-150`.
-- **Section accent colors**: Applied via `data-accent` attribute on page wrappers. Colors defined in `globals.css` as CSS variables.
-- **Panels**: Detail/preview panels use `w-[800px]` (`.panel-detail`), context panels use `w-[320px]` (`.panel-context`), sidebars use `w-56`.
-- **Editing**: Inline in preview panels for existing items. Create still uses a dialog.
-- **Page height**: All pages use `calc(100vh - var(--header-height))` with `--header-height: 56px`.
-- **Server components by default**, client components only where interactivity is needed.
+## Tech Stack
 
-### Contributing
+| Layer | Choice |
+|-------|--------|
+| Framework | Next.js 16 (App Router, Turbopack) |
+| Language | TypeScript |
+| Styling | Tailwind CSS v4 + shadcn/ui + Base UI |
+| Database | PostgreSQL + Prisma (Neon adapter for serverless) |
+| Auth | NextAuth v5 (Credentials provider, JWT) |
+| Animation | Framer Motion (centralized variants in `@devventory/motion`) |
+| AI | OpenRouter (chat, summarization, enrichment) |
+| Extension | WXT 0.20 (Chrome MV3) |
+| Monorepo | pnpm workspaces + Turborepo |
 
-1. Open an issue for discussion before starting significant work.
-2. Fork the repo and create a feature branch.
-3. Run `npm run lint` and `npx tsc --noEmit` before committing.
-4. Keep changes focused — prefer deletion over addition.
+---
 
-### Scripts
+## Environment Variables
+
+See `apps/web/.env.example` for all variables:
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `DATABASE_URL` | Yes | — | PostgreSQL connection string |
+| `NEXTAUTH_SECRET` | Yes | — | JWT encryption secret |
+| `NEXTAUTH_URL` | Yes | — | App URL (e.g. `http://localhost:3000`) |
+| `GITHUB_TOKEN` | No | — | GitHub PAT for Radar (higher rate limits) |
+| `OPENROUTER_API_KEY` | No | — | OpenRouter key for AI chat/enrichment |
+| `OPENROUTER_MODEL` | No | `meta-llama/llama-3.2-3b-instruct:free` | Model override |
+
+---
+
+## Scripts
 
 | Command | Description |
 |---------|-------------|
-| `npm run dev` | Start dev server (Turbopack) |
-| `npm run build` | Production build |
-| `npm run lint` | Run ESLint |
-| `npx prisma generate` | Regenerate Prisma client |
-| `npx prisma db push` | Push schema to database |
+| `pnpm dev` | Start all apps in dev mode (Turborepo) |
+| `pnpm build` | Build all apps |
+| `pnpm lint` | ESLint across all apps |
+| `pnpm web:dev` | Web app dev server only |
+| `pnpm web:build` | Web app production build |
+| `pnpm ext:dev` | Extension dev server (HMR) |
+| `pnpm ext:build` | Extension production build |
+| `pnpm clean` | Clean all caches |
+
+---
+
+## Design Conventions
+
+- **Animations**: All Framer Motion variants in `packages/motion/src/motion.ts`. Use shared variants (`fadeInUp`, `slideInRight`, `stagger`, `cardHover`) instead of inline `initial`/`animate` objects.
+- **Hover scale hierarchy**: 1.01 (cards), 1.015 (cardHover), 1.02 (sidebar), 1.03 (nav/CTA), 1.05 (icons), 1.1 (toolbar). `transition-all duration-150`.
+- **Section accent colors**: Applied via `data-accent` attribute. Defined in `globals.css`.
+- **Server components by default**, client components only where interactivity is needed.
+- **Provider registry**: Adding a new site to the extension requires one provider file + `register()`.
 
 ---
 

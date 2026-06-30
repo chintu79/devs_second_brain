@@ -36,6 +36,26 @@ export interface PageData {
   siteMeta: GitHubData | YouTubeData | null;
 }
 
+export interface CapturePayload {
+  provider: string;
+  capabilities: string[];
+  page: {
+    url: string;
+    title: string;
+    description: string;
+    siteName: string;
+    favicon: string;
+    ogImage: string;
+  };
+  selection?: {
+    text: string;
+  };
+  userInput?: {
+    thought: string;
+  };
+  metadata: Record<string, unknown>;
+}
+
 export interface SaveResourcePayload {
   url: string;
   title: string;
@@ -73,7 +93,15 @@ export interface ApiResponse<T = unknown> {
   ai?: AiEnrichResult;
 }
 
+export interface LearningContext {
+  saved: boolean;
+  count: number;
+  types: Array<{ type: string; count: number }>;
+  relatedNotes: number;
+  relatedResources: number;
+}
+
 export interface ExtensionMessage {
-  type: "getPageData" | "showToast" | "showInlinePopup" | "saveInlineResource" | "saveInlineNote" | "saveInlinePrompt";
+  type: "getPageData" | "showToast" | "showInlinePopup" | "capture" | "get-context";
   payload?: unknown;
 }

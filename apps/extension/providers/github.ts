@@ -1,10 +1,15 @@
 import type { Provider, Context, Action } from "../context-engine/types";
 import { getSiteMeta } from "../context-engine/metadata";
 import { createChip, showMenu } from "../context-engine/ui";
+import { register } from "./registry";
 
-export const githubProvider: Provider = {
+const provider: Provider = {
   id: "github-repo",
   label: "GitHub",
+  urlPatterns: ["*://github.com/*"],
+  capabilities: ["repository", "code", "issue", "pr", "summary", "tech-stack", "roadmap"],
+  supportsSelection: true,
+  supportsAI: true,
 
   detect(): Context | null {
     const { hostname, pathname } = window.location;
@@ -142,3 +147,6 @@ export const githubProvider: Provider = {
     return () => chip.remove();
   },
 };
+
+register(provider);
+export default provider;

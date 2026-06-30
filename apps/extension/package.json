@@ -10,11 +10,6 @@
     "compile": "wxt prepare"
   },
   "dependencies": {
-    "@devventory/api-client": "workspace:*",
-    "@devventory/types": "workspace:*",
-    "@devventory/utils": "workspace:*",
-    "@devventory/ui": "workspace:*",
-    "@devventory/shared": "workspace:*",
     "react": "^19",
     "react-dom": "^19"
   },

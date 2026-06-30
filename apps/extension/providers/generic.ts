@@ -1,9 +1,14 @@
 import type { Provider, Context, Action } from "../context-engine/types";
 import { getSiteMeta } from "../context-engine/metadata";
+import { register } from "./registry";
 
-export const genericProvider: Provider = {
+const provider: Provider = {
   id: "generic",
   label: "Page",
+  urlPatterns: [],
+  capabilities: ["page", "summary"],
+  supportsSelection: true,
+  supportsAI: true,
 
   detect(): Context | null {
     // Always matches as fallback
@@ -45,3 +50,6 @@ export const genericProvider: Provider = {
     return () => {};
   },
 };
+
+register(provider);
+export default provider;

@@ -1,10 +1,15 @@
 import type { Provider, Context, Action } from "../context-engine/types";
 import { getSiteMeta } from "../context-engine/metadata";
 import { createChip, showMenu } from "../context-engine/ui";
+import { register } from "./registry";
 
-export const youtubeProvider: Provider = {
+const provider: Provider = {
   id: "youtube",
   label: "YouTube",
+  urlPatterns: ["*://www.youtube.com/*", "*://youtu.be/*"],
+  capabilities: ["video", "transcript", "key-points", "summary", "flashcard"],
+  supportsSelection: false,
+  supportsAI: true,
 
   detect(): Context | null {
     const { hostname } = window.location;
@@ -101,3 +106,6 @@ export const youtubeProvider: Provider = {
     return () => chip.remove();
   },
 };
+
+register(provider);
+export default provider;

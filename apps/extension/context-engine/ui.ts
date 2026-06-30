@@ -37,13 +37,7 @@ export function injectBaseStyles() {
     .dv-popup-close{background:none;border:none;cursor:pointer;color:var(--dv-muted);padding:2px 4px;font-size:14px;border-radius:4px}
     .dv-popup-close:hover{background:var(--dv-card);color:var(--dv-fg)}
     .dv-popup-body{padding:8px 12px 10px}
-    .dv-popup-tabs{display:flex;gap:4px;margin-bottom:8px}
-    .dv-popup-tab{flex:1;padding:5px;border:none;background:none;cursor:pointer;font-size:11px;font-weight:500;color:var(--dv-muted);border-radius:5px;transition:all 0.15s}
-    .dv-popup-tab:hover{background:var(--dv-card)}
-    .dv-popup-tab.active{background:var(--dv-accent);color:#fff}
-    .dv-popup-tab-content{display:none}
-    .dv-popup-tab-content.active{display:block;animation:panel-in 0.15s cubic-bezier(0.16,1,0.3,1)}
-    @keyframes panel-in{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
+    .dv-popup-learn{display:flex;align-items:center;gap:6px;padding:5px 8px;margin-bottom:6px;font-size:10px;font-weight:500;color:var(--dv-accent);background:color-mix(in srgb,var(--dv-accent) 8%,transparent);border-radius:6px}
     .dv-popup-card{background:var(--dv-card);border-radius:8px;padding:8px 10px;margin-bottom:8px}
     .dv-popup-card-body{min-width:0}
     .dv-popup-card-title{font-size:12px;font-weight:500;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--dv-fg)}
@@ -62,6 +56,7 @@ export function injectBaseStyles() {
 }
 
 export function createChip(icon: string, label: string): HTMLElement {
+  injectBaseStyles();
   const chip = document.createElement("div");
   chip.className = "dv-chip";
   chip.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${icon}"/></svg>${label}`;

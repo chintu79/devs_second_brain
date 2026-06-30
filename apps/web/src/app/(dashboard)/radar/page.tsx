@@ -2,7 +2,6 @@ import { Suspense } from "react"
 import { auth } from "@/lib/auth"
 import prisma, { safeQuery } from "@/lib/prisma"
 import { fetchTrendingRepos } from "@/lib/github"
-import { allRepos, discoverySections, sidebarCategories } from "@/lib/mock-data"
 import { RadarWorkspace } from "@/components/radar/radar-workspace"
 
 export default async function RadarPage() {
@@ -10,9 +9,6 @@ export default async function RadarPage() {
   const userId = session?.user?.id
 
   const realData = await fetchTrendingRepos()
-  const repos = realData?.repos ?? allRepos
-  const sections = realData?.sections ?? discoverySections
-  const categories = realData?.categories ?? sidebarCategories
 
   let userTags: string[] = []
   if (userId) {
@@ -26,9 +22,9 @@ export default async function RadarPage() {
     <div data-accent="radar" className="absolute inset-0 flex overflow-hidden">
       <Suspense fallback={<div className="flex-1" />}>
         <RadarWorkspace
-          repos={repos}
-          sections={sections}
-          categories={categories}
+          repos={realData?.repos ?? []}
+          sections={realData?.sections ?? []}
+          categories={realData?.categories ?? []}
           userTags={userTags}
         />
       </Suspense>

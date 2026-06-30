@@ -1,6 +1,6 @@
 import type { Action, Context } from "./types";
-import { getSiteMeta } from "./metadata";
 import { injectBaseStyles } from "./ui";
+import type { CapturePayload, LearningContext } from "../lib/types";
 
 const SITE_LABELS: Record<string, string> = {
   "github-repo": "GitHub Repo",
@@ -30,6 +30,8 @@ export function openPopup(action: Action, ctx: Context, rect?: DOMRect | null) {
   const popup = document.createElement("div");
   popup.className = "dv-float dv-popup";
 
+  const displayTitle = action.label === ctx.label ? pageData.title : action.label;
+
   popup.innerHTML = `
     <div class="dv-popup-hdr">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--dv-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0-6 6v1h12V9a6 6 0 0 0-6-6z"/><path d="M8 14v1a4 4 0 0 0 8 0v-1"/></svg>
@@ -37,56 +39,27 @@ export function openPopup(action: Action, ctx: Context, rect?: DOMRect | null) {
       <button class="dv-popup-close">✕</button>
     </div>
     <div class="dv-popup-body">
-      <div class="dv-popup-tabs">
-        <button class="dv-popup-tab" data-tab="resource">Save Page</button>
-        <button class="dv-popup-tab" data-tab="note">Note</button>
-        <button class="dv-popup-tab" data-tab="prompt">Prompt</button>
-      </div>
-      <div class="dv-popup-tab-content" data-content="resource">
-        <div class="dv-popup-card">
-          <div class="dv-popup-card-body">
-            <div class="dv-popup-card-title">${escapeHtml(action.label === ctx.label ? pageData.title : action.label)}</div>
-            <div class="dv-popup-card-url">${escapeHtml(pageData.hostname)}${escapeHtml(repoPath)}</div>
-            ${badge ? `<span class="dv-popup-badge">${badge}</span>` : ""}
-          </div>
+      <div class="dv-popup-card">
+        <div class="dv-popup-card-body">
+          <div class="dv-popup-card-title">${escapeHtml(displayTitle)}</div>
+          <div class="dv-popup-card-url">${escapeHtml(pageData.hostname)}${escapeHtml(repoPath)}</div>
+          ${badge ? `<span class="dv-popup-badge">${badge}</span>` : ""}
         </div>
-        <textarea class="dv-popup-input" data-reason placeholder="Why save this?" rows="2"></textarea>
       </div>
-      <div class="dv-popup-tab-content" data-content="note">
-        ${selText ? `<div class="dv-popup-sel">${escapeHtml(selText.slice(0, 300))}</div>` : ""}
-        <textarea class="dv-popup-input" data-note placeholder="Type a quick thought..." rows="3"></textarea>
-      </div>
-      <div class="dv-popup-tab-content" data-content="prompt">
-        ${selText ? `<div class="dv-popup-sel">${escapeHtml(selText.slice(0, 300))}</div>` : ""}
-        <textarea class="dv-popup-input" data-prompt placeholder="Paste a prompt..." rows="3"></textarea>
-      </div>
-      <button class="dv-popup-save">Save Page</button>
+      <div class="dv-popup-learn" style="display:none"></div>
+      ${selText ? `<div class="dv-popup-sel">${escapeHtml(selText.slice(0, 300))}</div>` : ""}
+      <textarea class="dv-popup-input" data-thought placeholder="What are you trying to keep?" rows="2"></textarea>
+      <button class="dv-popup-save">Save</button>
       <div class="dv-popup-err" style="display:none"></div>
     </div>
   `;
 
-  const tabs = popup.querySelectorAll(".dv-popup-tab") as NodeListOf<HTMLElement>;
-  const contents = popup.querySelectorAll(".dv-popup-tab-content") as NodeListOf<HTMLElement>;
   const saveBtn = popup.querySelector(".dv-popup-save") as HTMLElement;
   const errEl = popup.querySelector(".dv-popup-err") as HTMLElement;
   const closeBtn = popup.querySelector(".dv-popup-close") as HTMLElement;
+  const thoughtInput = popup.querySelector("[data-thought]") as HTMLTextAreaElement;
 
-  let currentTab = action.tab;
-
-  function setTab(tab: string) {
-    currentTab = tab;
-    tabs.forEach((t) => t.classList.toggle("active", t.dataset.tab === tab));
-    contents.forEach((c) => c.classList.toggle("active", c.dataset.content === tab));
-    const labels: Record<string, string> = { resource: "Save Page", note: "Save Note", prompt: "Save Prompt" };
-    saveBtn.textContent = labels[tab] || "Save";
-  }
-
-  tabs.forEach((t) => t.onclick = () => setTab(t.dataset.tab || "resource"));
   closeBtn.onclick = () => popup.remove();
-  setTab(action.tab);
-
-  const getVal = (key: string) =>
-    (popup.querySelector(`[data-${key}]`) as HTMLTextAreaElement)?.value || "";
 
   saveBtn.onclick = async () => {
     saveBtn.textContent = "Saving...";
@@ -94,54 +67,42 @@ export function openPopup(action: Action, ctx: Context, rect?: DOMRect | null) {
     errEl.style.display = "none";
 
     try {
-      const msgType = currentTab === "resource" ? "saveInlineResource"
-        : currentTab === "note" ? "saveInlineNote"
-        : "saveInlinePrompt";
+      const payload: CapturePayload = {
+        provider: ctx.id,
+        capabilities: [],
+        page: {
+          url: pageData.url,
+          title: pageData.title,
+          description: pageData.description,
+          siteName: pageData.siteName,
+          favicon: pageData.favicon,
+          ogImage: pageData.ogImage,
+        },
+        selection: selText ? { text: selText } : undefined,
+        userInput: thoughtInput.value ? { thought: thoughtInput.value } : undefined,
+        metadata: { ...ctx.meta, siteId: pageData.siteId },
+      };
 
-      const payload: Record<string, unknown> =
-        currentTab === "resource"
-          ? { url: pageData.url, title: pageData.title, description: pageData.description, selectedText: selText, reason: getVal("reason"), siteType: pageData.siteId }
-          : currentTab === "note"
-            ? { content: selText ? `${selText}\n\n${getVal("note")}` : getVal("note"), title: `Selection from ${pageData.title}` }
-            : { prompt: selText ? `${selText}\n\n${getVal("prompt")}` : getVal("prompt"), sourceUrl: pageData.url };
-
-      const res = await chrome.runtime.sendMessage({ type: msgType, payload }) as { success?: boolean; error?: string };
+      const res = await chrome.runtime.sendMessage({ type: "capture", payload }) as { success?: boolean; error?: string; type?: string };
 
       if (res.success) {
         popup.remove();
-        showToast(
-          currentTab === "resource"
-            ? "Page saved!"
-            : currentTab === "note"
-              ? "Note saved!"
-              : "Prompt saved!",
-        );
+        showToast(res.type ? `Saved as ${res.type.charAt(0).toUpperCase() + res.type.slice(1)}` : "Saved!");
       } else {
         errEl.textContent = res.error || "Failed";
         errEl.style.display = "block";
-        saveBtn.textContent =
-          currentTab === "resource"
-            ? "Save Page"
-            : currentTab === "note"
-              ? "Save Note"
-              : "Save Prompt";
+        saveBtn.textContent = "Save";
         (saveBtn as HTMLButtonElement).disabled = false;
       }
     } catch (e) {
       console.error("Devventory save error:", e);
       errEl.textContent = "Could not connect";
       errEl.style.display = "block";
-      saveBtn.textContent =
-        currentTab === "resource"
-          ? "Save Page"
-          : currentTab === "note"
-            ? "Save Note"
-            : "Save Prompt";
+      saveBtn.textContent = "Save";
       (saveBtn as HTMLButtonElement).disabled = false;
     }
   };
 
-  // Position
   if (rect) {
     const scrollX = window.scrollX;
     const scrollY = window.scrollY;
@@ -159,8 +120,22 @@ export function openPopup(action: Action, ctx: Context, rect?: DOMRect | null) {
   }
 
   document.body.appendChild(popup);
-  const firstInput = popup.querySelector("textarea") as HTMLTextAreaElement | null;
-  firstInput?.focus();
+  thoughtInput?.focus();
+
+  // Fetch learning context (non-blocking)
+  chrome.runtime.sendMessage(
+    { type: "get-context", payload: { url: pageData.url, provider: ctx.id } },
+    (res: LearningContext) => {
+      if (res?.saved && res.count > 0) {
+        const learnEl = popup.querySelector(".dv-popup-learn") as HTMLElement;
+        if (learnEl) {
+          const items = res.types.map(t => `${t.count} ${t.type}`).join(" · ");
+          learnEl.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;color:var(--dv-accent)"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><span>Already saved — ${items}</span>`;
+          learnEl.style.display = "flex";
+        }
+      }
+    },
+  );
 }
 
 function clearExisting() {

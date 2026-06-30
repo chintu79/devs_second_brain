@@ -1,3 +1,10 @@
+export type Capability =
+  | "repository" | "code" | "video" | "documentation"
+  | "conversation" | "qa" | "article" | "paper"
+  | "design" | "issue" | "pr" | "page"
+  | "summary" | "explain" | "cheatsheet" | "flashcard"
+  | "roadmap" | "tech-stack" | "transcript" | "key-points";
+
 export type SiteId =
   | "github-repo" | "github-file" | "github-pr" | "github-issue"
   | "youtube"
@@ -70,16 +77,36 @@ export interface Action {
   id: string;
   label: string;
   description: string;
-  icon: string; // SVG path
+  icon: string;
   tab: "resource" | "note" | "prompt";
   payload?: Record<string, unknown>;
+}
+
+export interface ActionDef {
+  id: string;
+  label: string;
+  description: string;
+  icon: string;
+  tab: "auto";
+  priority: number;
+}
+
+export interface ProviderData {
+  id: string;
+  label: string;
+  meta: Record<string, unknown>;
+  pageData: SiteMeta;
 }
 
 export interface Provider {
   id: SiteId;
   label: string;
+  urlPatterns?: string[];
   detect(): Context | null;
   getActions(ctx: Context): Action[];
-  mountUI(ctx: Context): () => void; // returns cleanup
+  mountUI(ctx: Context): () => void;
   getChipAnchor?(): Element | null;
+  capabilities?: Capability[];
+  supportsSelection?: boolean;
+  supportsAI?: boolean;
 }

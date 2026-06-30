@@ -1,6 +1,5 @@
 "use client";
 
-import { forwardRef } from "react";
 import { motion } from "framer-motion";
 import { Star } from "lucide-react";
 import { formatRelative } from "@devventory/utils";
@@ -27,8 +26,7 @@ interface ProjectListProps {
   connectionCounts: Map<string, { notes: number; resources: number; prompts: number }>;
 }
 
-export const ProjectList = forwardRef<HTMLDivElement, ProjectListProps>(
-  function ProjectList({ projects, selectedId, onSelect, connectionCounts }, ref) {
+export function ProjectList({ projects, selectedId, onSelect, connectionCounts }: ProjectListProps) {
     if (projects.length === 0) {
       return (
         <div className="flex-1 flex items-center justify-center">
@@ -42,7 +40,6 @@ export const ProjectList = forwardRef<HTMLDivElement, ProjectListProps>(
 
     return (
       <motion.div
-        ref={ref}
         variants={stagger.container}
         initial="hidden"
         animate="visible"
@@ -115,6 +112,5 @@ export const ProjectList = forwardRef<HTMLDivElement, ProjectListProps>(
       </motion.div>
     );
   }
-);
 
 

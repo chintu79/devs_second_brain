@@ -1,8 +1,4 @@
 export {
-  resourceCategoryEnum,
-  promptCategoryEnum,
-  noteCategoryEnum,
-  projectStatusEnum,
   resourceSchema,
   promptSchema,
   noteSchema,

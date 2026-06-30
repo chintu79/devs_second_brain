@@ -1,6 +1,7 @@
 import type { Provider, Context, Action } from "../context-engine/types";
 import { getSiteMeta } from "../context-engine/metadata";
 import { createChip, showMenu } from "../context-engine/ui";
+import { register } from "./registry";
 
 const DOC_SITES = [
   "developer.mozilla.org",
@@ -29,9 +30,20 @@ function isDocSite(hostname: string): boolean {
   );
 }
 
-export const docsProvider: Provider = {
+const provider: Provider = {
   id: "docs",
   label: "Docs",
+  urlPatterns: [
+    "*://developer.mozilla.org/*",
+    "*://react.dev/*",
+    "*://nextjs.org/*",
+    "*://tailwindcss.com/*",
+    "*://svelte.dev/*",
+    "*://*.dev/*",
+  ],
+  capabilities: ["documentation", "explain", "cheatsheet", "summary"],
+  supportsSelection: true,
+  supportsAI: true,
 
   detect(): Context | null {
     const { hostname } = window.location;
@@ -41,7 +53,6 @@ export const docsProvider: Provider = {
       document.querySelector("h1")?.textContent?.trim() ||
       document.title;
 
-    // Try to detect framework
     const framework = DOC_SITES.find((s) => hostname.endsWith(s) || hostname === s);
 
     return {
@@ -111,3 +122,6 @@ export const docsProvider: Provider = {
     return () => chip.remove();
   },
 };
+
+register(provider);
+export default provider;

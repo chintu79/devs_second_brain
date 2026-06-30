@@ -46,14 +46,28 @@ export default defineBackground(() => {
       return true;
     }
 
-    if (msg.type === "saveInlineResource" || msg.type === "saveInlineNote" || msg.type === "saveInlinePrompt") {
+    if (msg.type === "capture") {
       (async () => {
         try {
-          const path = msg.type === "saveInlineResource" ? "/api/ext/save-resource"
-            : msg.type === "saveInlineNote" ? "/api/ext/save-note" : "/api/ext/save-prompt";
-          const res = await fetchWithKey(path, msg.payload);
+          const res = await fetchWithKey("/api/ext/capture", msg.payload);
           sendResponse(res);
         } catch { sendResponse({ error: "Could not connect" }); }
+      })();
+      return true;
+    }
+
+    if (msg.type === "get-context") {
+      (async () => {
+        try {
+          const query = msg.payload as { url: string; provider: string };
+          const qs = new URLSearchParams(query);
+          const base = await getBaseUrl();
+          const headers: Record<string, string> = {};
+          const { devventory_api_key } = await chrome.storage.sync.get("devventory_api_key");
+          if (devventory_api_key) headers["x-api-key"] = devventory_api_key;
+          const res = await fetch(`${base}/api/ext/context?${qs}`, { headers });
+          sendResponse(await res.json());
+        } catch { sendResponse({ saved: false, count: 0 }); }
       })();
       return true;
     }

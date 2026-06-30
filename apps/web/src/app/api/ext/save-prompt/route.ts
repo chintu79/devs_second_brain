@@ -14,7 +14,7 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { prompt, title, sourceUrl, aiModel } = body;
+    const { prompt, title } = body;
     if (!prompt) return corsResponse({ error: "Prompt is required" }, 400, request);
 
     const [aiTags, aiCategory] = await Promise.all([
@@ -25,9 +25,8 @@ export async function POST(request: Request) {
     const promptRecord = await prisma.prompt.create({
       data: {
         prompt,
-        title: title || null,
-        sourceUrl: sourceUrl || null,
-        aiModel: aiModel || null,
+        title: title || prompt.slice(0, 100),
+        useCase: "general",
         category: aiCategory || "other",
         userId,
         tags: buildTagCreate(aiTags.slice(0, 5), userId),
