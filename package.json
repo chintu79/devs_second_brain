@@ -12,6 +12,11 @@
     "ext:build": "pnpm --filter @devventory/extension build",
     "clean": "turbo clean && rm -rf node_modules"
   },
+  "dependencies": {
+    "next": "16.2.9",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  },
   "devDependencies": {
     "turbo": "^2.5.0",
     "typescript": "^5"
