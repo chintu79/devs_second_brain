@@ -8,5 +8,8 @@
     "zod": "^4.4.3",
     "lucide-react": "^1.21.0",
     "react": "^19"
+  },
+  "devDependencies": {
+    "@types/react": "^19"
   }
 }
