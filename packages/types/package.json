@@ -1,0 +1,12 @@
+{
+  "name": "@devventory/types",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "zod": "^4.4.3",
+    "lucide-react": "^1.21.0",
+    "react": "^19"
+  }
+}

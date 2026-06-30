@@ -1,0 +1,8 @@
+{
+  "extends": "../../packages/config/tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "types": ["wxt/client"]
+  },
+  "include": ["**/*.ts", "**/*.tsx"]
+}
