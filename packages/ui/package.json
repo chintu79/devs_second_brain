@@ -12,6 +12,10 @@
     "lucide-react": "^1.21.0",
     "react": "^19"
   },
+  "devDependencies": {
+    "@types/react": "^19",
+    "@types/react-dom": "^19"
+  },
   "peerDependencies": {
     "react": "^19",
     "react-dom": "^19"
