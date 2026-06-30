@@ -8,6 +8,8 @@
     "@devventory/utils": "workspace:*",
     "@base-ui/react": "^1.6.0",
     "class-variance-authority": "^0.7.1",
+    "cmdk": "^1.1.1",
+    "lucide-react": "^1.21.0",
     "react": "^19"
   },
   "peerDependencies": {
