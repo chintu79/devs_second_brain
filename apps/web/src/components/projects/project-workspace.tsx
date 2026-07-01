@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import { slideInRight } from "@devventory/motion";
 import { formatRelative } from "@devventory/utils";
-import { ProjectSidebar } from "./project-sidebar";
 import { ProjectList } from "./project-list";
 import { KanbanBoard } from "./kanban-board";
 import { toggleProjectFavorite, deleteProject, saveProjectPlan, archiveProject, editProject, createProject } from "@/actions/projects";
@@ -55,13 +54,6 @@ export function ProjectWorkspace({ projects, resources, prompts, notes }: Projec
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const searchRef = useRef<HTMLInputElement>(null);
 
-  /* ── Sidebar data ── */
-  const allTags = useMemo(() => {
-    const m = new Map<string, number>();
-    projects.forEach((p) => p.tags.forEach((t) => m.set(t, (m.get(t) || 0) + 1)));
-    return Array.from(m.entries()).map(([n, c]) => ({ name: n, count: c })).sort((a, b) => b.count - a.count);
-  }, [projects]);
-
   /* ── Filter projects ── */
   const filtered = useMemo(() => {
     let r = [...projects];
@@ -92,7 +84,6 @@ export function ProjectWorkspace({ projects, resources, prompts, notes }: Projec
     if (id) p.set("id", id); else p.delete("id");
     router.replace(`/projects${p.toString() ? `?${p}` : ""}`, { scroll: false });
   }, [router, searchParams]);
-
 
   function select(id: string) { setSelectedId(id === selectedId ? null : id); }
   function close() { setSelectedId(null); }
@@ -136,18 +127,6 @@ export function ProjectWorkspace({ projects, resources, prompts, notes }: Projec
     return map;
   }, [projects, notes, resources, prompts]);
 
-  /* ── Counts ── */
-  const counts = useMemo(() => ({
-    total: projects.length,
-    active: projects.filter((p) => !["completed", "archived", "idea"].includes(p.status)).length,
-    planning: projects.filter((p) => p.status === "planning").length,
-    research: projects.filter((p) => p.status === "research").length,
-    building: projects.filter((p) => p.status === "building").length,
-    completed: projects.filter((p) => p.status === "completed").length,
-    archived: projects.filter((p) => p.status === "archived").length,
-    fav: projects.filter((p) => p.favorite).length,
-  }), [projects]);
-
   const tabs = useMemo(() => [
     { id: "overview", label: "Overview" },
     { id: "plan.md", label: "PLAN.md" },
@@ -159,31 +138,37 @@ export function ProjectWorkspace({ projects, resources, prompts, notes }: Projec
 
   return (
     <div className="flex h-full" onKeyDown={handleKeyDown}>
-      {/* ── Left Sidebar ── */}
-      <ProjectSidebar
-        total={counts.total} activeCount={counts.active} planningCount={counts.planning}
-        researchCount={counts.research} buildingCount={counts.building}
-        completedCount={counts.completed} archivedCount={counts.archived} favCount={counts.fav}
-        allTags={allTags} activeSection={activeSection} onSectionChange={setActiveSection}
-        activeTag={activeTag} onTagChange={setActiveTag} onCreate={async () => {
-          const formData = new FormData();
-          formData.set("title", "");
-          formData.set("description", "");
-          formData.set("status", "idea");
-          formData.set("techStack", "");
-          formData.set("tags", "");
-          formData.set("planMd", PROJECT_TEMPLATE);
-          const result = await createProject(formData);
-          if (result.success && result.id) {
-            window.location.href = `/projects?id=${result.id}&new=true`;
-          }
-        }}
-      />
-
       {/* ── List / Kanban column ── */}
-      <div className={`w-[474px] shrink-0 border-r border-border/50 flex flex-col ${viewMode === "kanban" ? "px-0" : "px-2"}`}>
-        <div className="px-4 pt-3 pb-2 pr-8 border-b border-border/30 flex items-center gap-3">
-          <div className="relative flex-1">
+      <div className={`flex flex-col flex-1 ${selectedProject ? "max-w-[474px]" : ""} ${viewMode === "kanban" ? "" : ""}`}>
+        {/* Page header */}
+        <div className="flex items-center justify-between px-1 pb-4">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground">Projects</h1>
+            <p className="text-sm text-muted-foreground mt-0.5">Manage and organize all your projects.</p>
+          </div>
+          <Button
+            onClick={async () => {
+              const formData = new FormData();
+              formData.set("title", "");
+              formData.set("description", "");
+              formData.set("status", "idea");
+              formData.set("techStack", "");
+              formData.set("tags", "");
+              formData.set("planMd", PROJECT_TEMPLATE);
+              const result = await createProject(formData);
+              if (result.success && result.id) {
+                window.location.href = `/projects?id=${result.id}&new=true`;
+              }
+            }}
+            className="h-10 rounded-xl bg-gradient-to-r from-primary to-[#7c5cfc] text-sm font-medium text-primary-foreground shadow-[0_0_20px_-8px_rgba(99,102,241,0.4)] hover:shadow-[0_0_28px_-6px_rgba(99,102,241,0.6)] transition-all duration-300 px-5"
+          >
+            <Plus className="h-4 w-4 mr-1.5" />
+            New Project
+          </Button>
+        </div>
+
+        <div className="flex items-center gap-3 mb-3">
+          <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input ref={searchRef} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search projects..."
@@ -216,18 +201,23 @@ export function ProjectWorkspace({ projects, resources, prompts, notes }: Projec
               <span>Board</span>
             </button>
           </div>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            {selectedId && (
+              <button onClick={close} className="text-primary hover:text-primary/80 transition-colors">
+                Clear selection
+              </button>
+            )}
+          </div>
         </div>
         {viewMode === "list" ? (
           <>
-            <div className="px-3 py-2 border-b border-border/20 space-y-1.5">
-              <span className="text-[10px] text-muted-foreground">{filtered.length} project{filtered.length !== 1 ? "s" : ""}</span>
+            <div className="flex items-center gap-2 pb-2 text-xs text-muted-foreground">
+              <span>{filtered.length} project{filtered.length !== 1 ? "s" : ""}</span>
               {activeTag && (
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20">
-                    #{activeTag}
-                    <button onClick={() => setActiveTag(null)} className="hover:text-primary/70" aria-label="Clear tag filter">&times;</button>
-                  </span>
-                </div>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20">
+                  #{activeTag}
+                  <button onClick={() => setActiveTag(null)} className="hover:text-primary/70" aria-label="Clear tag filter">&times;</button>
+                </span>
               )}
             </div>
             <ProjectList projects={displayedProjects} selectedId={selectedId} onSelect={select} connectionCounts={connectionCounts} />

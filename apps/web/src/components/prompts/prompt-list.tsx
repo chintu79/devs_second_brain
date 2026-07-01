@@ -1,11 +1,10 @@
 "use client";
 
 import { useState, useMemo, useCallback, useRef } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Search, Loader2, ChevronDown, X, Sparkles } from "lucide-react";
 import { PromptCard } from "./prompt-card";
-import { PromptPreviewPanel } from "./prompt-preview-panel";
 import { EmptyState } from "@devventory/shared";
 import { fetchMorePrompts, createPrompt } from "@/actions/prompts";
 import { fadeInUp, stagger } from "@devventory/motion";
@@ -168,109 +167,92 @@ export function PromptList({ initialItems, nextCursor: initialCursor, categories
   const hasFilters = !!selectedCategory;
 
   return (
-    <div className="flex h-full gap-0" onKeyDown={handleKeyDown}>
-      <div className="w-[474px] shrink-0 transition-all duration-200" ref={listRef} tabIndex={-1}>
-        <div className="space-y-4 pr-5">
-          <div className="relative">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <input
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search prompts, workflows, agents..."
-              className="flex h-10 w-full rounded-lg border border-border bg-card pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/20 transition-all"
-            />
-          </div>
+    <div className="h-full space-y-4" onKeyDown={handleKeyDown} ref={listRef} tabIndex={-1}>
+      <div className="relative">
+        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <input
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search prompts, workflows, agents..."
+          className="flex h-10 w-full rounded-lg border border-border bg-card pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/20 transition-all"
+        />
+      </div>
 
-          {hasFilters && (
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-muted/50 text-muted-foreground hover:bg-muted/80 hover:scale-[1.03] transition-all">
-                {selectedCategory}
-                <button onClick={() => setCategory(null)} className="flex h-4 w-4 items-center justify-center rounded-full hover:bg-muted/60 transition-all">
-                  <X className="h-3 w-3" />
-                </button>
-              </span>
+      {hasFilters && (
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-muted/50 text-muted-foreground hover:bg-muted/80 hover:scale-[1.03] transition-all">
+            {selectedCategory}
+            <button onClick={() => setCategory(null)} className="flex h-4 w-4 items-center justify-center rounded-full hover:bg-muted/60 transition-all">
+              <X className="h-3 w-3" />
+            </button>
+          </span>
+          <button
+            onClick={() => setCategory(null)}
+            className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Clear
+          </button>
+        </div>
+      )}
+
+      <div className="text-xs text-muted-foreground">
+        {flatList.length} {flatList.length === 1 ? "prompt" : "prompts"}
+      </div>
+
+      {filtered.length === 0 ? (
+        <EmptyState
+          icon={Sparkles}
+          hasSearch={hasSearch}
+          searchQuery={searchQuery}
+          searchLabel="prompts"
+          emptyTitle="Create your first reusable workflow"
+          emptyDescription="A prompt is not text. It's reusable knowledge. Start with a template and build your personal toolkit of AI workflows, agents, and system instructions."
+          actionLabel="Create your first prompt"
+          onCreate={async () => {
+          const formData = new FormData();
+          formData.set("title", "");
+          formData.set("prompt", "");
+          formData.set("category", "coding");
+          formData.set("useCase", "");
+          formData.set("tags", "");
+          const result = await createPrompt(formData);
+          if (result.success && result.id) {
+            window.location.href = `/prompts?id=${result.id}&new=true`;
+          }
+        }}
+        />
+      ) : (
+        <div className="space-y-2">
+          <motion.div variants={stagger.container} initial="hidden" animate="visible">
+            {flatList.map((p) => (
+              <motion.div key={p.id} variants={fadeInUp}>
+                <PromptCard
+                  prompt={p}
+                  selected={selectedId === p.id}
+                  onSelect={handleSelect}
+                />
+              </motion.div>
+            ))}
+          </motion.div>
+
+          {cursor && (
+            <div className="pt-4 pb-8">
               <button
-                onClick={() => setCategory(null)}
-                className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+                onClick={loadMore}
+                disabled={loading}
+                className="w-full py-2 text-center text-xs text-muted-foreground hover:text-foreground hover:bg-muted/30 rounded-lg transition-all cursor-pointer disabled:opacity-50"
               >
-                Clear
+                {loading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <ChevronDown className="h-4 w-4" />
+                )}
+                {loading ? "Loading..." : "Load more"}
               </button>
             </div>
           )}
-
-          <div className="text-xs text-muted-foreground">
-            {flatList.length} {flatList.length === 1 ? "prompt" : "prompts"}
-          </div>
-
-          {filtered.length === 0 ? (
-            <EmptyState
-              icon={Sparkles}
-              hasSearch={hasSearch}
-              searchQuery={searchQuery}
-              searchLabel="prompts"
-              emptyTitle="Create your first reusable workflow"
-              emptyDescription="A prompt is not text. It's reusable knowledge. Start with a template and build your personal toolkit of AI workflows, agents, and system instructions."
-              actionLabel="Create your first prompt"
-              onCreate={async () => {
-              const formData = new FormData();
-              formData.set("title", "");
-              formData.set("prompt", "");
-              formData.set("category", "coding");
-              formData.set("useCase", "");
-              formData.set("tags", "");
-              const result = await createPrompt(formData);
-              if (result.success && result.id) {
-                window.location.href = `/prompts?id=${result.id}&new=true`;
-              }
-            }}
-            />
-          ) : (
-            <div className="space-y-2">
-              <motion.div variants={stagger.container} initial="hidden" animate="visible">
-                {flatList.map((p) => (
-                  <motion.div key={p.id} variants={fadeInUp}>
-                    <PromptCard
-                      prompt={p}
-                      selected={selectedId === p.id}
-                      onSelect={handleSelect}
-                    />
-                  </motion.div>
-                ))}
-              </motion.div>
-
-              {cursor && (
-                <div className="pt-4 pb-8">
-                  <button
-                    onClick={loadMore}
-                    disabled={loading}
-                    className="w-full py-2 text-center text-xs text-muted-foreground hover:text-foreground hover:bg-muted/30 rounded-lg transition-all cursor-pointer disabled:opacity-50"
-                  >
-                    {loading ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <ChevronDown className="h-4 w-4" />
-                    )}
-                    {loading ? "Loading..." : "Load more"}
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
         </div>
-      </div>
-
-      <AnimatePresence mode="wait">
-        {selectedPrompt && (
-          <PromptPreviewPanel
-            key={selectedPrompt.id}
-            prompt={selectedPrompt}
-            onClose={handleClose}
-            onUpdate={() => router.refresh()}
-            onTagClick={onTagClick}
-            autoEdit={searchParams.get("new") === "true"}
-          />
-        )}
-      </AnimatePresence>
+      )}
     </div>
   );
 }

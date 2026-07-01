@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
 import { ArrowRight, Bookmark, Link2, Search, History, GitFork, Hash, Plus, Sparkles, ArrowUp, Radio as RadioIcon } from "lucide-react";
 import { Button } from "@devventory/ui";
@@ -45,7 +45,34 @@ function TagPill({ label, color }: { label: string; color?: string }) {
   );
 }
 
+const staggerInner = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.1, delayChildren: 0.1 } },
+};
+
+const cardReveal = {
+  hidden: { opacity: 0, y: 24 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: ease.decelerate } },
+};
+
 export function LandingSections() {
+  const reduced = useReducedMotion();
+
+  const wrapStagger = (children: React.ReactNode) =>
+    reduced ? (
+      children
+    ) : (
+      <motion.div
+        variants={staggerInner}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true }}
+        className="contents"
+      >
+        {children}
+      </motion.div>
+    );
+
   return (
     <div className="space-y-32 md:space-y-48">
       {/* ── Act 2: Capture ── */}
@@ -57,6 +84,9 @@ export function LandingSections() {
         variants={sectionVariant}
       >
         <div className="grid md:grid-cols-2 gap-12 md:gap-20 items-center">
+          {wrapStagger(
+            <>
+              <motion.div variants={cardReveal}>
           <div>
             <Badge>ACT 1 · CAPTURE</Badge>
             <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-5 leading-tight">
@@ -75,6 +105,8 @@ export function LandingSections() {
               ))}
             </ul>
           </div>
+        </motion.div>
+        <motion.div variants={cardReveal}>
           <Frame title="DevCache — New Resource">
             <div className="p-5 space-y-4">
               <div className="flex items-center gap-2.5 border-b border-border pb-3.5">
@@ -132,6 +164,9 @@ export function LandingSections() {
               </div>
             </div>
           </Frame>
+        </motion.div>
+            </>
+          )}
         </div>
       </motion.section>
 
@@ -143,6 +178,9 @@ export function LandingSections() {
         variants={sectionVariant}
       >
         <div className="grid md:grid-cols-2 gap-12 md:gap-20 items-center">
+          {wrapStagger(
+            <>
+              <motion.div variants={cardReveal}>
           <div className="md:order-2">
             <Badge>ACT 2 · CONNECT</Badge>
             <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-5 leading-tight">
@@ -229,6 +267,9 @@ export function LandingSections() {
               </div>
             </Frame>
           </div>
+        </motion.div>
+            </>
+          )}
         </div>
       </motion.section>
 
@@ -240,6 +281,9 @@ export function LandingSections() {
         variants={sectionVariant}
       >
         <div className="grid md:grid-cols-2 gap-12 md:gap-20 items-center">
+          {wrapStagger(
+            <>
+              <motion.div variants={cardReveal}>
           <div>
             <Badge>ACT 3 · RETRIEVE</Badge>
             <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-5 leading-tight">
@@ -258,6 +302,8 @@ export function LandingSections() {
               ))}
             </ul>
           </div>
+        </motion.div>
+        <motion.div variants={cardReveal}>
           <Frame title="DevCache — Search">
             <div className="p-0">
               <div className="flex items-center gap-3 border-b border-border px-4 py-3">
@@ -330,6 +376,9 @@ export function LandingSections() {
               </div>
             </div>
           </Frame>
+        </motion.div>
+            </>
+          )}
         </div>
       </motion.section>
 
@@ -341,6 +390,9 @@ export function LandingSections() {
         variants={sectionVariant}
       >
         <div className="grid md:grid-cols-2 gap-12 md:gap-20 items-center">
+          {wrapStagger(
+            <>
+              <motion.div variants={cardReveal}>
           <div className="md:order-2">
             <Badge>ACT 4 · REDISCOVER</Badge>
             <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-5 leading-tight">
@@ -412,6 +464,9 @@ export function LandingSections() {
               </div>
             </Frame>
           </div>
+        </motion.div>
+            </>
+          )}
         </div>
       </motion.section>
 

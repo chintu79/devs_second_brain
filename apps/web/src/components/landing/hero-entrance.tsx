@@ -1,8 +1,8 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Search, Command } from "lucide-react";
 import { Button } from "@devventory/ui";
 import { ease } from "@devventory/motion";
 
@@ -104,6 +104,33 @@ function Mockup() {
   );
 }
 
+const CHAR_STAGGER = 0.1;
+const CHAR_DURATION = 0.7;
+const LETTER_START_DELAY = 0.3;
+const HEADING_TEXT = "Don't lose anything.";
+const HEADING_END = LETTER_START_DELAY + (HEADING_TEXT.length - 1) * CHAR_STAGGER + CHAR_DURATION;
+const EASE_OUT_EXPO = [0.16, 1, 0.3, 1] as [number, number, number, number];
+
+function LetterReveal({ text }: { text: string }) {
+  const prefersReduced = useReducedMotion();
+  if (prefersReduced) return <>{text}</>;
+  return (
+    <>
+      {text.split("").map((char, i) => (
+        <motion.span
+          key={i}
+          initial={{ opacity: 0, y: 14, filter: "blur(4px)" }}
+          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          transition={{ duration: CHAR_DURATION, delay: LETTER_START_DELAY + i * CHAR_STAGGER, ease: EASE_OUT_EXPO }}
+          className="inline-block"
+        >
+          {char === " " ? "\u00A0" : char}
+        </motion.span>
+      ))}
+    </>
+  );
+}
+
 const containerVariants = {
   hidden: {},
   visible: { transition: { staggerChildren: 0.1, delayChildren: 0.15 } },
@@ -139,30 +166,51 @@ export function HeroEntrance() {
         </div>
       </motion.div>
 
-      <motion.div variants={childVariants}>
-        <h1 className="text-[clamp(2.8rem,7vw,5.5rem)] font-bold tracking-[-0.03em] leading-[1.04] mb-6 max-w-4xl mx-auto">
-          Your brain can only<br />
-          <span className="text-primary">hold so much.</span>
+      <motion.div>
+        <h1 className="text-[clamp(2.8rem,7vw,5.5rem)] font-bold tracking-[-0.03em] leading-[1.04] mb-4 max-w-4xl mx-auto">
+          <LetterReveal text={HEADING_TEXT} />
         </h1>
+      </motion.div>
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, delay: HEADING_END + 0.5, ease: EASE_OUT_EXPO }}
+      >
+        <p className="text-[clamp(1.5rem,3.5vw,2.8rem)] font-bold tracking-[-0.02em] leading-[1.1] bg-gradient-to-r from-primary via-[#8B5CF6] to-[#06B6D4] bg-clip-text text-transparent animate-text-gradient">
+          Store your important resources forever.
+        </p>
       </motion.div>
 
       <motion.div variants={childVariants}>
-        <p className="text-muted-foreground/80 text-[17px] md:text-lg max-w-2xl mx-auto mb-10 leading-relaxed">
-          DevCache remembers the rest. Every resource, prompt, note, and project you save stays findable — forever.
-          Press <kbd className="rounded border border-border px-1.5 py-0.5 text-[13px] font-mono text-foreground/60 mx-1">⌘K</kbd> from anywhere and jump back in seconds.
+        <p className="text-muted-foreground/80 text-[17px] md:text-lg max-w-2xl mx-auto mb-8 leading-relaxed">
+          Save DSA questions, coding notes, interview experiences, prompts, useful resources, project ideas, and bookmarks in one secure place. Find everything instantly whenever you need it.
         </p>
+      </motion.div>
+
+      <motion.div variants={childVariants}>
+        <div className="inline-flex items-center gap-2.5 rounded-full border border-[#6366F1]/20 bg-[#6366F1]/5 px-4 py-2 text-sm text-muted-foreground/80 shadow-[0_0_20px_-8px_rgba(99,102,241,0.3)] backdrop-blur-sm mb-10 transition-all duration-300 hover:border-[#6366F1]/30 hover:shadow-[0_0_24px_-8px_rgba(99,102,241,0.4)]">
+          <Search className="h-3.5 w-3.5 text-[#6366F1]" />
+          <span>Press</span>
+          <kbd className="flex items-center gap-0.5 rounded-md border border-white/10 bg-white/5 px-1.5 py-0.5 text-[12px] font-medium text-foreground/80">
+            <Command className="h-3 w-3" />
+          </kbd>
+          <span className="text-muted-foreground/50">+</span>
+          <kbd className="rounded-md border border-white/10 bg-white/5 px-1.5 py-0.5 text-[12px] font-medium text-foreground/80">K</kbd>
+          <span className="hidden sm:inline">to search everything instantly</span>
+          <span className="sm:hidden">to search</span>
+        </div>
       </motion.div>
 
       <motion.div variants={childVariants}>
         <div className="flex items-center justify-center gap-4">
           <Link href="/register">
-            <Button size="lg" className="h-12 px-7 text-sm gap-2 bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-200 hover:scale-[1.03]">
+            <Button size="lg" className="h-12 px-7 text-sm gap-2 bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] text-white shadow-lg shadow-[#6366F1]/25 hover:shadow-[#6366F1]/50 hover:shadow-xl transition-all duration-300 hover:scale-[1.03]">
               Get Started
               <ArrowRight className="h-4 w-4" />
             </Button>
           </Link>
           <Link href="#features">
-            <Button variant="outline" size="lg" className="h-12 px-7 text-sm border-border/60 text-muted-foreground/80 hover:text-foreground hover:border-border transition-all duration-200 hover:scale-[1.03]">
+            <Button variant="outline" size="lg" className="h-12 px-7 text-sm border-border/60 text-muted-foreground/80 hover:text-foreground hover:border-border transition-all duration-300 hover:scale-[1.03] hover:shadow-lg">
               See how it works
             </Button>
           </Link>
