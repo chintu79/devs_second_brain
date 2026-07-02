@@ -62,9 +62,12 @@ export function ResourceItem({ resource, isSelected, onSelect }: ResourceItemPro
 
   return (
     <div className={`border-b border-border last:border-b-0 transition-colors ${isSelected ? "bg-primary/[0.04]" : "hover:bg-muted/60"}`}>
-      <button
+      <div
         onClick={() => onSelect?.(resource.id)}
-        className={`w-full text-left px-3 py-2.5 rounded-lg transition-all duration-150 hover:scale-[1.02] ${
+        onKeyDown={(e) => { if (e.key === "Enter") onSelect?.(resource.id); }}
+        role="button"
+        tabIndex={0}
+        className={`w-full text-left px-3 py-2.5 rounded-lg transition-all duration-150 hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
           isSelected ? "border-l-2 border-primary" : "border-l-2 border-transparent hover:border-l-2 hover:border-border/30"
         }`}
       >
@@ -123,7 +126,7 @@ export function ResourceItem({ resource, isSelected, onSelect }: ResourceItemPro
             </button>
           </div>
         </div>
-      </button>
+      </div>
     </div>
   );
 }

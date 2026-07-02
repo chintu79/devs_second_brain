@@ -468,7 +468,7 @@ html.theme-transition *::after {
 
 /* Sidebar accent indicator */
 .sidebar-item {
-  @apply relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150;
+  @apply relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-250;
 }
 
 .sidebar-item-active {
@@ -725,4 +725,20 @@ html.theme-transition *::after {
 .prose blockquote {
   @apply border-l-2 border-border pl-4 italic;
   color: #a1a1aa;
+}
+
+@keyframes text-gradient {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.animate-text-gradient {
+  background-size: 200% auto;
+  animation: text-gradient 4s ease infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-text-gradient {
+    animation: none;
+  }
 }

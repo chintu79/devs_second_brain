@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { HeroEntrance } from "@/components/landing/hero-entrance";
 import { LandingSections } from "@/components/landing/landing-sections";

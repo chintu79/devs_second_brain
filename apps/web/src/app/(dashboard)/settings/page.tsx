@@ -15,7 +15,7 @@ const sections: { id: SectionAccent; label: string }[] = [
   { id: "prompts", label: "Prompts" },
   { id: "notes", label: "Notes" },
   { id: "projects", label: "Projects" },
-  { id: "radar", label: "OS Radar" },
+  { id: "radar", label: "Daily Updates" },
   { id: "graph", label: "Graph" },
   { id: "chat", label: "AI Chat" },
   { id: "tags", label: "Tags" },
