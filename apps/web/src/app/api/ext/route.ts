@@ -2,13 +2,10 @@ import { NextResponse } from "next/server";
 
 export async function GET() {
   return NextResponse.json({
-    version: "0.1.0",
+    version: "0.2.0",
     endpoints: [
-      "POST /api/ext/verify-key",
-      "POST /api/ext/save-resource",
-      "POST /api/ext/save-note",
-      "POST /api/ext/save-prompt",
-      "POST /api/ext/ai-enrich",
+      "POST /api/capture        (unified capture — current)",
+      "POST /api/ext/verify-key (auth)",
     ],
   });
 }

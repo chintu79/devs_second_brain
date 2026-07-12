@@ -1,9 +1,3 @@
-export function formatDate(dateStr?: string | Date): string {
-  if (!dateStr) return "";
-  const date = new Date(dateStr);
-  return date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
-}
-
 const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
 
 export function formatRelative(dateStr?: string | Date): string {
@@ -16,5 +10,5 @@ export function formatRelative(dateStr?: string | Date): string {
   if (hrs < 24) return rtf.format(-hrs, "hour");
   const days = Math.floor(diff / 86400000);
   if (days < 30) return rtf.format(-days, "day");
-  return formatDate(dateStr);
+  return new Date(dateStr).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 }

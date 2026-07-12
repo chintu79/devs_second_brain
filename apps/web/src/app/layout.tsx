@@ -7,7 +7,6 @@ import "./globals.css";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import { AccentProvider } from "@/components/theme/accent-provider";
-import { Agentation } from "agentation";
 
 export const metadata: Metadata = {
   title: "Dev Second Brain",
@@ -16,19 +15,21 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="h-full dark" data-scroll-behavior="smooth" suppressHydrationWarning>
+    <html lang="en" className="h-full" data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
         <meta name="theme-color" content="#6366f1" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <link rel="apple-touch-icon" href="/icons/icon-512.svg" />
+        <script dangerouslySetInnerHTML={{
+          __html: `(function(){try{var t=localStorage.getItem("theme");if(t==="light"){document.documentElement.classList.remove("dark")}else{document.documentElement.classList.add("dark")}}catch(e){}})()`
+        }} />
       </head>
       <body className="min-h-full flex flex-col">
         <ThemeProvider>
           <AccentProvider>
             {children}
             <Toaster position="bottom-right" richColors closeButton />
-            <Agentation />
           </AccentProvider>
         </ThemeProvider>
       </body>

@@ -1,0 +1,142 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-11T15:00:00Z",
+  "title": "Design System: Devventory",
+  "extensions": {
+    "colorMeta": {
+      "primary": { "role": "primary", "displayName": "Brand Accent", "canonical": "oklch(0.58 0.18 270)", "tonalRamp": ["#11163a", "#1f2663", "#2e378c", "#3d47b5", "#5B6CFF", "#7d8aff", "#a0a9ff", "#c3c9ff"] },
+      "background": { "role": "neutral", "displayName": "Canvas", "canonical": "oklch(0.13 0.005 270)", "tonalRamp": ["#0a0a0a", "#121212", "#1b1b1b", "#242424", "#2e2e2e", "#383838", "#424242", "#4d4d4d"] },
+      "card": { "role": "neutral", "displayName": "Card Surface", "canonical": "oklch(0.21 0.008 270)", "tonalRamp": ["#141414", "#1b1b1b", "#222222", "#282828", "#2e2e2e", "#353535", "#3b3b3b", "#424242"] },
+      "sidebar": { "role": "neutral", "displayName": "Sidebar Surface", "canonical": "oklch(0.10 0.005 270)", "tonalRamp": ["#090909", "#0e0e0e", "#141414", "#191919", "#1f1f1f", "#242424", "#2a2a2a", "#2f2f2f"] },
+      "ink": { "role": "neutral", "displayName": "Primary Text", "canonical": "oklch(0.80 0.005 270)", "tonalRamp": ["#505050", "#666666", "#7d7d7d", "#939393", "#a9a9a9", "#bfbfbf", "#d4d4d4", "#e8e7e6"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Landing page hero headline only. Fluid clamp sizing." },
+      "headline": { "displayName": "Headline", "purpose": "Page titles, dashboard headers." },
+      "title": { "displayName": "Title", "purpose": "Card titles, dialog headers, section subheads." },
+      "body": { "displayName": "Body", "purpose": "Default text, UI labels, paragraphs." },
+      "label": { "displayName": "Label", "purpose": "Tags, badges, metadata, small UI elements." },
+      "code": { "displayName": "Code", "purpose": "Inline code and code blocks." }
+    },
+    "shadows": [
+      { "name": "sm", "value": "0px 0.5px 1px rgba(0,0,0,0.04), 0px 0px 1px rgba(0,0,0,0.06)", "purpose": "Card resting state. Barely perceptible." },
+      { "name": "md", "value": "0px 2px 8px rgba(0,0,0,0.05), 0px 0px 1px rgba(0,0,0,0.07)", "purpose": "Dropdown menus, popovers." },
+      { "name": "lg", "value": "0px 6px 24px rgba(0,0,0,0.06), 0px 0px 1px rgba(0,0,0,0.08)", "purpose": "Modals, dialogs." },
+      { "name": "xl", "value": "0px 12px 48px rgba(0,0,0,0.08), 0px 0px 1px rgba(0,0,0,0.10)", "purpose": "Command palette, highest elevation." }
+    ],
+    "motion": [
+      { "name": "micro", "value": "0.12s", "purpose": "Collapsible sections, micro-interactions." },
+      { "name": "hover", "value": "0.18s", "purpose": "Hover transitions (card lift, button glow)." },
+      { "name": "panel", "value": "0.25s", "purpose": "Panel slides, overlay fades." },
+      { "name": "reveal", "value": "0.3s", "purpose": "Entrance animations, list stagger reveals." },
+      { "name": "ease-standard", "value": "cubic-bezier(0.25, 0.1, 0.25, 1)", "purpose": "Default easing for most animations." },
+      { "name": "ease-decelerate", "value": "cubic-bezier(0.0, 0.0, 0.2, 1)", "purpose": "Objects decelerating naturally — entrances, exits." },
+      { "name": "ease-accelerate", "value": "cubic-bezier(0.4, 0.0, 1, 1)", "purpose": "Elements leaving with urgency — exit animations." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1280px" },
+      { "name": "2xl", "value": "1536px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Primary action button. Used for CTAs, save, create, confirm.",
+      "html": "<button class=\"ds-btn-primary\">Get Started</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 8px 16px; background: #5B6CFF; color: #ffffff; font-family: Inter, system-ui, sans-serif; font-size: 0.8125rem; font-weight: 600; letter-spacing: 0.01em; border: none; border-radius: 6px; cursor: pointer; transition: background 0.15s, transform 0.15s; } .ds-btn-primary:hover { background: #4E5EF7; transform: scale(1.03); } .ds-btn-primary:focus-visible { outline: 2px solid rgba(91, 108, 255, 0.5); outline-offset: 2px; } .ds-btn-primary:active { transform: scale(0.97); }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Secondary action. Used for cancel, dismiss, non-primary actions.",
+      "html": "<button class=\"ds-btn-ghost\">Cancel</button>",
+      "css": ".ds-btn-ghost { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 8px 16px; background: transparent; color: #929390; font-family: Inter, system-ui, sans-serif; font-size: 0.8125rem; font-weight: 500; border: none; border-radius: 6px; cursor: pointer; transition: background 0.15s, color 0.15s; } .ds-btn-ghost:hover { background: rgba(232, 231, 230, 0.06); color: #e8e7e6; } .ds-btn-ghost:focus-visible { outline: 2px solid rgba(91, 108, 255, 0.5); outline-offset: 2px; }"
+    },
+    {
+      "name": "Knowledge Card",
+      "kind": "card",
+      "refersTo": "card-default",
+      "description": "Knowledge resource item in grid/list. Click to open reader.",
+      "html": "<div class=\"ds-card-knowledge\" tabindex=\"0\" role=\"button\"><div class=\"ds-card-accent\"></div><div class=\"ds-card-body\"><div class=\"ds-card-header\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#38bdf8\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71\"/><path d=\"M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71\"/></svg><div><div class=\"ds-card-title\">How QR Phishing Attacks Target Developers</div><div class=\"ds-card-domain\">blog.security.com</div></div></div><div class=\"ds-card-summary\">QR phishing — or 'quishing' — is on the rise. Attackers embed malicious QR codes in emails and PDFs.</div><div class=\"ds-card-footer\"><span class=\"ds-card-tag\">Reference</span><span class=\"ds-card-time\">2h ago</span></div></div></div>",
+      "css": ".ds-card-knowledge { position: relative; display: flex; gap: 12px; padding: 16px; background: #282828; border: 1px solid rgba(232, 231, 230, 0.14); border-radius: 11px; cursor: pointer; transition: border-color 0.15s, transform 0.15s; font-family: Inter, system-ui, sans-serif; } .ds-card-knowledge:hover { border-color: rgba(232, 231, 230, 0.25); transform: translateY(-2px); box-shadow: 0px 0.5px 1px rgba(0,0,0,0.04), 0px 0px 1px rgba(0,0,0,0.06); } .ds-card-knowledge:focus-visible { outline: 2px solid rgba(91, 108, 255, 0.5); outline-offset: 2px; } .ds-card-accent { position: absolute; left: 0; top: 8px; bottom: 8px; width: 3px; background: #38bdf8; border-radius: 9999px; } .ds-card-body { flex: 1; min-width: 0; padding-left: 10px; display: flex; flex-direction: column; justify-content: space-between; } .ds-card-header { display: flex; align-items: flex-start; gap: 8px; } .ds-card-title { font-size: 0.875rem; font-weight: 600; line-height: 1.3; color: #e8e7e6; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; } .ds-card-domain { font-size: 0.75rem; color: rgba(146, 147, 144, 0.5); margin-top: 2px; } .ds-card-summary { font-size: 0.75rem; color: rgba(146, 147, 144, 0.7); line-height: 1.5; margin-top: 8px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; } .ds-card-footer { display: flex; align-items: center; gap: 8px; margin-top: 8px; } .ds-card-tag { font-size: 0.6875rem; font-weight: 500; padding: 2px 8px; background: rgba(146, 147, 144, 0.15); border-radius: 9999px; color: #38bdf8; opacity: 0.7; } .ds-card-time { font-size: 0.6875rem; color: rgba(146, 147, 144, 0.4); }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input-default",
+      "description": "Default text input field. Used for search, forms, edit-in-place.",
+      "html": "<input class=\"ds-input\" type=\"text\" placeholder=\"Search knowledge...\" />",
+      "css": ".ds-input { width: 100%; padding: 8px 12px; background: #1e1e1e; color: #e8e7e6; font-family: Inter, system-ui, sans-serif; font-size: 0.875rem; border: 1px solid rgba(232, 231, 230, 0.10); border-radius: 6px; outline: none; transition: border-color 0.15s; } .ds-input::placeholder { color: rgba(146, 147, 144, 0.5); } .ds-input:focus { border-color: #5B6CFF; } .ds-input:focus-visible { outline: 2px solid rgba(91, 108, 255, 0.3); outline-offset: 1px; }"
+    },
+    {
+      "name": "Sidebar Navigation Item",
+      "kind": "nav",
+      "refersTo": "nav-sidebar",
+      "description": "Sidebar navigation link. Active state uses accent tint.",
+      "html": "<div class=\"ds-nav-item\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z\"/><path d=\"M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z\"/></svg><span>Knowledge</span></div>",
+      "css": ".ds-nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; color: #929390; font-family: Inter, system-ui, sans-serif; font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: background 0.15s, color 0.15s; } .ds-nav-item:hover { background: rgba(232, 231, 230, 0.06); color: #e8e7e6; } .ds-nav-item:focus-visible { outline: 2px solid rgba(91, 108, 255, 0.5); outline-offset: 2px; }"
+    },
+    {
+      "name": "Knowledge Tag",
+      "kind": "chip",
+      "refersTo": "chip-tag",
+      "description": "Knowledge type badge. Colored by type accent.",
+      "html": "<span class=\"ds-chip\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#38bdf8\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71\"/><path d=\"M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71\"/></svg>Reference</span>",
+      "css": ".ds-chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; font-size: 0.6875rem; font-weight: 500; background: rgba(146, 147, 144, 0.15); color: #38bdf8; opacity: 0.7; border-radius: 9999px; font-family: Inter, system-ui, sans-serif; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Developer's Workbench",
+    "overview": "A calm, intentional workspace where knowledge is the material. The design never competes with the content — surfaces recede, typography leads, motion explains. Every pixel serves the goal of frictionless capture and effortless retrieval. The system is dark-first, nearly monochrome, with a single accent (#5B6CFF) that drives all interactive elements. Section-specific hues are reserved for icons, badges, and indicators — never for surfaces or text. Color is used as a rare resource, not decoration.",
+    "keyCharacteristics": [
+      "Dark-first, warm neutrals — canvas is warm near-black (#1b1b1b), not cold blue-gray",
+      "Single accent — #5B6CFF drives all interactive elements, never exceeds 5% screen coverage",
+      "Three-panel layout — folder tree | resource list | reader panel, the core paradigm",
+      "Shared element transitions — cards morph into readers, search results into detail views",
+      "Typography-first — Inter at every size, hierarchy via weight and spacing, not decorative type",
+      "Motion explains state — entrance, exit, selection, morph; never decoration"
+    ],
+    "rules": [
+      { "name": "The Rarity Rule", "body": "The primary accent (#5B6CFF) covers ≤5% of any given screen. If accent feels everywhere, remove it.", "section": "colors" },
+      { "name": "The One Hue Rule", "body": "Neutrals are tinted toward the accent hue (270°) at low chroma. Default-tinting toward warm or cool is prohibited.", "section": "colors" },
+      { "name": "The No-Gradient-Text Rule", "body": "Emphasis is communicated through weight and size. background-clip: text with gradient is decorative and prohibited.", "section": "colors" },
+      { "name": "The One Family Rule", "body": "Inter is the only UI font. No display/body pairing. Monospace is for code alone.", "section": "typography" },
+      { "name": "The Fixed Rem Rule", "body": "Product UI uses fixed rem values for all type. Fluid clamp() is reserved for the landing page hero only.", "section": "typography" },
+      { "name": "The 68ch Rule", "body": "Prose body text never exceeds 68 characters per line. Data and compact UI may run denser.", "section": "typography" },
+      { "name": "The Flat-by-Default Rule", "body": "Surfaces are flat at rest. Shadows appear only as a response to interaction state or elevated hierarchy.", "section": "elevation" }
+    ],
+    "dos": [
+      "Use a single accent (#5B6CFF) for all interactive elements. Keep it rare — ≤5% of any screen.",
+      "Use tonal layering (luminance steps) as the primary depth mechanism. Shadows support, they don't carry hierarchy.",
+      "Use shared layout transitions (layoutId) for morphing elements — card→reader, search→detail, tile→overlay.",
+      "Animate only transform and opacity. Never width, height, top, left.",
+      "Use Inter for everything. One family, multiple weights (400/500/600/700).",
+      "Respect prefers-reduced-motion — every animation has a zero-duration fallback.",
+      "Use the 8px spacing rhythm. 4px for micro-adjustments. No arbitrary values.",
+      "Show skeleton states for loading content, not spinners in the middle of content.",
+      "Design empty states that teach the interface, not nothing here."
+    ],
+    "donts": [
+      "Use side-stripe borders (border-left >1px as a colored accent on cards).",
+      "Use gradient text (background-clip: text + gradient). Emphasis via weight and size.",
+      "Use glassmorphism as default. Rare and purposeful, or nothing.",
+      "Use the hero-metric template (big number, small label, gradient accent).",
+      "Use identical card grids (same-sized cards with icon + heading + text, repeated endlessly).",
+      "Use tiny uppercase tracked eyebrows above every section heading.",
+      "Use numbered section markers (01 / 02 / 03) as default scaffolding.",
+      "Use display fonts for UI labels, buttons, or data.",
+      "Reinvent standard affordances — no custom scrollbars, weird form controls.",
+      "Use modal as first thought. Exhaust inline / progressive alternatives first.",
+      "Use bouncy animations or elastic springs. Ease-out-quart / quint / expo only.",
+      "Add decorative motion that doesn't convey state.",
+      "Create color for decoration. Justify every color with a functional role.",
+      "Hardcode values — use tokens."
+    ]
+  }
+}

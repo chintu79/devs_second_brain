@@ -1,13 +1,17 @@
 import { Suspense } from "react";
 import { auth } from "@/lib/auth";
-import prisma, { safeQuery } from "@/lib/prisma";
-import { getTagsWithCounts } from "@/actions/tags";
+import { fetchMoreKnowledgeItems, type KnowledgeFilter } from "@/actions/knowledge";
 import { KnowledgeWorkspace } from "@/components/knowledge/knowledge-workspace";
-import { includeTags, flattenListTags } from "@/lib/tags";
+import { KnowledgeSkeleton } from "@/components/knowledge/knowledge-skeleton";
 
-export default async function KnowledgePage() {
+const VALID_FILTERS: KnowledgeFilter[] = ["favorites", "archive", "trash"];
+
+export default async function KnowledgePage({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
   const session = await auth();
   const userId = session?.user?.id;
+  const sp = await searchParams;
+  const raw = typeof sp.filter === "string" ? sp.filter : null;
+  const filter: KnowledgeFilter = VALID_FILTERS.includes(raw as KnowledgeFilter) ? (raw as KnowledgeFilter) : null;
 
   if (!userId) {
     return (
@@ -17,23 +21,16 @@ export default async function KnowledgePage() {
     );
   }
 
-  const [tags, resources, prompts, notes, projects] = await Promise.all([
-    getTagsWithCounts(),
-    safeQuery("knowledge.resources", () => prisma.resource.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, take: 200, ...includeTags }), []),
-    safeQuery("knowledge.prompts", () => prisma.prompt.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, take: 200, ...includeTags }), []),
-    safeQuery("knowledge.notes", () => prisma.note.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, take: 200, ...includeTags }), []),
-    safeQuery("knowledge.projects", () => prisma.project.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, take: 200, ...includeTags }), []),
-  ]);
+  const initialResult = await fetchMoreKnowledgeItems(undefined, 50, filter);
 
   return (
-    <div data-accent="knowledge" className="absolute inset-0 flex overflow-hidden">
-      <Suspense fallback={<div className="flex-1" />}>
+    <div data-accent="knowledge" className="absolute inset-0 w-full h-full flex overflow-hidden">
+      <Suspense fallback={<KnowledgeSkeleton />}>
         <KnowledgeWorkspace
-          tags={tags}
-          resources={flattenListTags(resources.map((r) => ({ ...r, url: r.url, category: r.category })))}
-          prompts={flattenListTags(prompts.map((p) => ({ ...p, prompt: p.prompt })))}
-          notes={flattenListTags(notes.map((n) => ({ ...n, content: n.content })))}
-          projects={flattenListTags(projects.map((p) => ({ ...p, description: p.description, status: p.status, techStack: p.techStack, planMd: p.planMd })))}
+          key={filter || "all"}
+          initialItems={initialResult.items}
+          nextCursor={initialResult.nextCursor}
+          filter={filter}
         />
       </Suspense>
     </div>

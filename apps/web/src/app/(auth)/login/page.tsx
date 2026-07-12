@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Eye, EyeOff, Loader2, ShieldCheck } from "lucide-react"
 import { motion } from "framer-motion"
-import { login } from "@/actions/auth"
+import { signIn } from "next-auth/react"
 import { Button } from "@devventory/ui"
 import { Input } from "@devventory/ui"
 import { Label } from "@devventory/ui"
@@ -62,12 +62,13 @@ function LoginForm() {
 
   async function onSubmit(values: LoginFormValues) {
     setServerError(null)
-    const formData = new FormData()
-    formData.set("email", values.email)
-    formData.set("password", values.password)
-    const result = await login(formData)
+    const result = await signIn("credentials", {
+      email: values.email,
+      password: values.password,
+      redirect: false,
+    })
     if (result?.error) {
-      setServerError(result.error)
+      setServerError("Invalid credentials")
     } else {
       router.push(callbackUrl)
     }
@@ -193,21 +194,9 @@ export default function LoginPage() {
   return (
     <div className="relative flex w-full items-center justify-center">
       <div className="fixed inset-0 -z-10">
-        <motion.div
-          animate={{ x: [0, 30, -20, 0], y: [0, -40, 20, 0] }}
-          transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-primary/10 blur-[120px]"
-        />
-        <motion.div
-          animate={{ x: [0, -20, 40, 0], y: [0, 30, -30, 0] }}
-          transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute -bottom-40 -right-32 h-[28rem] w-[28rem] rounded-full bg-[#7c5cfc]/10 blur-[140px]"
-        />
-        <motion.div
-          animate={{ x: [0, 20, -10, 0], y: [0, -20, 30, 0] }}
-          transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute left-1/3 top-1/2 h-64 w-64 rounded-full bg-[#06B6D4]/5 blur-[100px]"
-        />
+        <div className="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-primary/10 blur-[120px]" />
+        <div className="absolute -bottom-40 -right-32 h-[28rem] w-[28rem] rounded-full bg-[#7c5cfc]/10 blur-[140px]" />
+        <div className="absolute left-1/3 top-1/2 h-64 w-64 rounded-full bg-[#06B6D4]/5 blur-[100px]" />
       </div>
 
       <div className="fixed inset-0 -z-10 opacity-30">

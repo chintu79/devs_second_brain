@@ -20,7 +20,7 @@ export async function register(formData: FormData) {
     });
 
     if (existingUser) {
-      return { error: "Registration failed. Please try again." };
+      return { error: "An account with this email already exists. Please sign in instead." };
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -33,8 +33,7 @@ export async function register(formData: FormData) {
       },
     });
 
-    await signIn("credentials", { email, password, redirect: false });
-    return { success: true, redirect: "/onboard" };
+    return { success: true, redirect: "/login" };
   } catch (error) {
     console.error("Registration error:", error);
     return { error: `Registration failed: ${error instanceof Error ? error.message : "Unknown error"}` };

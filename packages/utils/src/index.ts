@@ -1,2 +1,2 @@
 export { cn } from "./cn";
-export { formatDate, formatRelative } from "./format";
+export { formatRelative } from "./format";

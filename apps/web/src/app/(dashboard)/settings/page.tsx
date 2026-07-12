@@ -1,25 +1,17 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { Palette, RotateCcw, Download, Upload, Loader2, Key, Plus, Trash2, Copy, Check, Eye, EyeOff, Server, Wifi, WifiOff, PanelRight, ToggleLeft, ToggleRight } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Palette, RotateCcw, Loader2, Key, Plus, Trash2, Copy, Check, Eye, EyeOff, PanelRight, ToggleLeft, ToggleRight } from "lucide-react";
 import { toast } from "sonner";
 import { getAccents, setAccents, defaultAccents, type SectionAccent } from "@/components/theme/accent-provider";
-import { exportVault } from "@/actions/export";
-import { importVault } from "@/actions/import";
 import { generateApiKey, listApiKeys, revokeApiKey } from "@/actions/api-keys";
-import { getEnvStatus, getConfigValue, setConfig } from "@/actions/config";
+
 
 const sections: { id: SectionAccent; label: string }[] = [
   { id: "dashboard", label: "Dashboard" },
-  { id: "resources", label: "Resources" },
-  { id: "prompts", label: "Prompts" },
-  { id: "notes", label: "Notes" },
+  { id: "knowledge", label: "Knowledge" },
   { id: "projects", label: "Projects" },
-  { id: "radar", label: "Daily Updates" },
-  { id: "graph", label: "Graph" },
-  { id: "chat", label: "AI Chat" },
-  { id: "tags", label: "Tags" },
-  { id: "search", label: "Search" },
+  { id: "radar", label: "Radar" },
   { id: "settings", label: "Settings" },
 ];
 
@@ -37,8 +29,6 @@ interface ApiKeyItem {
 export default function SettingsPage() {
   const [accents, setAccentsState] = useState<Record<SectionAccent, string>>(defaultAccents);
   const [saved, setSaved] = useState(false);
-  const [exporting, setExporting] = useState(false);
-  const [importing, setImporting] = useState(false);
   const [apiKeys, setApiKeys] = useState<ApiKeyItem[]>([]);
   const [keyName, setKeyName] = useState("");
   const [generating, setGenerating] = useState(false);
@@ -46,22 +36,13 @@ export default function SettingsPage() {
   const [copied, setCopied] = useState(false);
   const [showNewKey, setShowNewKey] = useState(true);
   const [revokingId, setRevokingId] = useState<string | null>(null);
-  const [envStatus, setEnvStatus] = useState<Record<string, boolean> | null>(null);
-  const [aiKey, setAiKey] = useState("");
-  const [savingAiKey, setSavingAiKey] = useState(false);
   const [previewAutoOpen, setPreviewAutoOpen] = useState(true);
-  const fileRef = useRef<HTMLInputElement>(null);
-
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setPreviewAutoOpen(localStorage.getItem("preview-auto-open") !== "false");
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setAccentsState(getAccents());
     listApiKeys().then(setApiKeys);
-    Promise.all([getEnvStatus(), getConfigValue("OPENROUTER_API_KEY")]).then(([env, ai]) => {
-      if (env) setEnvStatus(env);
-      if (ai !== null) setAiKey(ai);
-    });
   }, []);
 
   function togglePreview() {
@@ -81,54 +62,9 @@ export default function SettingsPage() {
     setTimeout(() => setSaved(false), 2000);
   }
 
-  async function handleSaveAiKey() {
-    setSavingAiKey(true);
-    await setConfig("OPENROUTER_API_KEY", aiKey);
-    setSavingAiKey(false);
-    setEnvStatus((prev) => prev ? { ...prev, OPENROUTER_API_KEY: !!aiKey } : prev);
-    toast.success(aiKey ? "AI provider key saved" : "AI provider key cleared");
-  }
-
   function resetAccents() {
     setAccentsState(defaultAccents);
     setAccents(defaultAccents);
-  }
-
-  async function handleExport() {
-    setExporting(true);
-    const res = await exportVault();
-    setExporting(false);
-    if (res.error) {
-      toast.error(res.error);
-      return;
-    }
-    const blob = new Blob([res.data!], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `dev-second-brain-export-${new Date().toISOString().slice(0, 10)}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success("Vault exported successfully");
-  }
-
-  async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setImporting(true);
-    try {
-      const text = await file.text();
-      const res = await importVault(text);
-      if (res.error) {
-        toast.error(res.error);
-      } else {
-        toast.success(`Imported ${res.count} items`);
-      }
-    } catch {
-      toast.error("Failed to read file");
-    }
-    setImporting(false);
-    if (fileRef.current) fileRef.current.value = "";
   }
 
   async function handleGenerateKey() {
@@ -266,45 +202,6 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* System */}
-        <h2 className="text-sm font-semibold text-[#E4E4E7] mb-3">System</h2>
-        <div className="rounded-xl border border-border/20 p-5 space-y-4 mb-8">
-          <p className="text-sm text-[#A1A1AA] leading-relaxed">Environment status and runtime configuration. Changes apply immediately.</p>
-
-          {envStatus && (
-            <div className="grid grid-cols-2 gap-2">
-              {Object.entries(envStatus).map(([key, ok]) => (
-                <div key={key} className="flex items-center gap-2 rounded-lg bg-muted/30 px-3 py-2">
-                  {ok ? <Wifi className="h-3.5 w-3.5 text-[#22C55E]" /> : <WifiOff className="h-3.5 w-3.5 text-red-400" />}
-                  <span className="text-xs text-[#D4D4D8] font-mono">{key}</span>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div className="border-t border-border/20 pt-4 space-y-3">
-            <p className="text-xs font-medium text-[#A1A1AA]">AI Provider Key (OpenRouter)</p>
-            <div className="flex items-center gap-3">
-              <input
-                value={aiKey}
-                onChange={(e) => setAiKey(e.target.value)}
-                placeholder="sk-or-..."
-                className="flex-1 h-9 rounded-lg border border-border/20 bg-card px-3 text-sm text-foreground placeholder:text-[#71717A] focus:outline-none focus:border-border/60 transition-colors font-mono"
-              />
-              <button
-                onClick={handleSaveAiKey}
-                disabled={savingAiKey}
-                className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
-              >
-                {savingAiKey ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save"}
-              </button>
-            </div>
-            <p className="text-xs text-[#71717A]">
-              Get a free key at <a href="https://openrouter.ai/keys" className="text-primary underline underline-offset-2 hover:opacity-80">openrouter.ai/keys</a>. Leave empty to use the <code className="text-xs bg-muted px-1 rounded">OPENROUTER_API_KEY</code> env var.
-            </p>
-          </div>
-        </div>
-
         {/* Preview */}
         <h2 className="text-sm font-semibold text-[#E4E4E7] mb-3">Preview</h2>
         <div className="rounded-xl border border-border/20 p-5 mb-8">
@@ -372,39 +269,6 @@ export default function SettingsPage() {
           </button>
         </div>
 
-        {/* Import / Export */}
-        <h2 className="text-sm font-semibold text-[#E4E4E7] mb-3">Import / Export</h2>
-        <div className="rounded-xl border border-border/20 p-5 space-y-4 mb-10">
-          <p className="text-sm text-[#A1A1AA] leading-relaxed">
-            Export your entire vault as JSON for backup, or import a previously exported backup.
-            Imported items will be added to your existing data (no duplicates check).
-          </p>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handleExport}
-              disabled={exporting}
-              className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-card px-4 text-sm text-foreground hover:bg-muted transition-colors disabled:opacity-50"
-            >
-              {exporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
-              Export
-            </button>
-            <button
-              onClick={() => fileRef.current?.click()}
-              disabled={importing}
-              className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-card px-4 text-sm text-foreground hover:bg-muted transition-colors disabled:opacity-50"
-            >
-              {importing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
-              Import
-            </button>
-            <input
-              ref={fileRef}
-              type="file"
-              accept=".json"
-              onChange={handleImport}
-              className="hidden"
-            />
-          </div>
-        </div>
       </div>
   );
 }

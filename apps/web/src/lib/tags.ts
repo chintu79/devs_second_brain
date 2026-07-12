@@ -1,26 +1,9 @@
-const MAX_TAGS = 3
+const MAX_TAGS = 20;
 
 export function parseTagNames(input: string): string[] {
   if (!input || !input.trim()) return [];
   return input.split(",").map((t) => t.trim()).filter(Boolean).slice(0, MAX_TAGS);
 }
-
-export function buildTagCreate(tagNames: string[], userId: string) {
-  return {
-    create: tagNames.map((name) => ({
-      tag: {
-        connectOrCreate: {
-          where: { name_userId: { name, userId } },
-          create: { name, userId },
-        },
-      },
-    })),
-  };
-}
-
-export const includeTags = {
-  include: { tags: { include: { tag: true } } },
-} as const;
 
 export function flattenItemTags<T extends { tags?: { tag: { name: string } }[] }>(
   item: T
@@ -31,8 +14,16 @@ export function flattenItemTags<T extends { tags?: { tag: { name: string } }[] }
   };
 }
 
-export function flattenListTags<T extends { tags?: { tag: { name: string } }[] }>(
-  items: T[]
-): (Omit<T, "tags"> & { tags: string[] })[] {
-  return items.map(flattenItemTags);
+export function flattenItemCollections<T extends { collections?: { collectionId: string }[] }>(
+  item: T
+): Omit<T, "collections"> & { collectionIds: string[] } {
+  return {
+    ...item,
+    collectionIds: item.collections?.map((c) => c.collectionId) ?? [],
+  };
 }
+
+export const DOT_COLORS: Record<string, string> = {
+  link: "bg-sky-400", note: "bg-emerald-400", document: "bg-amber-400",
+  pdf: "bg-red-400", tweet: "bg-blue-400", video: "bg-rose-400",
+};

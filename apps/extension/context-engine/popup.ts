@@ -1,36 +1,17 @@
-import type { Action, Context } from "./types";
 import { injectBaseStyles } from "./ui";
 import type { CapturePayload, LearningContext } from "../lib/types";
 
-const SITE_LABELS: Record<string, string> = {
-  "github-repo": "GitHub Repo",
-  "github-file": "File",
-  "github-pr": "PR",
-  "github-issue": "Issue",
-  youtube: "YouTube",
-  mdn: "MDN",
-  stackoverflow: "Stack Overflow",
-  docs: "Docs",
-  blog: "Blog",
-  article: "Article",
-};
-
-export function openPopup(action: Action, ctx: Context, rect?: DOMRect | null) {
+export function openPopup(
+  pageData: { url: string; title: string; description: string; siteName: string; hostname: string; favicon: string; ogImage: string; selectedText?: string },
+  rect?: DOMRect | null,
+) {
   injectBaseStyles();
   clearExisting();
 
-  const pageData = ctx.pageData;
   const selText = pageData.selectedText || "";
-  const badge = pageData.siteId && SITE_LABELS[pageData.siteId];
-  const repoPath =
-    ctx.meta.owner && ctx.meta.repo
-      ? `/${ctx.meta.owner}/${ctx.meta.repo}`
-      : "";
 
   const popup = document.createElement("div");
   popup.className = "dv-float dv-popup";
-
-  const displayTitle = action.label === ctx.label ? pageData.title : action.label;
 
   popup.innerHTML = `
     <div class="dv-popup-hdr">
@@ -41,9 +22,8 @@ export function openPopup(action: Action, ctx: Context, rect?: DOMRect | null) {
     <div class="dv-popup-body">
       <div class="dv-popup-card">
         <div class="dv-popup-card-body">
-          <div class="dv-popup-card-title">${escapeHtml(displayTitle)}</div>
-          <div class="dv-popup-card-url">${escapeHtml(pageData.hostname)}${escapeHtml(repoPath)}</div>
-          ${badge ? `<span class="dv-popup-badge">${badge}</span>` : ""}
+          <div class="dv-popup-card-title">${escapeHtml(pageData.title)}</div>
+          <div class="dv-popup-card-url">${escapeHtml(pageData.hostname)}</div>
         </div>
       </div>
       <div class="dv-popup-learn" style="display:none"></div>
@@ -68,7 +48,7 @@ export function openPopup(action: Action, ctx: Context, rect?: DOMRect | null) {
 
     try {
       const payload: CapturePayload = {
-        provider: ctx.id,
+        provider: "page",
         capabilities: [],
         page: {
           url: pageData.url,
@@ -80,7 +60,7 @@ export function openPopup(action: Action, ctx: Context, rect?: DOMRect | null) {
         },
         selection: selText ? { text: selText } : undefined,
         userInput: thoughtInput.value ? { thought: thoughtInput.value } : undefined,
-        metadata: { ...ctx.meta, siteId: pageData.siteId },
+        metadata: {},
       };
 
       const res = await chrome.runtime.sendMessage({ type: "capture", payload }) as { success?: boolean; error?: string; type?: string };
@@ -122,9 +102,8 @@ export function openPopup(action: Action, ctx: Context, rect?: DOMRect | null) {
   document.body.appendChild(popup);
   thoughtInput?.focus();
 
-  // Fetch learning context (non-blocking)
   chrome.runtime.sendMessage(
-    { type: "get-context", payload: { url: pageData.url, provider: ctx.id } },
+    { type: "get-context", payload: { url: pageData.url, provider: "page" } },
     (res: LearningContext) => {
       if (res?.saved && res.count > 0) {
         const learnEl = popup.querySelector(".dv-popup-learn") as HTMLElement;
