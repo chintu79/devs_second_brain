@@ -22,17 +22,19 @@ export function TagInput({ value, onChange, placeholder = `Add tags... (max ${MA
 
   const tags = value ? value.split(",").map((t) => t.trim()).filter(Boolean) : [];
   const tagsRef = useRef(tags);
+  const mounted = useRef(true);
   useEffect(() => { tagsRef.current = tags; }, [tags]);
+  useEffect(() => { return () => { mounted.current = false; }; }, []);
 
   useEffect(() => {
     if (!inputValue.trim()) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSuggestions([]);
       setOpen(false);
       return;
     }
     const timer = setTimeout(async () => {
       const results = await searchTags(inputValue.trim());
+      if (!mounted.current) return;
       const filtered = results.filter((t) => !tagsRef.current.includes(t.name));
       setSuggestions(filtered);
       setOpen(filtered.length > 0);

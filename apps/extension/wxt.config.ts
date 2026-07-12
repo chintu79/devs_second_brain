@@ -8,17 +8,20 @@ export default defineConfig({
     version: "0.1.0",
     description: "The fastest way to capture knowledge from any page",
     permissions: ["storage", "activeTab", "contextMenus", "scripting"],
-    host_permissions: [
-      "*://github.com/*",
-      "*://www.youtube.com/*",
-      "*://youtu.be/*",
-      "*://developer.mozilla.org/*",
-      "*://react.dev/*",
-      "*://nextjs.org/*",
-      "*://tailwindcss.com/*",
-      "*://svelte.dev/*",
-      "*://*.dev/*",
-    ],
+    host_permissions: ["<all_urls>"],
     action: {},
+    options_ui: {
+      page: "options.html",
+      open_in_tab: true,
+    },
+    commands: {
+      "capture-page": {
+        suggested_key: {
+          default: "Ctrl+Shift+S",
+          mac: "Command+Shift+S",
+        },
+        description: "Capture current page",
+      },
+    },
   },
 });

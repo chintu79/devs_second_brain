@@ -1,94 +1,95 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { auth } from "@/lib/auth";
+import { requireAuth } from "@/lib/action-utils";
+import { search } from "@/lib/search/engine";
+import { parseQuery } from "@/lib/search/tokenizer";
+import type { SearchFilters, SearchResponse } from "@/lib/search/types";
 
-export async function globalSearch(query: string) {
+export async function globalSearch(
+  query: string,
+  filters?: SearchFilters,
+  cursor?: string,
+  limit = 50
+): Promise<SearchResponse> {
   try {
-    const session = await auth();
-    const userId = session?.user?.id;
+    const userId = await requireAuth();
+    if (!query?.trim() || !userId) return { results: [], total: 0, hasMore: false, query, nextCursor: null };
 
-    if (!query?.trim()) {
-      return { resources: [], prompts: [], notes: [], projects: [] };
+    const parsed = parseQuery(query);
+    if (!parsed.text && !parsed.phrase && !parsed.tagFilter && !Object.keys(parsed.namedFilters).length) {
+      return { results: [], total: 0, hasMore: false, query, nextCursor: null };
     }
 
-    const q = query.trim();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const where: any = { userId, status: "active" };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const conditions: any[] = [];
 
-    if (!userId) {
-      return { resources: [], prompts: [], notes: [], projects: [] };
+    if (parsed.textTokens.length > 0) {
+      const tokenConds = parsed.textTokens.map((token) => ({
+        OR: [
+          { title: { contains: token, mode: "insensitive" } },
+          { url: { contains: token, mode: "insensitive" } },
+          { content: { contains: token, mode: "insensitive" } },
+          { notes: { contains: token, mode: "insensitive" } },
+          { summary: { contains: token, mode: "insensitive" } },
+          { domain: { contains: token, mode: "insensitive" } },
+          { provider: { contains: token, mode: "insensitive" } },
+          { tags: { some: { tag: { name: { contains: token, mode: "insensitive" } } } } },
+        ],
+      }));
+      conditions.push({ AND: tokenConds });
     }
 
-    const [resources, prompts, notes, projects] = await Promise.all([
-      prisma.resource.findMany({
-      where: {
-        userId,
+    if (parsed.phrase) {
+      conditions.push({
         OR: [
-          { title: { contains: q, mode: "insensitive" } },
-          { url: { contains: q, mode: "insensitive" } },
-          { notes: { contains: q, mode: "insensitive" } },
-          { category: { contains: q, mode: "insensitive" } },
-          { tags: { some: { tag: { name: { contains: q, mode: "insensitive" } } } } },
+          { title: { contains: parsed.phrase, mode: "insensitive" } },
+          { content: { contains: parsed.phrase, mode: "insensitive" } },
+          { notes: { contains: parsed.phrase, mode: "insensitive" } },
         ],
-      },
-      include: { tags: { include: { tag: true } } },
-      take: 10,
-    }),
-    prisma.prompt.findMany({
-      where: {
-        userId,
-        OR: [
-          { title: { contains: q, mode: "insensitive" } },
-          { prompt: { contains: q, mode: "insensitive" } },
-          { useCase: { contains: q, mode: "insensitive" } },
-          { category: { contains: q, mode: "insensitive" } },
-          { tags: { some: { tag: { name: { contains: q, mode: "insensitive" } } } } },
-        ],
-      },
-      include: { tags: { include: { tag: true } } },
-      take: 10,
-    }),
-    prisma.note.findMany({
-      where: {
-        userId,
-        OR: [
-          { title: { contains: q, mode: "insensitive" } },
-          { content: { contains: q, mode: "insensitive" } },
-          { category: { contains: q, mode: "insensitive" } },
-          { tags: { some: { tag: { name: { contains: q, mode: "insensitive" } } } } },
-        ],
-      },
-      include: { tags: { include: { tag: true } } },
-      take: 10,
-    }),
-    prisma.project.findMany({
-      where: {
-        userId,
-        OR: [
-          { title: { contains: q, mode: "insensitive" } },
-          { description: { contains: q, mode: "insensitive" } },
-          { tags: { some: { tag: { name: { contains: q, mode: "insensitive" } } } } },
-          { techStack: { has: q } },
-        ],
-      },
-      include: { tags: { include: { tag: true } } },
-      take: 10,
-    }),
-  ]);
+      });
+    }
 
-  function flattenTags(items: { tags: { tag: { id: string; name: string } }[] }[]) {
-    return items.map((item) => ({
-      ...item,
-      tags: item.tags.map((t) => t.tag.name),
+    if (conditions.length > 0) where.AND = conditions;
+
+    const raw = await prisma.knowledgeItem.findMany({
+      where,
+      include: { tags: { include: { tag: true } } },
+      take: limit + 1,
+      orderBy: { createdAt: "desc" },
+      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+    });
+
+    const hasMore = raw.length > limit;
+    if (hasMore) raw.pop();
+
+    const items = raw.map((i) => ({
+      id: i.id, title: i.title, url: i.url, type: i.type,
+      content: i.content, notes: i.notes, summary: i.summary,
+      tags: i.tags.map((t) => t.tag.name),
+      favorite: i.favorite, domain: i.domain, provider: i.provider,
+      status: i.status, createdAt: i.createdAt, lastOpenedAt: i.lastOpenedAt,
     }));
-  }
+
+    const mergedFilters: SearchFilters = { ...filters };
+    if (parsed.tagFilter) mergedFilters.tag = parsed.tagFilter;
+    if (parsed.namedFilters.type) mergedFilters.type = parsed.namedFilters.type;
+    if (parsed.namedFilters.provider) mergedFilters.provider = parsed.namedFilters.provider;
+    if (parsed.namedFilters.domain) mergedFilters.domain = parsed.namedFilters.domain;
+    if (parsed.namedFilters.favorite) mergedFilters.favorite = parsed.namedFilters.favorite;
+
+    const results = search(items, parsed, mergedFilters);
 
     return {
-      resources: flattenTags(resources),
-      prompts: flattenTags(prompts),
-      notes: flattenTags(notes),
-      projects: flattenTags(projects),
+      results: results.slice(0, limit),
+      total: results.length,
+      hasMore: hasMore || results.length > limit,
+      query,
+      nextCursor: hasMore ? raw[raw.length - 1].id : null,
     };
   } catch {
-    return { resources: [], prompts: [], notes: [], projects: [] };
+    return { results: [], total: 0, hasMore: false, query, nextCursor: null };
   }
 }

@@ -1,0 +1,7 @@
+{
+  "framework": "next",
+  "files": ["apps/web/src/app/layout.tsx"],
+  "insertBefore": "</body>",
+  "commentSyntax": "//",
+  "cspChecked": true
+}

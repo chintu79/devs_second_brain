@@ -53,51 +53,31 @@ Before generating any UI or feature, ask:
 <!-- END:design-manifesto -->
 
 ## Goal
-- Transform Dev Second Brain into a premium developer knowledge OS with section-based identity, discovery-focused radar, search-as-primary-interface, and intentional functional motion.
+- Ship an MVP of Devventory: one place to capture, organize, and retrieve everything important without remembering where it was saved.
 
-## Constraints & Preferences
-- Section accent colors: Dashboard #6366F1, Resources #14B8A6, Prompts #F59E0B, Notes #22C55E, Projects #8B5CF6, Radar #06B6D4, Search #EF4444, Settings #A1A1AA
-- Accent colors used only for active indicators, labels, focused borders, chips, badges — never as backgrounds
-- Border hierarchy: page sections (opacity 18%), interactive cards (12%), hover (25%), active accent color
-- Divider system: section / content / sidebar dividers for structural rhythm
-- Typography contrast: #FAFAFA page title, #E4E4E7 section heading, #F4F4F5 card title, #D4D4D8 description, #A1A1AA metadata, #71717A muted
-- Spacing scale: 4/8/12/16/24/32/48/64 — no random values
-- Radar must feel like Product Hunt + Readwise Reader + Arc Spaces
-- Search must feel like Raycast / Spotlight
-- Motion vocabulary: Reveal, Fade, Fade Up/Down, Slide, Stagger, Lift, Float, Morph, Expand, Collapse, Crossfade, Shared Element, Scale In, Focus Shift, Highlight, Progressive Reveal, Depth Shift, Context Slide, Active Indicator Slide, Hover Lift, Underline Reveal
-- Timing: micro-interactions 100-200ms, hovers 150-250ms, page transitions 250-400ms, panels 250-350ms, search 200-300ms
-- Easing: ease-out, spring (natural deceleration), no bounce/elastic/overshoot
-- Section containers: border-radius 20px, padding 24px, gap 32px
-- Every section page wrapped with `data-accent` attribute
-- Sidebar divided into Navigation / Workspace / Profile groups with per-section accent colors
-- Dashboard hierarchy: Continue Working (hero → primary), Recent Activity (secondary), Knowledge Library (tertiary)
-- Search and Radar use three-column workspace layout (sidebar | feed | detail/context panel) with URL-driven selection
-- Consistent hover: `scale-[1.02]` on sidebar items, context panel links; `scale-[1.03]` on nav links, filter pills, CTA buttons; `scale-[1.05]` on workflow icons; `scale-[1.1]` on toolbar icon buttons; `scale-[1.01]` on cards/items, `scale-[1.015]` on search/prompt/repo cards via cardHover variant
+## MVP Constraints
+- Only 4 pages: Dashboard, Knowledge, Projects, Radar
+- All content is "Knowledge" — two types: References (external URLs, MVP) and Documents (owned files, roadmap)
+- Knowledge is the heart — three-panel layout with folder tree | content | context panel
+- Projects are workspaces that reference knowledge, never duplicate it
+- Browser extension is high priority (capture URLs + optional context)
+- AI is limited to metadata generation, summaries, and auto-labels
+- Remove everything that doesn't directly improve Capture, Organization, or Retrieval
+- NOT a rollback — preserve architectural improvements (three-panel layout, inline editor, folder tree, backlinks)
 
 ## Progress
 ### Done
-- **3 features built**: Contribution heatmap (365-day GitHub-style grid), Backlinks (title mentions across vault items), Daily log hero (greeting with today's plan + streak count).
-- **Ponytail audit pass** (−136 lines): Removed 12 dead shadcn exports, deleted dead exports (`getDailyEntry`, `setPreviewAutoOpen`), inlined `generateRawKey`/`maskKey` one-liners, replaced hand-rolled `formatRelative` with `Intl.RelativeTimeFormat`, simplified `safeQuery`, removed non-functional Bell button.
-- **UI/UX polish**: Added `toast.success()` to all 14 CRUD operations. Fixed broken note favorite toggle. Added `cursor-pointer` to load-more buttons. Added `title` tooltips to all 8 AI Suggest buttons. Added `hover:scale-[1.02]` to sidebar items in resources/prompts.
-- **Radar improved**: Saved repos from DB in feed via `getBookmarkedRepos()`. Bookmarks sidebar shows real count. Toast on bookmark/unbookmark. Removed duplicate "Save to Resources" button — radar is self-contained.
-- **Professional UI cleanup + workspace simplification**: Removed ☕ emoji (→ `FileText` icon), removed `savedBy`/`Few Developers` gimmick badges, replaced `Sparkles` → `ArrowUp` in radar growth indicators, renamed "Hidden Gems" → "Discovery", renamed "Forgotten Gems" → "Rediscovered", replaced typewriter animation with static text, replaced bounce typing indicator with "Thinking...", removed `animate-pulse` on note Bot icon, removed floating decorative cards from auth page, removed `animate-glow-pulse`/`animate-float`/`animate-icon-glow` CSS animations from globals.css. Removed icon boxes from resource-item, prompt-card, note-list cards. Removed time-based list sections from resource-list and prompt-list. Made favorites always visible (no hover-to-reveal). Added active filter chips with clear buttons to all three list views. Deleted `resource-filters.tsx` and `prompt-filters.tsx`. Restructured resource-reader-panel and prompt-preview-panel into Knowledge Inspector (connections, clickable tags, collapsible metadata). Made note-reader-panel tags clickable. Restructured resource and prompt sidebars (separated actions, collapsible categories/tags, inline sort).
-- Globals.css: section accent CSS variables, sidebar-item per-link accent, border hierarchy, divider system, section container (radius 20px), selection color-mix, scrollbar, premium note-prose, skeleton, entrance animations, command palette overlay
-- Sidebar: Navigation/Workspace/Profile groups with `data-accent`, Framer Motion `LayoutGroup` + `layoutId` active indicator
-- Dashboard: streaming Suspense boundaries (greeting → primary → graph), skeletons per section, LCP at FCP
-- Radar: three-column workspace (sidebar | feed | detail), growth indicators, 24 repos
-- Search: debounced `globalSearch`, grouped results, type-colored borders, preview panel, URL-driven selection
-- Motion library: centralized variants in `src/lib/motion.ts`, `cardHover` variant (scale: 1.015)
-- Full hover consistency: `transition-all duration-150` + `hover:scale` hierarchy (1.01/1.015/1.02/1.03/1.05/1.1)
-- Lighthouse a11y: `aria-label` on 28 icon-only buttons, color contrast fix (`--color-muted-fg: #8a9299`)
-- Chat & Docs: two-column chat workspace with context panel, code block copy, docs TOC with animated indicator, reading progress bar
+- **MVP Restructure** (Jul 8): Removed /prompts, /search, /chat, /docs, /graph, /log, /onboard, /notes, /resources pages
+- **Sidebar simplified**: 4 links (Dashboard, Knowledge, Projects, Radar) — removed Workspace sub-group
+- **DashboardNavbar simplified**: 5 links — same 4 + Settings
+- **Knowledge → References workspace**: Three-panel layout, folder tree | resource list | reader panel. Uses resource-list + resource-reader-panel components. Folder model added to Prisma schema.
+- **Dashboard simplified**: Just "Continue Working" (projects + references) and "Recent Captures" (recent references). Removed analytics, streak, daily brief, weekly progress.
+- **Projects simplified**: Removed kanban view, prompts/notes reference data. Kept workspace panel with overview, PLAN.md, timeline.
+- **Landing page simplified**: Removed LandingSections, kept Navbar + HeroEntrance + footer
+- **Prisma Folder model**: Added Folder model with self-referencing parentId, folderId on Resource/Note/Prompt/Project
+- **Cleaned up**: Removed chat/, prompts/, graph/, docs/ components. Removed daily log, analytics server actions. Removed AI chat API route, save-prompt extension API.
 
-### In Progress
-- (none)
-
-### Done (this session)
-- **Notes workspace UX refactor**: Compact card redesign (p-2.5, single-line preview at 80 chars, word count + reading time in compact metadata row, `useMemo`d previews, border-left selected indicator with `border-l-2 border-primary` instead of background-color wash, no related-project indicator in list). Consolidated reader panel metadata (category + reading time + word count + updated + created all in one compact block below title, removed footer meta). Reading progress bar via `useScroll`/`useSpring` from framer-motion. Made context panel items navigable (Related Notes/Backlinks → `router.push(/notes?id=X)`, Resources/Prompts/Projects → their respective sections). Added helpful empty state for context panel. Removed redundant "Note" header label. Removed `projects` prop from `NoteList` (unused). Better empty state in note-list ("Try a different category, tag, or search term"). Sidebar spacing improvements (`my-2`→`my-3`, `pt-2`→`pt-3`). Cleaned up unused imports (`Loader2` from workspace, `FileText`/`Link2` from note-list).
-
-### Blocked
+## Blocked
 - Registration fails on Vercel: Neon database unreachable from Vercel region
 
 ## AI Chat & Docs Redesign
@@ -149,46 +129,25 @@ Before generating any UI or feature, ask:
 ## Relevant Files
 - `src/app/globals.css`: Section accent variables, border hierarchy, divider system, section container, sidebar-item with dynamic `--sidebar-item-accent`, selection color-mix, scrollbar, premium note-prose, skeleton, entrance animations, command palette overlay
 - `src/lib/motion.ts`: Centralized motion constants and variants
-- `src/components/layout/sidebar.tsx`: Framer Motion LayoutGroup + layoutId active indicator glide
+- `src/components/layout/sidebar.tsx`: 4 links (Dashboard, Knowledge, Projects, Radar), Framer Motion LayoutGroup + layoutId active indicator glide
 - `src/components/landing/hero-entrance.tsx`: Staggered Framer Motion sequence for landing hero
-- `src/components/landing/animated-arrow.tsx`: Framer Motion oscillation + rotation for workflow arrows
 - `src/components/resources/resource-list.tsx`: Staggered card reveal, search, filter pills with hover:scale-[1.03]
-- `src/components/prompts/prompt-list.tsx`: Staggered card reveal, CTA with hover:scale-[1.03]
 - `src/components/projects/project-list.tsx`: Staggered card reveal
-- `src/components/notes/note-list.tsx`: Staggered card reveal, compact cards (p-2.5, single-line preview), active filter chips, no icon box, always-visible favorite + delete, `useMemo`d previews, border-left selected indicator
-- `src/components/notes/note-sidebar.tsx`: Collapsible sections, section toggle with hover:scale-[1.02], create button hover:scale-[1.1]
+- `src/components/projects/project-workspace.tsx`: WorkspacePanel with slideInRight, tabs (Overview, PLAN.md, Timeline), always-editable
+- `src/components/knowledge/knowledge-workspace.tsx`: Three-panel References workspace with folder tree, resource list, reader panel
+- `src/components/knowledge/folder-tree.tsx`: Folder tree with nested items, expand/collapse, create/rename/delete
 - `src/components/radar/radar-feed.tsx`: Staggered card reveal, sticky search bar
 - `src/components/radar/radar-sidebar.tsx`: Collapsible sections, section toggle with hover:scale-[1.02]
 - `src/components/projects/project-sidebar.tsx`: Collapsible sections, create button hover:scale-[1.1], section toggle hover:scale-[1.02]
-- `src/components/search/search-result-card.tsx`: Uses shared `cardHover` variant
 - `src/components/radar/repository-card.tsx`: Uses shared `cardHover` variant
-- `src/components/prompts/prompt-card.tsx`: Uses shared `cardHover` variant
-- `src/components/vaults/note-card.tsx`: hover:scale-[1.02] + hover:border-border/60 + hover:shadow-sm, action buttons hover:scale-[1.1]
-- `src/components/vaults/resource-card.tsx`: Same hover pattern as note-card
-- `src/components/vaults/project-card.tsx`: Same hover pattern as note-card
-- `src/components/vaults/prompt-card.tsx`: Same hover pattern as note-card
-- `src/components/search/search-preview-panel.tsx`: Uses shared `slideInRight` variant
-- `src/components/prompts/prompt-preview-panel.tsx`: Uses shared `slideInRight` variant
-- `src/components/radar/repository-detail-panel.tsx`: Uses shared `slideInRight` variant
-- `src/components/notes/note-reader-panel.tsx`: Uses shared `slideInRight` variant, consolidated metadata header, reading progress bar via `useScroll`/`useSpring`, navigable context panel items (router.push), clickable tags via onTagClick, helpful empty state for context panel
-- `src/components/projects/project-workspace.tsx`: WorkspacePanel uses shared `slideInRight` variant, tabs with hover:scale-[1.02]
-- `src/components/resources/resource-filters.tsx`: **Deleted** — filtering handled by sidebar + active chips
-- `src/components/prompts/prompt-filters.tsx`: **Deleted** — filtering handled by sidebar + active chips
-- `src/components/dashboard/command-bar.tsx`: Search bar hover:scale-[1.01], quick actions + bell hover:scale-[1.1]
-- `src/components/dashboard/continue-working.tsx`: Project cards with hover:scale-[1.01], "All projects" link hover:scale-[1.02]
-- `src/components/dashboard/recent-activity.tsx`: Activity items hover:scale-[1.01], "View all" link hover:scale-[1.02]
-- `src/components/dashboard/knowledge-library.tsx`: Vault cards with hover border/shadow
-- `src/components/dashboard/context-panel.tsx`: Note links hover:scale-[1.02]
-- `src/components/resources/resource-context-panel.tsx`: Sidebar links hover:scale-[1.02]
-- `src/components/prompts/prompt-context-panel.tsx`: Sidebar links hover:scale-[1.02]
-- `src/components/search/search-context-panel.tsx`: Items hover:scale-[1.02]
-- `src/components/radar/radar-context-panel.tsx`: Context items hover:scale-[1.02]
-- `src/components/ui/card.tsx`: Stale `card-hover` class removed; base Card is now plain (no hover)
-- `src/app/page.tsx`: Landing page with HeroEntrance, workflow arrows, feature cards hover:scale-[1.02], nav links hover:scale-[1.03], CTA buttons hover:scale-[1.03], footer links hover:scale-[1.02]
-- `src/components/chat/chat-ui.tsx`: Enhanced with context-aware suggestions (context-aware empty state + suggested questions per section), `MessageContent` component with code block copy buttons (language label, copy button with Check feedback), context bar showing active chat context
-- `src/components/chat/chat-context-panel.tsx`: Right sidebar showing related vault items (resources/notes/prompts/projects) with type-colored icons, animated `slideInRight`, empty state
-- `src/components/chat/chat-workspace.tsx`: Two-column layout (chat + context panel), URL-driven `?from=` context param, manages context state via URL searchParams
-- `src/app/(dashboard)/chat/page.tsx`: Server component fetching vault data (take:20 per type), passes to ChatWorkspace — enables context panel without extra API calls
-- `src/components/docs/docs-toc.tsx`: Sticky TOC sidebar with IntersectionObserver-driven active section, Framer Motion `layoutId` animated indicator, smooth scroll on click
-- `src/components/docs/reading-progress.tsx`: Fixed gradient progress bar using Framer Motion `useScroll` + spring animation, SSR-safe with `mounted` check
-- `src/app/(dashboard)/docs/page.tsx`: Two-column layout (max-w-6xl) with TOC sidebar on large screens, ReadingProgress bar, TOC sections extracted via `map()`
+- `src/components/dashboard/dashboard-main.tsx`: Simplified — Continue Working + Recent Captures only
+- `src/components/shared/inline-editor.tsx`: TipTap editor with bubble menu, slash commands, CSS drag handles, block action menu
+- `src/components/shared/backlinks.tsx`: Title-mention backlinks component
+- `src/components/layout/command-palette.tsx`: Cmd+K command palette
+- `src/app/page.tsx`: Landing page with Navbar + HeroEntrance + footer (removed LandingSections)
+- `src/app/(dashboard)/knowledge/page.tsx`: References workspace — fetches resources, folders, categories, tags
+- `src/app/(dashboard)/dashboard/page.tsx`: Continuation page — Continue Working + Recent Captures
+- `src/app/(dashboard)/projects/page.tsx`: Project workspaces — fetches projects only (no prompts/notes)
+- `src/actions/folders.ts`: Folder CRUD + moveItemToFolder with typed FolderNode
+- `src/actions/resources.ts`: Resource CRUD + cursor-based pagination
+- `prisma/schema.prisma`: Models — User, Account, Session, Resource, Note, Prompt, Project, Tag, Reference, Folder, ApiKey, DailyEntry, RadarBookmark

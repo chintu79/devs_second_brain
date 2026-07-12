@@ -1,9 +1,6 @@
-import { mountContextUI, getContext } from "../context-engine";
 import { injectBaseStyles } from "../context-engine/ui";
 import { getSiteMeta } from "../context-engine/metadata";
 import { openPopup } from "../context-engine/popup";
-
-// ─── Floating "+" button on text selection ───
 
 let floatBtn: HTMLButtonElement | null = null;
 
@@ -36,17 +33,8 @@ function showFloatBtn(rect: DOMRect) {
     floatBtn.title = "Save to Devventory";
     floatBtn.onclick = () => {
       clearFloat();
-      const ctx = getContext();
-      openPopup(
-        { id: "save", label: ctx?.label || document.title, description: "", icon: "", tab: "resource" },
-        ctx || {
-          id: "generic",
-          label: document.title,
-          meta: {},
-          pageData: { ...getSiteMeta(), siteId: "generic" },
-        },
-        rect,
-      );
+      const data = getSiteMeta();
+      openPopup(data, rect);
     };
     document.body.appendChild(floatBtn);
   }
@@ -58,8 +46,6 @@ function showFloatBtn(rect: DOMRect) {
     Math.max(rect.top + scrollY - 14, scrollY + 8) + "px";
 }
 
-// ─── Cloudflare challenge detection ───
-
 function isCloudflareChallenge(): boolean {
   return (
     document.querySelector("#cf-challenge-wrapper, #cf-please-wait, [id^='cf-challenge-']") !== null ||
@@ -69,9 +55,6 @@ function isCloudflareChallenge(): boolean {
   );
 }
 
-// ponytail: interval poll instead of MutationObserver — challenge page DOM
-// is minimal and replacing MutationObserver with a lighter check avoids
-// tripping detection. Upgrade to observer if perf matters.
 function waitForRealPage(maxMs = 30000): Promise<void> {
   return new Promise<void>((resolve) => {
     if (!isCloudflareChallenge()) return resolve();
@@ -86,17 +69,16 @@ function waitForRealPage(maxMs = 30000): Promise<void> {
 }
 
 function initUI() {
-  const unmount = mountContextUI();
-
-  // Selection floater — minimal listener, only creates DOM on actual selection
   document.addEventListener("mouseup", onMouseUp);
   document.addEventListener("mousedown", (e) => {
     if (!(e.target as HTMLElement)?.closest?.(".dv-float, .dv-chip, .dv-menu")) clearFloat();
   });
   document.addEventListener("scroll", clearFloat, true);
 
-  // Message handlers — no DOM injection until user acts
   chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+    if (msg.type === "ping") {
+      sendResponse(true);
+    }
     if (msg.type === "getPageData") {
       sendResponse(getSiteMeta());
     }
@@ -106,52 +88,29 @@ function initUI() {
     }
     if (msg.type === "showInlinePopup") {
       injectBaseStyles();
-      const ctx = getContext();
-      openPopup(
-        { id: "save", label: ctx?.label || document.title, description: "", icon: "", tab: "resource" },
-        ctx || {
-          id: "generic",
-          label: document.title,
-          meta: {},
-          pageData: { ...getSiteMeta(), siteId: "generic" },
-        },
-        null,
-      );
+      const data = getSiteMeta();
+      openPopup(data, null);
+      sendResponse(true);
+    }
+    if (msg.type === "showContextPopup") {
+      injectBaseStyles();
+      const data = getSiteMeta();
+      if (msg.selectionText) data.selectedText = msg.selectionText;
+      if (msg.linkUrl) data.url = msg.linkUrl;
+      openPopup(data, null);
       sendResponse(true);
     }
   });
-
-  return unmount;
 }
 
-// ─── Entry ───
-
 export default defineContentScript({
-  matches: [
-    "*://github.com/*",
-    "*://www.youtube.com/*",
-    "*://youtu.be/*",
-    "*://developer.mozilla.org/*",
-    "*://react.dev/*",
-    "*://nextjs.org/*",
-    "*://tailwindcss.com/*",
-    "*://svelte.dev/*",
-    "*://*.dev/*",
-  ],
+  matches: ["*://*/*"],
   main() {
-    // If this is a Cloudflare challenge page, defer all injection until
-    // the real page loads (Cloudflare redirects after verification).
     if (isCloudflareChallenge()) {
       waitForRealPage().then(initUI);
       return;
     }
-
-    const unmount = initUI();
-
-    return () => {
-      unmount();
-      clearFloat();
-    };
+    initUI();
   },
 });
 

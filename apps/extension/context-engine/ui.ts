@@ -1,5 +1,3 @@
-import type { Action } from "./types";
-
 let injected = false;
 
 export function injectBaseStyles() {
@@ -10,14 +8,10 @@ export function injectBaseStyles() {
     @keyframes dv-toast-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
     @keyframes dv-pop{from{opacity:0;transform:scale(0.7)}to{opacity:1;transform:scale(1)}}
     @keyframes dv-slide{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
-
-    /* Chip — small pill with own vars (Brave Shields strips :root custom props) */
     .dv-chip{--dv-accent:#6366f1;--dv-bg:#fff;--dv-fg:#1a1a1a;--dv-muted:#8a9299;--dv-border:#e4e4e7;--dv-card:#f4f4f5;display:inline-flex;align-items:center;gap:4px;padding:2px 8px 2px 6px;border-radius:6px;border:1px solid var(--dv-border);background:var(--dv-bg);color:var(--dv-accent);font-size:11px;font-weight:500;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;transition:all 0.15s;white-space:nowrap;vertical-align:middle;line-height:normal;box-shadow:none;user-select:none}
     @media(prefers-color-scheme:dark){.dv-chip{--dv-accent:#818cf8;--dv-bg:#0a0a0a;--dv-fg:#fafafa;--dv-muted:#8a9299;--dv-border:#27272a;--dv-card:#18181b}}
     .dv-chip:hover{background:var(--dv-card);border-color:var(--dv-accent);box-shadow:0 1px 4px rgba(0,0,0,0.08)}
     .dv-chip svg{width:12px;height:12px;flex-shrink:0}
-
-    /* Action menu — small dropdown below chip */
     .dv-menu{--dv-accent:#6366f1;--dv-bg:#fff;--dv-fg:#1a1a1a;--dv-muted:#8a9299;--dv-border:#e4e4e7;--dv-card:#f4f4f5;position:absolute;z-index:2147483646;background:var(--dv-bg);border:1px solid var(--dv-border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.12);padding:4px;min-width:180px;animation:dv-slide 0.12s cubic-bezier(0.16,1,0.3,1);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
     @media(prefers-color-scheme:dark){.dv-menu{--dv-accent:#818cf8;--dv-bg:#0a0a0a;--dv-fg:#fafafa;--dv-muted:#8a9299;--dv-border:#27272a;--dv-card:#18181b}}
     .dv-menu-item{display:flex;align-items:center;gap:8px;padding:6px 8px;border:none;background:none;cursor:pointer;font-size:11px;color:var(--dv-fg);border-radius:5px;width:100%;text-align:left;transition:background 0.1s}
@@ -25,8 +19,6 @@ export function injectBaseStyles() {
     .dv-menu-item svg{width:13px;height:13px;color:var(--dv-accent);flex-shrink:0}
     .dv-menu-item span{flex:1}
     .dv-menu-item small{color:var(--dv-muted);font-size:10px}
-
-    /* Inline popup (reused from content) */
     .dv-float{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;box-sizing:border-box;z-index:2147483646;--dv-accent:#6366f1;--dv-bg:#fff;--dv-fg:#1a1a1a;--dv-muted:#8a9299;--dv-border:#e4e4e7;--dv-card:#f4f4f5}
     @media(prefers-color-scheme:dark){.dv-float{--dv-accent:#818cf8;--dv-bg:#0a0a0a;--dv-fg:#fafafa;--dv-muted:#8a9299;--dv-border:#27272a;--dv-card:#18181b}}
     .dv-float-btn{position:absolute;width:28px;height:28px;border-radius:50%;border:1px solid var(--dv-border);background:var(--dv-bg);color:var(--dv-accent);cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.1);padding:0;animation:dv-pop 0.15s cubic-bezier(0.16,1,0.3,1)}
@@ -53,50 +45,4 @@ export function injectBaseStyles() {
     .dv-popup-err{color:#ef4444;font-size:11px;padding:4px 0;margin-top:4px;display:none}
   `;
   document.head.appendChild(style);
-}
-
-export function createChip(icon: string, label: string): HTMLElement {
-  injectBaseStyles();
-  const chip = document.createElement("div");
-  chip.className = "dv-chip";
-  chip.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${icon}"/></svg>${label}`;
-  return chip;
-}
-
-export function showMenu(
-  anchor: Element,
-  actions: Action[],
-  onSelect: (action: Action) => void,
-) {
-  const existing = document.querySelector(".dv-menu");
-  if (existing) existing.remove();
-
-  const menu = document.createElement("div");
-  menu.className = "dv-menu";
-
-  actions.forEach((a) => {
-    const item = document.createElement("button");
-    item.className = "dv-menu-item";
-    item.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${a.icon}"/></svg><span>${a.label}</span><small>${a.description}</small>`;
-    item.onclick = (e) => {
-      e.stopPropagation();
-      menu.remove();
-      onSelect(a);
-    };
-    menu.appendChild(item);
-  });
-
-  const rect = anchor.getBoundingClientRect();
-  menu.style.top = `${rect.bottom + window.scrollY + 4}px`;
-  menu.style.left = `${Math.min(rect.left + window.scrollX, window.innerWidth - 200)}px`;
-
-  document.body.appendChild(menu);
-
-  const close = (e: MouseEvent) => {
-    if (!menu.contains(e.target as Node) && e.target !== anchor) {
-      menu.remove();
-      document.removeEventListener("mousedown", close);
-    }
-  };
-  setTimeout(() => document.addEventListener("mousedown", close), 0);
 }

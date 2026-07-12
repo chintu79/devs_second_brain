@@ -57,62 +57,22 @@
 /* ── Section Accent Colors (reduced saturation 15-20%) ──
      Each section gets a distinct hue with lower chroma for a calm, premium feel.
      These are used ONLY for icons, indicators, badges, charts, and active states.
-     The primary brand accent (#5B6CFF) drives all interactive elements.
+     The primary brand accent (#6366F1) drives all interactive elements.
   */
 :root {
-  --accent: #5B6CFF;
-  --accent-bg: rgba(91, 108, 255, 0.10);
-  --sidebar-item-accent: #5B6CFF;
+  --accent: #6366F1;
+  --accent-bg: rgba(99, 102, 241, 0.10);
+  --sidebar-item-accent: #6366F1;
 }
 
 [data-accent="dashboard"] {
-  --accent: #5B6CFF;
-  --accent-bg: rgba(91, 108, 255, 0.10);
-}
-
-[data-accent="resources"] {
-  --accent: #179A8C;
-  --accent-bg: rgba(23, 154, 140, 0.10);
-}
-
-[data-accent="prompts"] {
-  --accent: #D69524;
-  --accent-bg: rgba(214, 149, 36, 0.10);
-}
-
-[data-accent="notes"] {
-  --accent: #239B63;
-  --accent-bg: rgba(35, 155, 99, 0.10);
-}
-
-[data-accent="projects"] {
-  --accent: #7A5AF8;
-  --accent-bg: rgba(122, 90, 248, 0.10);
-}
-
-[data-accent="radar"] {
-  --accent: #1F93C9;
-  --accent-bg: rgba(31, 147, 201, 0.10);
-}
-
-[data-accent="graph"] {
-  --accent: #3178D6;
-  --accent-bg: rgba(49, 120, 214, 0.10);
-}
-
-[data-accent="chat"] {
-  --accent: #8A56E2;
-  --accent-bg: rgba(138, 86, 226, 0.10);
+  --accent: #6366F1;
+  --accent-bg: rgba(99, 102, 241, 0.10);
 }
 
 [data-accent="knowledge"] {
   --accent: #C6488C;
   --accent-bg: rgba(198, 72, 140, 0.10);
-}
-
-[data-accent="search"] {
-  --accent: #D84B64;
-  --accent-bg: rgba(216, 75, 100, 0.10);
 }
 
 [data-accent="settings"] {
@@ -122,47 +82,11 @@
 
 /* Sidebar item per-section accent */
 .sidebar-link[data-accent="dashboard"] {
-  --sidebar-item-accent: #5B6CFF;
-}
-
-.sidebar-link[data-accent="resources"] {
-  --sidebar-item-accent: #179A8C;
-}
-
-.sidebar-link[data-accent="prompts"] {
-  --sidebar-item-accent: #D69524;
-}
-
-.sidebar-link[data-accent="notes"] {
-  --sidebar-item-accent: #239B63;
-}
-
-.sidebar-link[data-accent="projects"] {
-  --sidebar-item-accent: #7A5AF8;
-}
-
-.sidebar-link[data-accent="radar"] {
-  --sidebar-item-accent: #1F93C9;
-}
-
-.sidebar-link[data-accent="graph"] {
-  --sidebar-item-accent: #3178D6;
-}
-
-.sidebar-link[data-accent="chat"] {
-  --sidebar-item-accent: #8A56E2;
-}
-
-.sidebar-link[data-accent="tags"] {
-  --sidebar-item-accent: #C6488C;
+  --sidebar-item-accent: #6366F1;
 }
 
 .sidebar-link[data-accent="knowledge"] {
   --sidebar-item-accent: #C6488C;
-}
-
-.sidebar-link[data-accent="search"] {
-  --sidebar-item-accent: #D84B64;
 }
 
 .sidebar-link[data-accent="settings"] {
@@ -182,7 +106,7 @@
    · 4-tier border system: subtle / default / medium / hover
    · Layered shadows with large blur and low opacity — no harsh drop shadows
    · Reduced accent saturation by ~15-20% across all section colors
-   · Brand accent (#5B6CFF) drives all interactive elements; section colors
+    · Brand accent (#6366F1) drives all interactive elements; section colors
      are reserved for icons, indicators, badges, charts, and active states
    · Every text/background combination verified against WCAG AA 4.5:1
    ═══════════════════════════════════════════════════════════════ */
@@ -267,11 +191,11 @@
      Single consistent accent for all interactive elements.
      Section colors are used ONLY for icons, badges, indicators, charts.
   */
-  --brand: #5B6CFF;
-  --brand-hover: #4E5EF7;
-  --brand-active: #4353EA;
-  --brand-soft: rgba(91, 108, 255, 0.12);
-  --brand-ring: rgba(91, 108, 255, 0.30);
+   --brand: #6366F1;
+   --brand-hover: #5558E6;
+   --brand-active: #4A4DD9;
+   --brand-soft: rgba(99, 102, 241, 0.12);
+   --brand-ring: rgba(99, 102, 241, 0.30);
 
   /* ── Semantic Status ── */
   --success: #129267;
@@ -284,7 +208,7 @@
   --card-border: rgba(36, 36, 36, 0.10);
   --card-hover-bg: #FCFCFB;
   --sidebar-item-hover-bg: rgba(36, 36, 36, 0.06);
-  --sidebar-item-active-bg: color-mix(in srgb, var(--sidebar-item-accent, #5B6CFF) 14%, #F6F6F3);
+  --sidebar-item-active-bg: color-mix(in srgb, var(--sidebar-item-accent, #6366F1) 14%, #F6F6F3);
   --dropdown-bg: #FFFFFF;
   --dropdown-border: rgba(36, 36, 36, 0.12);
   --modal-bg: #FFFFFF;
@@ -293,9 +217,9 @@
   --tooltip-text: #FFFFFF;
   --input-bg: #F5F5F2;
   --input-border: rgba(36, 36, 36, 0.12);
-  --input-focus-border: #5B6CFF;
+  --input-focus-border: #6366F1;
   --code-block-bg: #F3F3EF;
-  --selection-bg: rgba(91, 108, 255, 0.16);
+  --selection-bg: rgba(99, 102, 241, 0.16);
 
   --color-sidebar-accent-foreground: var(--sidebar-item-accent, #242424);
 
@@ -468,7 +392,7 @@ html.theme-transition *::after {
 
 /* Sidebar accent indicator */
 .sidebar-item {
-  @apply relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-250;
+  @apply relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-250;
 }
 
 .sidebar-item-active {
@@ -476,22 +400,8 @@ html.theme-transition *::after {
   color: var(--color-sidebar-primary-foreground, #fafafa);
 }
 
-.sidebar-logo-bg {
-  background-color: var(--accent, #6366f1);
-}
-
 .sidebar-indicator {
   background-color: var(--sidebar-item-accent, #6366f1);
-}
-
-.panel-detail {
-  width: 800px;
-  flex-shrink: 0;
-  border-left: 1px solid var(--color-border-color, oklch(0.87 0.01 100));
-  background: var(--color-background);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
 }
 
 /* ── Premium Note Prose for markdown rendering ── */
@@ -665,66 +575,6 @@ html.theme-transition *::after {
 .note-prose img {
   @apply rounded-xl my-8 max-w-full;
   border: 1px solid var(--color-border-color);
-}
-
-/* Generic prose for non-note contexts (legacy) */
-.prose {
-  @apply max-w-none;
-}
-
-.prose p {
-  @apply leading-relaxed;
-  color: #d4d4d8;
-}
-
-.prose code {
-  @apply rounded bg-muted px-1.5 py-0.5 text-sm font-mono;
-  color: #e4e4e7;
-}
-
-.prose pre {
-  @apply rounded-lg bg-muted p-4 overflow-x-auto;
-}
-
-.prose pre code {
-  @apply bg-transparent p-0;
-}
-
-.prose h1,
-.prose h2,
-.prose h3 {
-  @apply font-semibold tracking-tight;
-}
-
-.prose h1 {
-  @apply text-2xl mt-8 mb-4;
-}
-
-.prose h2 {
-  @apply text-xl mt-6 mb-3;
-}
-
-.prose h3 {
-  @apply text-lg mt-4 mb-2;
-}
-
-.prose ul,
-.prose ol {
-  @apply pl-5 my-3;
-}
-
-.prose li {
-  @apply my-1;
-}
-
-.prose a {
-  @apply underline underline-offset-2 hover:opacity-80;
-  color: var(--accent, #6366f1);
-}
-
-.prose blockquote {
-  @apply border-l-2 border-border pl-4 italic;
-  color: #a1a1aa;
 }
 
 @keyframes text-gradient {

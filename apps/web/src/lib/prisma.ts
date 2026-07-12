@@ -24,13 +24,3 @@ const prisma = globalThis.prismaGlobal ?? prismaClientSingleton();
 export default prisma;
 
 if (process.env.NODE_ENV !== "production") globalThis.prismaGlobal = prisma;
-
-export async function safeQuery<T>(label: string, fn: () => Promise<T>, fallback: T): Promise<T> {
-  try {
-    return await fn();
-  } catch (error) {
-    console.error(`[DB] ${label}:`, error instanceof Error ? error.message : String(error));
-    console.error(`[DB] ${label} stack:`, error instanceof Error ? error.stack : new Error().stack);
-    return fallback;
-  }
-}

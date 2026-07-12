@@ -1,0 +1,26 @@
+{
+  "editor:open-search": [
+    {
+      "modifiers": ["Mod"],
+      "key": "K"
+    }
+  ],
+  "switcher:open": [
+    {
+      "modifiers": ["Mod", "Shift"],
+      "key": "O"
+    }
+  ],
+  "command-palette:open": [
+    {
+      "modifiers": ["Mod", "Shift"],
+      "key": "P"
+    }
+  ],
+  "graph:open": [
+    {
+      "modifiers": ["Mod", "Shift"],
+      "key": "G"
+    }
+  ]
+}

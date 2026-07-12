@@ -1,27 +1,18 @@
-import { getConfigValue } from "@/actions/config";
-
 const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || "meta-llama/llama-3.2-3b-instruct:free";
-const ENV_KEY = process.env.OPENROUTER_API_KEY;
+const API_KEY = process.env.OPENROUTER_API_KEY;
 
 const API_URL = "https://openrouter.ai/api/v1/chat/completions";
 
-export async function getApiKey(): Promise<string | null> {
-  // ponytail: two-tier — env var wins, then DB config
-  if (ENV_KEY) return ENV_KEY;
-  try { return await getConfigValue("OPENROUTER_API_KEY"); } catch { return null; }
-}
-
 async function generateContent(prompt: string): Promise<string> {
-  const key = await getApiKey();
-  if (!key) {
-    throw new Error("OPENROUTER_API_KEY not configured. Set it in Settings → System or add it to your .env file.");
+  if (!API_KEY) {
+    throw new Error("OPENROUTER_API_KEY not configured. Add it to your .env file.");
   }
 
   const res = await fetch(API_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${key}`,
+      Authorization: `Bearer ${API_KEY}`,
     },
     body: JSON.stringify({
       model: OPENROUTER_MODEL,
@@ -69,20 +60,4 @@ export async function summarizeContent(content: string): Promise<string> {
   return generateContent(prompt);
 }
 
-export async function suggestTechnologies(content: string): Promise<string[]> {
-  const prompt = `From the following content, list the technologies, frameworks, and tools mentioned as a comma-separated list. Answer with only the list, nothing else:\n\n${content?.slice(0, 1000)}`;
-  const result = await generateContent(prompt);
-  return result.split(",").map((t) => t.trim()).filter(Boolean);
-}
 
-export async function suggestDifficulty(content: string): Promise<string> {
-  const prompt = `Rate the difficulty of the following content as either "beginner", "intermediate", or "advanced". Answer with only one word:\n\n${content?.slice(0, 1000)}`;
-  const result = (await generateContent(prompt)).toLowerCase().trim();
-  return ["beginner", "intermediate", "advanced"].includes(result) ? result : "";
-}
-
-export async function suggestKeywords(content: string): Promise<string[]> {
-  const prompt = `Extract 3-5 key topics or keywords from the following content as a comma-separated list. Answer with only the list:\n\n${content?.slice(0, 1000)}`;
-  const result = await generateContent(prompt);
-  return result.split(",").map((t) => t.trim().toLowerCase()).filter(Boolean);
-}
